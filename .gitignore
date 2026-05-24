@@ -33,3 +33,10 @@ yarn-error.log*
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Firebase Service Account - JANGAN UPLOAD
+*-firebase-adminsdk-*.json
+firebase-adminsdk-*.json
+serviceAccount*.json
+*service-account*.json
+
