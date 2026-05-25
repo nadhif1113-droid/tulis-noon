@@ -4,10 +4,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Volume2, Mic, Check, X, Sparkles, Lock, MapPin, Briefcase, GraduationCap, Trophy, Flame, Star, Home, BookOpen, Users, User, Heart, Share2, Send, Play, Image as ImageIcon, MessageCircle, Calendar, Target, Zap, ChevronRight, Bot, Video, Clock, Award, UserCheck, Coffee, Music, Film, Gamepad2, Heart as HeartIcon, Mountain } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
+import { CHALLENGE_SCENARIOS, getTodayChallenge, getXpForLevel } from '@/data/challenge-levels';
 
 export default function TulisNoonApp() {
   const router = useRouter();
-  const { user, userProfile: authProfile, loading: authLoading, updateUserProfile } = useAuth();
+  const { user, userProfile: authProfile, loading: authLoading, updateUserProfile, saveChallengeProgress } = useAuth();
   // null = belum ditentukan (masih loading auth/profile).
   // 'welcome' = user baru yang belum selesai onboarding.
   // 'main' = user yang udah selesai onboarding.
@@ -17,6 +18,10 @@ export default function TulisNoonApp() {
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [selectedGame, setSelectedGame] = useState(null);
   const [selectedGuru, setSelectedGuru] = useState(null);
+  // Challenge scenario yang lagi dimainin. Default ke "Tantangan Hari Ini" (rotasi by tanggal).
+  const [selectedChallenge, setSelectedChallenge] = useState(null);
+  // Level dalam scenario yang dipilih (1-100)
+  const [selectedLevel, setSelectedLevel] = useState(1);
   const [progress, setProgress] = useState({ umrah: 1, profesi: 0, beasiswa: 0 });
   // Default 0 (bukan 45 magic number) — biar ga ada flash angka acak sebelum sync dari Firestore.
   const [xp, setXp] = useState(0);
@@ -38,6 +43,26 @@ export default function TulisNoonApp() {
     { id: 2, type: 'lesson', text: 'Selesai: Salam & Sapaan', emoji: '🤝', time: '5 jam lalu', user: 'Siti' },
     { id: 3, type: 'badge', text: 'Lulus Quiz Pasar Madinah', emoji: '🏆', time: '1 hari lalu', user: 'Yusuf' },
   ]);
+  // Offline detection — tampilkan banner sopan kalau user kehilangan koneksi.
+  // Penting krn app pakai Firestore (perlu internet buat sync XP/progress).
+  const [isOffline, setIsOffline] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    // Initial state (kalau user buka app dalam keadaan offline)
+    setIsOffline(!navigator.onLine);
+
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // Sync data dari Firebase auth (Firestore users collection) ke state lokal
   useEffect(() => {
@@ -112,6 +137,39 @@ export default function TulisNoonApp() {
       }}/>
 
       <div className="relative max-w-md mx-auto min-h-screen flex flex-col">
+        {/* Offline banner — sticky di atas, muncul di semua screen kalau koneksi terputus.
+            Wording: sopan, Islamic, tidak menyalahkan user. */}
+        {isOffline && (
+          <div
+            className="sticky top-0 z-50 px-4 py-3 flex items-start gap-3 shadow-md"
+            style={{
+              background: 'linear-gradient(90deg, #8b4a2a, #a05536)',
+              color: '#faf6ee',
+              borderBottom: '2px solid #c9a961',
+            }}
+            role="alert"
+            aria-live="polite"
+          >
+            <div
+              className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-lg"
+              style={{ background: 'rgba(255,255,255,0.15)' }}
+            >
+              🌙
+            </div>
+            <div className="flex-1 min-w-0">
+              <p
+                className="text-sm font-semibold leading-snug"
+                style={{ fontFamily: 'Fraunces, serif' }}
+              >
+                Maaf, koneksi internet terputus
+              </p>
+              <p className="text-xs leading-relaxed mt-0.5" style={{ opacity: 0.92 }}>
+                Mohon periksa jaringanmu — bi idznillah akan tersambung kembali. Progres belajarmu insyaAllah aman tersimpan.
+              </p>
+            </div>
+          </div>
+        )}
+
         {screen === null && (
           <div className="flex-1 flex items-center justify-center px-6">
             <div className="text-center">
@@ -146,7 +204,7 @@ export default function TulisNoonApp() {
         {screen === 'main' && (
           <>
             <div className="flex-1 pb-20">
-              {tab === 'home' && <HomeTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} onOpenLesson={() => { setSelectedPath({id:'umrah', title:'Wisatawan & Jamaah Umrah'}); setScreen('lessons'); }} onOpenGame={(g) => { setSelectedGame(g); setScreen('game'); }} onOpenChallenge={() => setScreen('challenge')} onOpenGuru={() => setScreen('guru')} achievements={achievements} />}
+              {tab === 'home' && <HomeTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} onOpenLesson={() => { setSelectedPath({id:'umrah', title:'Wisatawan & Jamaah Umrah'}); setScreen('lessons'); }} onOpenGame={(g) => { setSelectedGame(g); setScreen('game'); }} onOpenChallenge={(scenario) => { setSelectedChallenge(scenario || getTodayChallenge()); setScreen('challenge-levels'); }} onOpenGuru={() => setScreen('guru')} achievements={achievements} />}
               {tab === 'belajar' && <BelajarTab onSelectPath={(p) => { setSelectedPath(p); setScreen('lessons'); }} onOpenGuru={() => setScreen('guru')} progress={progress} />}
               {tab === 'sosial' && <SosialTab achievements={achievements} userName={userName} />}
               {tab === 'profil' && <ProfilTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} progress={progress} onOpenPremium={() => setScreen('premium')} />}
@@ -166,12 +224,34 @@ export default function TulisNoonApp() {
           awardXp(earned);
           setScreen('main');
         }} />}
-        {screen === 'challenge' && <ChallengeScreen
+        {screen === 'challenge-levels' && <ChallengeLevelsScreen
+          scenario={selectedChallenge || getTodayChallenge()}
+          challengeProgress={authProfile?.challengeProgress?.[(selectedChallenge || getTodayChallenge())?.id] || {}}
           onBack={() => setScreen('main')}
-          onComplete={(earned) => awardXp(earned)}
+          onSelectLevel={(lvl) => {
+            setSelectedLevel(lvl);
+            setScreen('challenge');
+          }}
+        />}
+        {screen === 'challenge' && <ChallengeScreen
+          scenario={selectedChallenge || getTodayChallenge()}
+          levelNumber={selectedLevel}
+          existingProgress={authProfile?.challengeProgress?.[(selectedChallenge || getTodayChallenge())?.id]?.[selectedLevel]}
+          onBack={() => setScreen('challenge-levels')}
+          onComplete={({ earned, score, totalQuestions }) => {
+            awardXp(earned);
+            const scn = selectedChallenge || getTodayChallenge();
+            saveChallengeProgress({
+              scenarioId: scn.id,
+              level: selectedLevel,
+              score,
+              totalQuestions,
+              xpEarned: earned,
+            }).catch((err) => console.error('Save progress error:', err));
+          }}
           onShare={(text) => {
             setAchievements(a => [{ id: Date.now(), type:'challenge', text:text, emoji:'⚡', time:'baru saja', user: userName || 'Anda' }, ...a]);
-            setScreen('main');
+            setScreen('challenge-levels');
           }}
         />}
         {screen === 'guru' && <GuruScreen onBack={() => setScreen('main')} onSelectGuru={(g) => { setSelectedGuru(g); setScreen('guru-detail'); }} />}
@@ -609,25 +689,53 @@ function HomeTab({ userName, userProfile, xp, streak, onOpenLesson, onOpenGame, 
         )}
       </div>
 
-      {/* Daily Challenge Card */}
-      <button onClick={onOpenChallenge} className="w-full text-left rounded-2xl p-5 mb-5 relative overflow-hidden active:scale-[0.98] transition-transform" style={{ background: 'linear-gradient(135deg, #0a4d3c, #1a6b56)' }}>
-        <div className="absolute -right-6 -top-6 text-8xl opacity-15" style={{ fontFamily: 'Amiri, serif', color: '#c9a961' }}>ن</div>
-        <div className="flex items-center gap-2 mb-2">
-          <Zap size={16} color="#c9a961" />
-          <p className="text-xs tracking-widest uppercase text-white opacity-90">Tantangan Hari Ini</p>
-        </div>
-        <h3 className="text-xl text-white mb-1" style={{ fontFamily: 'Fraunces, serif', fontWeight: 600 }}>Pasar Madinah</h3>
-        <p className="text-sm text-white opacity-80 mb-3">5 frasa belanja · 2 menit · +30 XP</p>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <div className="flex -space-x-1">
-              {['#c9a961','#d4b876','#e8c885'].map((c,i)=>(<div key={i} className="w-5 h-5 rounded-full border-2" style={{background:c,borderColor:'#0a4d3c'}}/>))}
+      {/* Daily Challenge Card — rotasi berdasarkan tanggal */}
+      {(() => {
+        const todayChallenge = getTodayChallenge();
+        const otherChallenges = CHALLENGE_SCENARIOS.filter((s) => s.id !== todayChallenge.id);
+        return (
+          <>
+            <button onClick={() => onOpenChallenge(todayChallenge)} className="w-full text-left rounded-2xl p-5 mb-5 relative overflow-hidden active:scale-[0.98] transition-transform" style={{ background: todayChallenge.bgGradient }}>
+              <div className="absolute -right-6 -top-6 text-8xl opacity-15" style={{ fontFamily: 'Amiri, serif', color: '#c9a961' }}>{todayChallenge.emoji}</div>
+              <div className="flex items-center gap-2 mb-2">
+                <Zap size={16} color="#c9a961" />
+                <p className="text-xs tracking-widest uppercase text-white opacity-90">Tantangan Hari Ini</p>
+              </div>
+              <h3 className="text-xl text-white mb-1" style={{ fontFamily: 'Fraunces, serif', fontWeight: 600 }}>{todayChallenge.name}</h3>
+              <p className="text-sm text-white opacity-80 mb-1" style={{ fontFamily: 'Amiri, serif' }}>{todayChallenge.arName}</p>
+              <p className="text-sm text-white opacity-80 mb-3">{todayChallenge.desc} · 5 soal · max +40 XP</p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <div className="flex -space-x-1">
+                    {['#c9a961','#d4b876','#e8c885'].map((c,i)=>(<div key={i} className="w-5 h-5 rounded-full border-2" style={{background:c,borderColor:todayChallenge.color}}/>))}
+                  </div>
+                  <span className="text-xs text-white opacity-80">142 user sudah ikut</span>
+                </div>
+                <span className="text-sm font-semibold text-white flex items-center gap-1">Mulai <ChevronRight size={14}/></span>
+              </div>
+            </button>
+
+            {/* Tantangan Lain — 3 lokasi yang ga muncul sebagai "Hari Ini" */}
+            <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#8b6b3d' }}>Tantangan Lain</p>
+            <div className="grid grid-cols-3 gap-2 mb-5">
+              {otherChallenges.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => onOpenChallenge(c)}
+                  className="p-3 rounded-2xl text-left active:scale-[0.98] transition-transform"
+                  style={{ background: 'white', border: '1px solid rgba(10,77,60,0.08)' }}
+                >
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl mb-2" style={{ background: `${c.color}15` }}>
+                    {c.emoji}
+                  </div>
+                  <p className="font-semibold text-xs mb-0.5 leading-tight" style={{ color: '#1a1a1a' }}>{c.name}</p>
+                  <p className="text-[10px] leading-tight" style={{ color: '#8b6b3d' }}>{c.desc}</p>
+                </button>
+              ))}
             </div>
-            <span className="text-xs text-white opacity-80">142 user sudah ikut</span>
-          </div>
-          <span className="text-sm font-semibold text-white flex items-center gap-1">Mulai <ChevronRight size={14}/></span>
-        </div>
-      </button>
+          </>
+        );
+      })()}
 
       {/* Continue Learning */}
       <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#8b6b3d' }}>Lanjut Belajar</p>
@@ -643,27 +751,132 @@ function HomeTab({ userName, userProfile, xp, streak, onOpenLesson, onOpenGame, 
         <ChevronRight size={18} style={{ color: '#8b6b3d' }} />
       </button>
 
-      {/* Quick Games */}
-      <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#8b6b3d' }}>Game Cepat</p>
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        {[
-          { id:'image-quiz', t:'Tebak Gambar', d:'Visual', icon:ImageIcon, color:'#0a4d3c', bg:'rgba(10,77,60,0.1)' },
-          { id:'video-quiz', t:'Quiz Video', d:'Skenario', icon:Play, color:'#7a3d2a', bg:'rgba(122,61,42,0.1)' },
-          { id:'chat-roleplay', t:'AI Roleplay', d:'Ngobrol', icon:Bot, color:'#8b6b3d', bg:'rgba(139,107,61,0.15)' },
-          { id:'story', t:'Cerita', d:'Interaktif', icon:BookOpen, color:'#0a4d3c', bg:'rgba(10,77,60,0.1)' },
-        ].map((g,i) => {
-          const Icon = g.icon;
-          return (
-            <button key={i} onClick={() => onOpenGame(g)} className="p-4 rounded-2xl text-left active:scale-[0.98] transition-transform" style={{ background: 'white', border: '1px solid rgba(10,77,60,0.08)' }}>
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3" style={{ background: g.bg }}>
-                <Icon size={18} style={{ color: g.color }} />
-              </div>
-              <p className="font-semibold text-sm" style={{ color: '#1a1a1a' }}>{g.t}</p>
-              <p className="text-xs" style={{ color: '#666' }}>{g.d}</p>
-            </button>
-          );
-        })}
-      </div>
+      {/* Quick Games — di-rekomendasi berdasarkan minat user dari onboarding */}
+      {(() => {
+        // Mapping affinity: setiap game cocok untuk minat-minat tertentu.
+        // Logika rule-based (bukan ML beneran) — cukup untuk v1.
+        // Phase 2 nanti bisa di-upgrade pakai ML beneran yang track behavior user
+        // (mana game yang sering dimainin, completion rate, dll).
+        const allGames = [
+          {
+            id: 'image-quiz', t: 'Tebak Gambar', d: 'Visual',
+            icon: ImageIcon, color: '#0a4d3c', bg: 'rgba(10,77,60,0.1)',
+            interests: ['food', 'travel', 'family', 'sports'],
+            personalizedDesc: {
+              food: 'Tebak makanan Arab',
+              travel: 'Tebak tempat-tempat',
+              family: 'Tebak benda keluarga',
+              sports: 'Tebak olahraga',
+            },
+          },
+          {
+            id: 'video-quiz', t: 'Quiz Video', d: 'Skenario',
+            icon: Play, color: '#7a3d2a', bg: 'rgba(122,61,42,0.1)',
+            interests: ['travel', 'business', 'religion', 'family'],
+            personalizedDesc: {
+              travel: 'Skenario umrah',
+              business: 'Skenario kerja',
+              religion: 'Skenario masjid',
+              family: 'Skenario keluarga',
+            },
+          },
+          {
+            id: 'chat-roleplay', t: 'AI Roleplay', d: 'Ngobrol',
+            icon: Bot, color: '#8b6b3d', bg: 'rgba(139,107,61,0.15)',
+            interests: ['religion', 'business', 'family', 'travel'],
+            personalizedDesc: {
+              religion: 'Ngobrol dgn ustadz',
+              business: 'Ngobrol kerja',
+              family: 'Ngobrol keluarga',
+              travel: 'Ngobrol jamaah',
+            },
+          },
+          {
+            id: 'story', t: 'Cerita', d: 'Interaktif',
+            icon: BookOpen, color: '#0a4d3c', bg: 'rgba(10,77,60,0.1)',
+            interests: ['history', 'movies', 'religion', 'family'],
+            personalizedDesc: {
+              history: 'Sejarah Islam',
+              movies: 'Cerita seru',
+              religion: 'Kisah sahabat',
+              family: 'Cerita keluarga',
+            },
+          },
+        ];
+
+        const userInterests = userProfile?.interests || [];
+
+        // Hitung match score untuk tiap game: jumlah minat user yang overlap dengan
+        // tag interests game itu. Game tanpa match (score 0) tetap ditampilkan tapi
+        // di-posisi terakhir.
+        const scored = allGames.map((g) => {
+          const matchedInterests = g.interests.filter((i) => userInterests.includes(i));
+          // Kustomisasi deskripsi card berdasarkan minat pertama yang match
+          const personalDesc = matchedInterests.length > 0
+            ? g.personalizedDesc[matchedInterests[0]]
+            : g.d;
+          return {
+            ...g,
+            score: matchedInterests.length,
+            displayDesc: personalDesc,
+          };
+        });
+
+        // Sort: skor tertinggi dulu, stable sort by index sebagai tiebreaker
+        scored.sort((a, b) => b.score - a.score);
+
+        const topMatchScore = scored[0]?.score || 0;
+        const hasPersonalization = topMatchScore > 0;
+
+        return (
+          <>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs tracking-widest uppercase" style={{ color: '#8b6b3d' }}>
+                {hasPersonalization ? 'Direkomendasikan Untukmu' : 'Game Cepat'}
+              </p>
+              {hasPersonalization && (
+                <span className="text-xs" style={{ color: '#c9a961' }}>
+                  ✨ Berdasarkan minatmu
+                </span>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              {scored.map((g) => {
+                const Icon = g.icon;
+                const isTopMatch = hasPersonalization && g.score === topMatchScore;
+                return (
+                  <button
+                    key={g.id}
+                    onClick={() => onOpenGame(g)}
+                    className="p-4 rounded-2xl text-left active:scale-[0.98] transition-transform relative"
+                    style={{
+                      background: 'white',
+                      border: isTopMatch
+                        ? '1.5px solid rgba(201,169,97,0.6)'
+                        : '1px solid rgba(10,77,60,0.08)',
+                      boxShadow: isTopMatch ? '0 4px 16px -8px rgba(201,169,97,0.5)' : 'none',
+                    }}
+                  >
+                    {isTopMatch && (
+                      <span
+                        className="absolute -top-2 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold"
+                        style={{ background: '#c9a961', color: 'white' }}
+                      >
+                        ✨ Untukmu
+                      </span>
+                    )}
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3" style={{ background: g.bg }}>
+                      <Icon size={18} style={{ color: g.color }} />
+                    </div>
+                    <p className="font-semibold text-sm" style={{ color: '#1a1a1a' }}>{g.t}</p>
+                    <p className="text-xs" style={{ color: '#666' }}>{g.displayDesc}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        );
+      })()}
 
       {/* Guru / Teacher Card */}
       <button onClick={onOpenGuru} className="w-full text-left rounded-2xl p-5 mb-6 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #7a3d2a, #a05536)' }}>
@@ -1582,7 +1795,159 @@ function StoryGame({ onBack, onComplete }) {
 }
 
 // ============ DAILY CHALLENGE ============
-function ChallengeScreen({ onBack, onShare, onComplete }) {
+// ============================================================================
+// CHALLENGE LEVELS SCREEN — 5 halaman × 20 level dengan color coding hasil
+// - GOLD (gradient gold) → user udah perfect score di level ini
+// - RED  (warm red) → user udah main tapi belum perfect
+// - DEFAULT (white) → belum dimainkan
+// - LOCKED (grey + 🔒) → Coming Soon, konten belum di-seed
+// ============================================================================
+function ChallengeLevelsScreen({ scenario, challengeProgress = {}, onBack, onSelectLevel }) {
+  const levels = scenario.levels || [];
+  const seededCount = levels.filter((l) => !l.comingSoon && l.questions?.length > 0).length;
+  const goldCount = Object.values(challengeProgress).filter((p) => p.perfectAchieved).length;
+
+  // Pagination: 20 level per halaman = 5 halaman buat 100 level
+  const PAGE_SIZE = 20;
+  const totalPages = Math.ceil(levels.length / PAGE_SIZE);
+  const [page, setPage] = useState(0);
+
+  const pageStart = page * PAGE_SIZE;
+  const pageLevels = levels.slice(pageStart, pageStart + PAGE_SIZE);
+
+  return (
+    <div className="flex-1 flex flex-col px-5 py-6">
+      <div className="flex items-center gap-3 mb-4">
+        <button onClick={onBack} className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(10,77,60,0.08)' }}>
+          <ArrowLeft size={18} style={{ color: '#0a4d3c' }} />
+        </button>
+        <div className="flex-1">
+          <p className="text-xs tracking-widest uppercase" style={{ color: '#8b6b3d' }}>Pilih Level</p>
+          <h2 className="text-xl font-semibold" style={{ color: scenario.color, fontFamily: 'Fraunces, serif' }}>
+            {scenario.emoji} {scenario.name}
+          </h2>
+        </div>
+      </div>
+
+      {/* Header card dengan progress + GOLD count */}
+      <div className="rounded-2xl p-4 mb-4 relative overflow-hidden" style={{ background: scenario.bgGradient }}>
+        <div className="absolute -right-4 -top-4 text-6xl opacity-15">{scenario.emoji}</div>
+        <p className="text-xs tracking-widest uppercase opacity-80 text-white mb-1">{scenario.arName}</p>
+        <p className="text-sm text-white opacity-90 mb-3">{scenario.location}</p>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full" style={{ background: 'rgba(201,169,97,0.3)' }}>
+              <Trophy size={11} color="#c9a961" />
+              <span className="text-xs font-bold text-white">{goldCount} Gold</span>
+            </div>
+            <span className="text-xs text-white opacity-80">{seededCount}/100 tersedia</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Pagination tabs */}
+      <div className="flex gap-1.5 mb-4 overflow-x-auto pb-1">
+        {Array.from({ length: totalPages }).map((_, i) => {
+          const isActive = i === page;
+          const rangeStart = i * PAGE_SIZE + 1;
+          const rangeEnd = Math.min((i + 1) * PAGE_SIZE, levels.length);
+          return (
+            <button
+              key={i}
+              onClick={() => setPage(i)}
+              className="px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all"
+              style={{
+                background: isActive ? scenario.color : 'rgba(10,77,60,0.06)',
+                color: isActive ? 'white' : '#8b6b3d',
+              }}
+            >
+              {rangeStart}-{rangeEnd}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Grid 4×5 = 20 level per halaman */}
+      <div className="grid grid-cols-4 gap-2.5 mb-4">
+        {pageLevels.map((lvl) => {
+          const isSeeded = !lvl.comingSoon && lvl.questions?.length > 0;
+          const progress = challengeProgress[lvl.level];
+          const totalQ = lvl.questions?.length || 5;
+          const isGold = progress?.perfectAchieved;
+          const isRed = progress && !progress.perfectAchieved && progress.attempts > 0;
+
+          // Visual style per tier
+          let cardStyle, numberColor, badgeIcon;
+          if (!isSeeded) {
+            cardStyle = { background: 'rgba(139,107,61,0.06)', border: '1px dashed rgba(139,107,61,0.25)', opacity: 0.6 };
+            numberColor = '#8b6b3d';
+            badgeIcon = <Lock size={12} style={{ color: '#8b6b3d' }} />;
+          } else if (isGold) {
+            cardStyle = { background: 'linear-gradient(135deg, #fef6e1, #fff)', border: '2px solid #c9a961', boxShadow: '0 6px 16px -8px rgba(201,169,97,0.5)' };
+            numberColor = '#c9a961';
+            badgeIcon = <Star size={11} style={{ color: '#c9a961' }} fill="#c9a961" />;
+          } else if (isRed) {
+            cardStyle = { background: 'linear-gradient(135deg, #fdeae1, #fff)', border: '2px solid #a05536' };
+            numberColor = '#a05536';
+            badgeIcon = <X size={11} style={{ color: '#a05536' }} />;
+          } else {
+            cardStyle = { background: 'white', border: `1.5px solid ${scenario.color}40` };
+            numberColor = scenario.color;
+            badgeIcon = <Zap size={11} style={{ color: scenario.color }} />;
+          }
+
+          return (
+            <button
+              key={lvl.level}
+              onClick={() => isSeeded && onSelectLevel(lvl.level)}
+              disabled={!isSeeded}
+              className="aspect-square rounded-xl flex flex-col items-center justify-center relative active:scale-[0.95] transition-transform p-1"
+              style={cardStyle}
+            >
+              <span className="text-sm font-bold leading-none mb-1" style={{ color: numberColor, fontFamily: 'Fraunces, serif' }}>{lvl.level}</span>
+              {badgeIcon}
+              {isSeeded && progress && (
+                <span className="text-[8px] font-semibold mt-0.5" style={{ color: numberColor }}>
+                  {progress.bestScore}/{totalQ}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Legend — penjelasan warna */}
+      <div className="rounded-xl p-3 text-xs space-y-1.5" style={{ background: 'rgba(10,77,60,0.04)' }}>
+        <p className="font-semibold mb-1.5" style={{ color: '#0a4d3c' }}>Keterangan warna:</p>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded" style={{ background: 'linear-gradient(135deg, #fef6e1, #fff)', border: '2px solid #c9a961' }} />
+          <span style={{ color: '#3d2817' }}><strong style={{ color: '#c9a961' }}>GOLD</strong> — Skor sempurna ⭐</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded" style={{ background: 'linear-gradient(135deg, #fdeae1, #fff)', border: '2px solid #a05536' }} />
+          <span style={{ color: '#3d2817' }}><strong style={{ color: '#a05536' }}>RED</strong> — Belum sempurna, ulangi untuk GOLD</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded" style={{ background: 'white', border: `1.5px solid ${scenario.color}` }} />
+          <span style={{ color: '#3d2817' }}>Belum dimainkan</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded" style={{ background: 'rgba(139,107,61,0.1)', border: '1px dashed rgba(139,107,61,0.3)' }} />
+          <span style={{ color: '#3d2817' }}>Coming Soon 🔒</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChallengeScreen({ onBack, onShare, onComplete, scenario, levelNumber, existingProgress }) {
+  // Fallback ke Pasar Madinah Level 1 kalau scenario/level ga di-pass (defensive)
+  const activeScenario = scenario || CHALLENGE_SCENARIOS[0];
+  const activeLevel = activeScenario.levels?.find((l) => l.level === levelNumber)
+    || activeScenario.levels?.[0]
+    || { level: 1, title: activeScenario.name, questions: [] };
+  const questions = activeLevel.questions || [];
+
   const [stage, setStage] = useState('intro'); // intro, playing, complete
   const [q, setQ] = useState(0);
   const [score, setScore] = useState(0);
@@ -1590,69 +1955,82 @@ function ChallengeScreen({ onBack, onShare, onComplete }) {
   const [timeLeft, setTimeLeft] = useState(10);
   const [xpAwarded, setXpAwarded] = useState(false);
 
-  // Award XP otomatis sekali aja saat masuk stage 'complete' — supaya user dapet XP
-  // meskipun langsung tap "Kembali" tanpa share.
+  // Award XP + save progress otomatis sekali aja saat masuk stage 'complete'.
+  // XP scaling: max = getXpForLevel(level), earned proporsional ke score.
   useEffect(() => {
-    if (stage === 'complete' && !xpAwarded) {
-      const earnedXp = score * 6 + (score === 5 ? 10 : 0);
-      if (onComplete) onComplete(earnedXp);
+    if (stage === 'complete' && !xpAwarded && questions.length > 0) {
+      const maxXp = getXpForLevel(activeLevel.level);
+      const earnedXp = Math.round((score / questions.length) * maxXp);
+      if (onComplete) {
+        onComplete({ earned: earnedXp, score, totalQuestions: questions.length });
+      }
       setXpAwarded(true);
     }
-  }, [stage, score, xpAwarded, onComplete]);
+  }, [stage, score, xpAwarded, onComplete, questions.length, activeLevel.level]);
 
-  const questions = [
-    { ar: 'كَمِ السِّعْر؟', options: ['Apa namamu', 'Berapa harganya', 'Di mana hotel', 'Selamat datang'], correct: 1 },
-    { ar: 'أَيْنَ الْحَمَّام؟', options: ['Di mana toilet', 'Berapa jam', 'Saya lapar', 'Terima kasih'], correct: 0 },
-    { ar: 'هَذَا غَالِي', options: ['Ini murah', 'Ini bagus', 'Ini mahal', 'Ini lezat'], correct: 2 },
-    { ar: 'مِنْ فَضْلِكَ', options: ['Maaf', 'Tolong/Silakan', 'Selamat tinggal', 'Saya tidak tahu'], correct: 1 },
-    { ar: 'لَا أَفْهَم', options: ['Saya mengerti', 'Saya lapar', 'Saya tidak mengerti', 'Saya capek'], correct: 2 },
-  ];
-
+  // Timer hanya jalan untuk soal MC (Match soal punya timer beda atau tanpa timer)
   useEffect(() => {
     if (stage !== 'playing') return;
-    if (timeLeft === 0) { handleAnswer(-1); return; }
+    const currentQ = questions[q];
+    if (currentQ?.type === 'match') return; // Match soal ga pakai countdown
+    if (timeLeft === 0) { handleMcAnswer(-1); return; }
     const t = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
     return () => clearTimeout(t);
-  }, [timeLeft, stage]);
+  }, [timeLeft, stage, q, questions]);
 
-  const handleAnswer = (idx) => {
+  const handleMcAnswer = (idx) => {
     setSelected(idx);
-    if (idx === questions[q].correct) setScore(s => s+1);
+    if (idx === questions[q].correct) setScore(s => s + 1);
     setTimeout(() => {
       if (q === questions.length - 1) setStage('complete');
-      else { setQ(q+1); setSelected(null); setTimeLeft(10); }
+      else { setQ(q + 1); setSelected(null); setTimeLeft(10); }
     }, 1000);
   };
 
+  // Match soal: user dapet 1 poin HANYA kalau semua pasangan benar
+  // pada percobaan pertama (firstTryPerfect = true).
+  // Kalau pernah salah pasangkan sekali pun, soal dianggap belum dikuasai → 0 poin.
+  const handleMatchComplete = (firstTryPerfect) => {
+    if (firstTryPerfect) setScore(s => s + 1);
+    setTimeout(() => {
+      if (q === questions.length - 1) setStage('complete');
+      else { setQ(q + 1); setSelected(null); setTimeLeft(10); }
+    }, 800);
+  };
+
   if (stage === 'intro') {
+    const maxXp = getXpForLevel(activeLevel.level);
+    const hasMc = questions.some((qq) => qq.type === 'mc');
+    const hasMatch = questions.some((qq) => qq.type === 'match');
     return (
       <div className="flex-1 flex flex-col px-5 py-6">
         <button onClick={onBack} className="w-10 h-10 rounded-full flex items-center justify-center mb-6" style={{ background: 'rgba(10,77,60,0.08)' }}><ArrowLeft size={18} style={{ color: '#0a4d3c' }} /></button>
 
         <div className="flex-1 flex flex-col items-center justify-center text-center">
           <div className="relative mb-6">
-            <div className="absolute inset-0 blur-3xl opacity-40" style={{ background: '#c9a961', borderRadius: '50%' }} />
-            <div className="relative w-24 h-24 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0a4d3c, #1a6b56)' }}>
-              <Zap size={40} color="#c9a961" />
+            <div className="absolute inset-0 blur-3xl opacity-40" style={{ background: activeScenario.color, borderRadius: '50%' }} />
+            <div className="relative w-24 h-24 rounded-full flex items-center justify-center text-5xl" style={{ background: activeScenario.bgGradient }}>
+              {activeScenario.emoji}
             </div>
           </div>
-          <p className="text-xs tracking-[0.3em] uppercase mb-2" style={{ color: '#c9a961' }}>Tantangan Hari Ini</p>
-          <h2 className="text-3xl mb-3" style={{ fontFamily: 'Fraunces, serif', fontWeight: 600, color: '#0a4d3c' }}>Pasar Madinah</h2>
-          <p className="text-base mb-6 max-w-xs" style={{ color: '#3d2817' }}>5 pertanyaan kilat. 10 detik per soal. Tunjukkan kecepatanmu!</p>
+          <p className="text-xs tracking-[0.3em] uppercase mb-2" style={{ color: '#c9a961' }}>Level {activeLevel.level} · {activeScenario.name}</p>
+          <h2 className="text-3xl mb-1" style={{ fontFamily: 'Fraunces, serif', fontWeight: 600, color: activeScenario.color }}>{activeLevel.title}</h2>
+          <p className="text-base mb-1" style={{ fontFamily: 'Amiri, serif', color: '#8b6b3d' }}>{activeScenario.arName}</p>
+          <p className="text-sm mb-6 max-w-xs" style={{ color: '#3d2817' }}>{activeLevel.description || activeScenario.location}</p>
 
           <div className="space-y-2 w-full max-w-xs mb-8">
             <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'white' }}>
-              <Target size={16} style={{ color: '#0a4d3c' }} />
-              <span className="text-sm" style={{ color: '#1a1a1a' }}>5 soal pilihan ganda</span>
+              <Target size={16} style={{ color: activeScenario.color }} />
+              <span className="text-sm" style={{ color: '#1a1a1a' }}>{questions.length} soal {hasMc && hasMatch ? '(MC + Match)' : hasMatch ? '(Match)' : '(MC)'}</span>
             </div>
             <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'white' }}>
-              <Calendar size={16} style={{ color: '#0a4d3c' }} />
-              <span className="text-sm" style={{ color: '#1a1a1a' }}>+30 XP, naik streak</span>
+              <Star size={16} style={{ color: activeScenario.color }} />
+              <span className="text-sm" style={{ color: '#1a1a1a' }}>Max +{maxXp} XP (perfect)</span>
             </div>
           </div>
         </div>
 
-        <button onClick={() => setStage('playing')} className="w-full py-4 rounded-2xl text-white font-medium flex items-center justify-center gap-2" style={{ background: '#0a4d3c' }}>
+        <button onClick={() => setStage('playing')} className="w-full py-4 rounded-2xl text-white font-medium flex items-center justify-center gap-2" style={{ background: activeScenario.color }}>
           Mulai Tantangan <Zap size={18} />
         </button>
       </div>
@@ -1660,80 +2038,307 @@ function ChallengeScreen({ onBack, onShare, onComplete }) {
   }
 
   if (stage === 'complete') {
-    const xp = score * 6 + (score === questions.length ? 10 : 0);
+    const maxXp = getXpForLevel(activeLevel.level);
+    const xp = questions.length > 0 ? Math.round((score / questions.length) * maxXp) : 0;
+    const isPerfect = score === questions.length && questions.length > 0;
+    const isPartial = score > 0 && !isPerfect;
+    const isZero = score === 0;
+
+    // Color theming berdasarkan performance
+    const tier = isPerfect
+      ? { label: 'SEMPURNA!', emoji: '🏆', accent: '#c9a961', gradient: 'linear-gradient(135deg, #d4b876, #c9a961)', message: `Level GOLD diraih untuk Level ${activeLevel.level}!`, sub: 'Kamu menguasai semua kosakata di level ini' }
+      : isPartial
+      ? { label: 'COBA LAGI', emoji: '🔥', accent: '#a05536', gradient: 'linear-gradient(135deg, #a05536, #7a3d2a)', message: `Capai ${questions.length}/${questions.length} untuk dapat GOLD ⭐`, sub: 'Ulangi level untuk kuasai semua kosakata' }
+      : { label: 'BELUM BERHASIL', emoji: '🌱', accent: '#8b6b3d', gradient: 'linear-gradient(135deg, #8b6b3d, #6b4f2a)', message: 'Jangan menyerah — semua orang mulai dari sini', sub: 'Coba lagi, pasti bisa!' };
+
     return (
       <div className="flex-1 flex flex-col px-5 py-6 items-center justify-center text-center">
-        <div className="relative mb-6">
-          <div className="absolute inset-0 blur-3xl opacity-40" style={{ background: '#c9a961', borderRadius: '50%' }} />
-          <div className="relative w-28 h-28 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #c9a961, #d4b876)' }}>
-            <Trophy size={48} color="white" />
+        {/* Trophy/Badge dengan warna sesuai tier */}
+        <div className="relative mb-4">
+          <div className="absolute inset-0 blur-3xl opacity-50" style={{ background: tier.accent, borderRadius: '50%' }} />
+          <div className="relative w-32 h-32 rounded-full flex items-center justify-center text-6xl" style={{ background: tier.gradient, boxShadow: `0 20px 40px -10px ${tier.accent}80` }}>
+            {tier.emoji}
           </div>
         </div>
-        <h2 className="text-3xl mb-2" style={{ fontFamily: 'Fraunces, serif', fontWeight: 600, color: '#0a4d3c' }}>Tantangan Selesai!</h2>
-        <p className="text-base mb-1" style={{ color: '#3d2817' }}>Skor: {score}/{questions.length}</p>
-        <div className="flex items-center gap-2 mt-3 mb-6 px-5 py-2 rounded-full" style={{ background: 'rgba(201,169,97,0.2)' }}>
-          <Star size={16} style={{ color: '#c9a961' }} fill="#c9a961" />
-          <span className="text-sm font-semibold" style={{ color: '#8b6b3d' }}>+{xp} XP</span>
+
+        {/* Tier label besar */}
+        <p className="text-xs tracking-[0.3em] uppercase mb-2 font-bold" style={{ color: tier.accent }}>{tier.label}</p>
+
+        {/* Title */}
+        <h2 className="text-3xl mb-2" style={{ fontFamily: 'Fraunces, serif', fontWeight: 700, color: '#0a4d3c' }}>
+          Level {activeLevel.level}
+        </h2>
+        <p className="text-sm mb-4" style={{ color: '#8b6b3d' }}>{activeScenario.emoji} {activeScenario.name} · {activeLevel.title}</p>
+
+        {/* Score display besar */}
+        <div className="flex items-center gap-3 mb-3">
+          <div className="text-center">
+            <p className="text-5xl font-bold" style={{ fontFamily: 'Fraunces, serif', color: tier.accent }}>{score}</p>
+            <p className="text-xs uppercase tracking-widest" style={{ color: '#8b6b3d' }}>Benar</p>
+          </div>
+          <span className="text-3xl" style={{ color: '#8b6b3d' }}>/</span>
+          <div className="text-center">
+            <p className="text-5xl font-bold" style={{ fontFamily: 'Fraunces, serif', color: '#3d2817' }}>{questions.length}</p>
+            <p className="text-xs uppercase tracking-widest" style={{ color: '#8b6b3d' }}>Total</p>
+          </div>
         </div>
 
+        {/* XP pill */}
+        <div className="flex items-center gap-2 mb-2 px-5 py-2 rounded-full" style={{ background: `${tier.accent}25`, border: `1.5px solid ${tier.accent}` }}>
+          <Star size={16} style={{ color: tier.accent }} fill={tier.accent} />
+          <span className="text-sm font-bold" style={{ color: tier.accent }}>+{xp} XP</span>
+          <span className="text-xs" style={{ color: '#8b6b3d' }}>dari max {maxXp}</span>
+        </div>
+
+        {/* Message contextual */}
+        <p className="text-sm max-w-xs mb-1 mt-3" style={{ color: tier.accent, fontWeight: 600 }}>{tier.message}</p>
+        <p className="text-xs max-w-xs mb-6" style={{ color: '#8b6b3d' }}>{tier.sub}</p>
+
+        {/* Buttons */}
         <div className="w-full max-w-xs space-y-2">
-          <button onClick={() => {
-            const text = `Tantangan Pasar Madinah selesai dengan skor ${score}/${questions.length}`;
-            onShare(text);
-            // Try open WA share
-            const waText = encodeURIComponent(`Saya baru selesai Tantangan Pasar Madinah di Tulis Noon! 🎉\nSkor: ${score}/${questions.length}\n\nYuk belajar bahasa Arab bareng: [link aplikasi]`);
-            window.open(`https://wa.me/?text=${waText}`, '_blank');
-          }} className="w-full py-3 rounded-2xl flex items-center justify-center gap-2 text-white font-medium" style={{ background: '#25D366' }}>
-            <Share2 size={16} /> Bagikan ke WhatsApp
-          </button>
-          <button onClick={() => onShare(`Selesai tantangan dengan skor ${score}/${questions.length}`)} className="w-full py-3 rounded-2xl font-medium" style={{ background: '#0a4d3c', color: 'white' }}>
-            Posting ke Feed
-          </button>
-          <button onClick={onBack} className="w-full py-3 rounded-2xl text-sm" style={{ color: '#8b6b3d' }}>
-            Kembali ke Beranda
+          {/* Retry button - prominent kalau belum perfect */}
+          {!isPerfect && (
+            <button
+              onClick={() => {
+                // Reset state untuk replay level yang sama
+                setStage('intro');
+                setQ(0);
+                setScore(0);
+                setSelected(null);
+                setTimeLeft(10);
+                setXpAwarded(false);
+              }}
+              className="w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2"
+              style={{ background: tier.gradient, color: 'white', boxShadow: `0 10px 24px -8px ${tier.accent}80` }}
+            >
+              <Zap size={18} /> Ulangi untuk GOLD ⭐
+            </button>
+          )}
+
+          {/* WhatsApp share - kalau perfect aja, biar bangga */}
+          {isPerfect && (
+            <button onClick={() => {
+              const text = `Tantangan ${activeScenario.name} Level ${activeLevel.level} GOLD ⭐ — skor ${score}/${questions.length}`;
+              onShare(text);
+              const waText = encodeURIComponent(`Saya baru dapat GOLD ⭐ di Tantangan ${activeScenario.name} ${activeScenario.emoji} Level ${activeLevel.level} di Tulis Noon! 🏆\nSkor: ${score}/${questions.length} · +${xp} XP\n\nYuk belajar bahasa Arab bareng: https://tulis-noon.vercel.app`);
+              window.open(`https://wa.me/?text=${waText}`, '_blank');
+            }} className="w-full py-3 rounded-2xl flex items-center justify-center gap-2 text-white font-medium" style={{ background: '#25D366' }}>
+              <Share2 size={16} /> Pamerin ke WhatsApp
+            </button>
+          )}
+
+          <button onClick={onBack} className="w-full py-3 rounded-2xl text-sm font-semibold" style={{ background: 'rgba(10,77,60,0.08)', color: '#0a4d3c' }}>
+            Kembali ke Pilih Level
           </button>
         </div>
+
+        {/* Existing best score badge — kalau ada attempt sebelumnya */}
+        {existingProgress && existingProgress.attempts > 0 && (
+          <p className="text-xs mt-4" style={{ color: '#8b6b3d' }}>
+            Rekor terbaik: {existingProgress.bestScore}/{questions.length}
+            {existingProgress.perfectAchieved && ' ⭐'}
+            {' · '}
+            {existingProgress.attempts} kali main
+          </p>
+        )}
       </div>
     );
   }
 
-  // playing
+  // playing — render berbeda berdasarkan question type
   const current = questions[q];
+  const progressBar = (
+    <div className="flex items-center gap-3 mb-6">
+      <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'rgba(10,77,60,0.1)' }}>
+        <div className="h-full transition-all" style={{ width: `${((q+1)/questions.length)*100}%`, background: activeScenario.color }} />
+      </div>
+      <span className="text-xs font-semibold" style={{ color: activeScenario.color }}>{q+1}/{questions.length}</span>
+    </div>
+  );
+
+  if (current?.type === 'match') {
+    return (
+      <div className="flex-1 flex flex-col px-5 py-5">
+        {progressBar}
+        <MatchQuestion
+          question={current}
+          scenarioColor={activeScenario.color}
+          onComplete={handleMatchComplete}
+        />
+      </div>
+    );
+  }
+
+  // Default: MC (multiple choice)
   return (
     <div className="flex-1 flex flex-col px-5 py-5">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'rgba(10,77,60,0.1)' }}>
-          <div className="h-full transition-all" style={{ width: `${((q+1)/questions.length)*100}%`, background: '#0a4d3c' }} />
-        </div>
-        <span className="text-xs font-semibold" style={{ color: '#0a4d3c' }}>{q+1}/{questions.length}</span>
-      </div>
+      {progressBar}
 
       <div className="flex items-center justify-center mb-6">
         <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ background: timeLeft <= 3 ? 'rgba(201,169,97,0.2)' : 'rgba(10,77,60,0.08)' }}>
-          <span className="text-3xl font-bold" style={{ color: timeLeft <= 3 ? '#c9a961' : '#0a4d3c', fontFamily: 'Fraunces, serif' }}>{timeLeft}</span>
+          <span className="text-3xl font-bold" style={{ color: timeLeft <= 3 ? '#c9a961' : activeScenario.color, fontFamily: 'Fraunces, serif' }}>{timeLeft}</span>
         </div>
       </div>
 
       <p className="text-xs tracking-widest uppercase mb-3 text-center" style={{ color: '#8b6b3d' }}>Apa artinya?</p>
       <div className="rounded-3xl p-8 mb-6 text-center" style={{ background: 'white', boxShadow: '0 10px 40px -10px rgba(10,77,60,0.2)' }}>
-        <p className="text-4xl" style={{ fontFamily: 'Amiri, serif', color: '#0a4d3c' }}>{current.ar}</p>
+        <p className="text-4xl mb-2" style={{ fontFamily: 'Amiri, serif', color: activeScenario.color }}>{current.ar}</p>
+        {current.latin && (
+          <p className="text-xs italic" style={{ color: '#8b6b3d' }}>{current.latin}</p>
+        )}
       </div>
 
       <div className="space-y-2">
         {current.options.map((opt, idx) => {
           let bg = 'white', border = 'rgba(10,77,60,0.15)';
           if (selected !== null) {
-            if (idx === current.correct) { bg = 'rgba(10,77,60,0.08)'; border = '#0a4d3c'; }
+            if (idx === current.correct) { bg = 'rgba(10,77,60,0.08)'; border = activeScenario.color; }
             else if (idx === selected) { bg = 'rgba(201,169,97,0.15)'; border = '#c9a961'; }
           }
           return (
-            <button key={idx} onClick={() => selected === null && handleAnswer(idx)} className="w-full p-4 rounded-2xl text-left" style={{ background: bg, border: `2px solid ${border}`, color: '#1a1a1a' }}>
+            <button key={idx} onClick={() => selected === null && handleMcAnswer(idx)} className="w-full p-4 rounded-2xl text-left" style={{ background: bg, border: `2px solid ${border}`, color: '#1a1a1a' }}>
               {opt}
             </button>
           );
         })}
       </div>
     </div>
+  );
+}
+
+// ============================================================================
+// MATCH QUESTION — cocokkan vocab Arab dengan artinya
+// User tap kiri (Arab) lalu tap kanan (Indo) untuk pasangkan.
+// Pasangan benar → hijau, salah → reset, ulangi sampai semua benar
+// ============================================================================
+function MatchQuestion({ question, scenarioColor, onComplete }) {
+  const [matches, setMatches] = useState({}); // arIndex → idIndex
+  const [selectedAr, setSelectedAr] = useState(null);
+  const [shake, setShake] = useState(false);
+  // Track berapa kali user salah pasangkan. Kalau > 0 saat semua selesai,
+  // soal dianggap "tidak sempurna" → tidak dapat poin (biar fair dgn MC).
+  const [mistakes, setMistakes] = useState(0);
+  const [completed, setCompleted] = useState(false); // guard biar onComplete cuma dipanggil sekali
+
+  // Shuffle the Indonesian column on mount (Arab tetap urut original)
+  const [idOrder] = useState(() => {
+    const indices = question.pairs.map((_, i) => i);
+    // Fisher-Yates shuffle
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+    return indices;
+  });
+
+  // Auto-complete kalau semua udah ke-match dengan benar.
+  // Poin diberikan HANYA kalau mistakes === 0 (semua benar pada percobaan pertama).
+  useEffect(() => {
+    if (completed) return;
+    if (Object.keys(matches).length === question.pairs.length) {
+      const allCorrect = question.pairs.every((_, arIdx) => matches[arIdx] === arIdx);
+      if (allCorrect && onComplete) {
+        setCompleted(true);
+        // Pass `firstTryPerfect` flag — true hanya kalau 0 kesalahan
+        setTimeout(() => onComplete(mistakes === 0), 600);
+      }
+    }
+  }, [matches, question.pairs, onComplete, mistakes, completed]);
+
+  const handleArClick = (arIdx) => {
+    if (matches[arIdx] !== undefined) return; // udah matched
+    setSelectedAr(arIdx === selectedAr ? null : arIdx);
+  };
+
+  const handleIdClick = (idIdx) => {
+    if (selectedAr === null) return;
+    if (Object.values(matches).includes(idIdx)) return; // udah matched
+
+    if (idIdx === selectedAr) {
+      // Match benar
+      setMatches((m) => ({ ...m, [selectedAr]: idIdx }));
+      setSelectedAr(null);
+    } else {
+      // Salah — increment mistakes + shake feedback
+      setMistakes((c) => c + 1);
+      setShake(true);
+      setTimeout(() => {
+        setShake(false);
+        setSelectedAr(null);
+      }, 400);
+    }
+  };
+
+  return (
+    <>
+      <p className="text-xs tracking-widest uppercase mb-2 text-center" style={{ color: '#8b6b3d' }}>{question.instruction || 'Cocokkan pasangan'}</p>
+      <p className="text-sm mb-4 text-center" style={{ color: '#3d2817' }}>Tap kiri lalu tap kanan untuk pasangkan</p>
+
+      <div className={`grid grid-cols-2 gap-3 mb-4 ${shake ? 'animate-pulse' : ''}`}>
+        {/* Kolom Arab (kiri) */}
+        <div className="space-y-2">
+          {question.pairs.map((p, arIdx) => {
+            const isMatched = matches[arIdx] !== undefined;
+            const isSelected = selectedAr === arIdx;
+            return (
+              <button
+                key={arIdx}
+                onClick={() => handleArClick(arIdx)}
+                disabled={isMatched}
+                className="w-full p-3 rounded-xl text-center transition-all disabled:opacity-100"
+                style={{
+                  background: isMatched ? `${scenarioColor}15` : isSelected ? 'rgba(201,169,97,0.25)' : 'white',
+                  border: `2px solid ${isMatched ? scenarioColor : isSelected ? '#c9a961' : 'rgba(10,77,60,0.15)'}`,
+                  opacity: isMatched ? 0.7 : 1,
+                }}
+              >
+                <p className="text-xl" style={{ fontFamily: 'Amiri, serif', color: scenarioColor }}>{p.ar}</p>
+                {p.latin && <p className="text-[10px] italic mt-0.5" style={{ color: '#8b6b3d' }}>{p.latin}</p>}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Kolom Indonesia (kanan) — di-shuffle */}
+        <div className="space-y-2">
+          {idOrder.map((idIdx) => {
+            const isMatched = Object.values(matches).includes(idIdx);
+            return (
+              <button
+                key={idIdx}
+                onClick={() => handleIdClick(idIdx)}
+                disabled={isMatched}
+                className="w-full p-3 rounded-xl text-center transition-all disabled:opacity-100"
+                style={{
+                  background: isMatched ? `${scenarioColor}15` : 'white',
+                  border: `2px solid ${isMatched ? scenarioColor : 'rgba(10,77,60,0.15)'}`,
+                  opacity: isMatched ? 0.7 : 1,
+                  minHeight: '54px',
+                }}
+              >
+                <p className="text-sm" style={{ color: '#1a1a1a' }}>{question.pairs[idIdx].id}</p>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="flex items-center justify-center gap-3 mt-2">
+        <p className="text-xs" style={{ color: '#8b6b3d' }}>
+          {Object.keys(matches).length}/{question.pairs.length} benar
+        </p>
+        {mistakes > 0 && (
+          <p className="text-xs font-semibold" style={{ color: '#a05536' }}>
+            · {mistakes} salah
+          </p>
+        )}
+      </div>
+      <p className="text-[10px] text-center mt-1 italic" style={{ color: mistakes > 0 ? '#a05536' : '#8b6b3d', opacity: 0.8 }}>
+        {mistakes === 0
+          ? 'Pasangkan semua tanpa salah untuk dapat poin ⭐'
+          : 'Kamu sudah salah — poin tidak terkumpul, tapi tetap lanjut ya'}
+      </p>
+    </>
   );
 }
 
