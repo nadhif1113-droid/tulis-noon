@@ -3,10 +3,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Volume2, Mic, Check, X, Sparkles, Lock, MapPin, Briefcase, GraduationCap, Trophy, Flame, Star, Home, BookOpen, Users, User, Heart, Share2, Send, Play, Image as ImageIcon, MessageCircle, Calendar, Target, Zap, ChevronRight, Bot, Video, Clock, Award, UserCheck, Coffee, Music, Film, Gamepad2, Heart as HeartIcon, Mountain } from 'lucide-react';
+import { useAuth } from '@/lib/auth-context';
 
 export default function TulisNoonApp() {
   const router = useRouter();
-  const [screen, setScreen] = useState('welcome');
+  const { user, userProfile: authProfile } = useAuth();
+  const [screen, setScreen] = useState('main');
   const [tab, setTab] = useState('home');
   const [selectedPath, setSelectedPath] = useState(null);
   const [selectedLesson, setSelectedLesson] = useState(null);
@@ -32,6 +34,25 @@ export default function TulisNoonApp() {
     { id: 2, type: 'lesson', text: 'Selesai: Salam & Sapaan', emoji: '🤝', time: '5 jam lalu', user: 'Siti' },
     { id: 3, type: 'badge', text: 'Lulus Quiz Pasar Madinah', emoji: '🏆', time: '1 hari lalu', user: 'Yusuf' },
   ]);
+
+  // Sync data dari Firebase auth (Firestore users collection) ke state lokal
+  useEffect(() => {
+    const nameFromAuth = authProfile?.displayName || user?.displayName;
+    if (nameFromAuth) {
+      setUserName(nameFromAuth);
+    }
+    if (authProfile) {
+      setUserProfile((prev) => ({
+        ...prev,
+        interests: authProfile.interests || prev.interests,
+        learningStyle: authProfile.learningStyle || prev.learningStyle,
+        accent: authProfile.accent || prev.accent,
+        dailyTime: authProfile.dailyTime || prev.dailyTime,
+      }));
+    }
+    if (typeof authProfile?.xp === 'number') setXp(authProfile.xp);
+    if (typeof authProfile?.streak === 'number') setStreak(authProfile.streak);
+  }, [authProfile, user]);
 
   const tabScreens = ['home', 'belajar', 'sosial', 'profil'];
 
