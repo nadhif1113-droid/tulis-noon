@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Volume2, Mic, Check, X, Sparkles, Lock, MapPin, Briefcase, GraduationCap, Trophy, Flame, Star, Home, BookOpen, Users, User, Heart, Share2, Send, Play, Image as ImageIcon, MessageCircle, Calendar, Target, Zap, ChevronRight, Bot, Video, Clock, Award, UserCheck, Coffee, Music, Film, Gamepad2, Heart as HeartIcon, Mountain } from 'lucide-react';
 
 export default function TulisNoonApp() {
+  const router = useRouter();
   const [screen, setScreen] = useState('welcome');
   const [tab, setTab] = useState('home');
   const [selectedPath, setSelectedPath] = useState(null);
@@ -53,7 +55,7 @@ export default function TulisNoonApp() {
               {tab === 'sosial' && <SosialTab achievements={achievements} userName={userName} />}
               {tab === 'profil' && <ProfilTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} progress={progress} onOpenPremium={() => setScreen('premium')} />}
             </div>
-            <BottomNav active={tab} onChange={setTab} />
+            <BottomNav active={tab} onChange={setTab} router={router} />
           </>
         )}
 
@@ -770,7 +772,7 @@ function ProfilTab({ userName, userProfile, xp, streak, progress, onOpenPremium 
 }
 
 // ============ BOTTOM NAV ============
-function BottomNav({ active, onChange }) {
+function BottomNav({ active, onChange, router }) {
   const tabs = [
     { id: 'home', l: 'Beranda', icon: Home },
     { id: 'belajar', l: 'Belajar', icon: BookOpen },
@@ -784,7 +786,7 @@ function BottomNav({ active, onChange }) {
           const Icon = t.icon;
           const isActive = active === t.id;
           return (
-            <button key={t.id} onClick={() => onChange(t.id)} className="flex flex-col items-center justify-center py-2 px-1">
+            <button key={t.id} onClick={() => { if(t.id === 'profil') { router?.push('/profile'); } else { onChange(t.id); } }} className="flex flex-col items-center justify-center py-2 px-1">
               <Icon size={22} style={{ color: isActive ? '#0a4d3c' : '#8b6b3d' }} fill={isActive ? '#0a4d3c' : 'transparent'} strokeWidth={isActive ? 2 : 1.5} />
               <span className="text-[10px] mt-1 font-medium" style={{ color: isActive ? '#0a4d3c' : '#8b6b3d' }}>{t.l}</span>
             </button>
