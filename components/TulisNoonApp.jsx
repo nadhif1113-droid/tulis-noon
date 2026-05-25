@@ -7,16 +7,20 @@ import { useAuth } from '@/lib/auth-context';
 
 export default function TulisNoonApp() {
   const router = useRouter();
-  const { user, userProfile: authProfile } = useAuth();
-  const [screen, setScreen] = useState('main');
+  const { user, userProfile: authProfile, loading: authLoading, updateUserProfile } = useAuth();
+  // null = belum ditentukan (masih loading auth/profile).
+  // 'welcome' = user baru yang belum selesai onboarding.
+  // 'main' = user yang udah selesai onboarding.
+  const [screen, setScreen] = useState(null);
   const [tab, setTab] = useState('home');
   const [selectedPath, setSelectedPath] = useState(null);
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [selectedGame, setSelectedGame] = useState(null);
   const [selectedGuru, setSelectedGuru] = useState(null);
   const [progress, setProgress] = useState({ umrah: 1, profesi: 0, beasiswa: 0 });
-  const [xp, setXp] = useState(45);
-  const [streak, setStreak] = useState(3);
+  // Default 0 (bukan 45 magic number) — biar ga ada flash angka acak sebelum sync dari Firestore.
+  const [xp, setXp] = useState(0);
+  const [streak, setStreak] = useState(0);
   const [userName, setUserName] = useState('');
   const [userProfile, setUserProfile] = useState({
     interests: [],
@@ -37,6 +41,14 @@ export default function TulisNoonApp() {
 
   // Sync data dari Firebase auth (Firestore users collection) ke state lokal
   useEffect(() => {
+    // Debug log — bisa dilihat di Console buat trace kapan sync jalan
+    console.log('🔄 Sync from Firestore:', {
+      hasProfile: !!authProfile,
+      firestoreXp: authProfile?.xp,
+      firestoreStreak: authProfile?.streak,
+      onboardingCompleted: authProfile?.onboardingCompleted,
+    });
+
     const nameFromAuth = authProfile?.displayName || user?.displayName;
     if (nameFromAuth) {
       setUserName(nameFromAuth);
@@ -50,9 +62,43 @@ export default function TulisNoonApp() {
         dailyTime: authProfile.dailyTime || prev.dailyTime,
       }));
     }
-    if (typeof authProfile?.xp === 'number') setXp(authProfile.xp);
-    if (typeof authProfile?.streak === 'number') setStreak(authProfile.streak);
+    if (typeof authProfile?.xp === 'number') {
+      setXp(authProfile.xp);
+    }
+    if (typeof authProfile?.streak === 'number') {
+      setStreak(authProfile.streak);
+    }
   }, [authProfile, user]);
+
+  // Routing logic: user baru → welcome onboarding, user lama → main app
+  useEffect(() => {
+    // Tunggu auth selesai loading dulu
+    if (authLoading) return;
+    // Auth selesai tapi belum ada profile (akun baru sedang dibuat di Firestore)
+    if (!authProfile) return;
+
+    // Cek flag onboardingCompleted di Firestore.
+    // Kalau true → user udah selesai isi profil → langsung main.
+    // Kalau false/undefined → user baru → tampilkan welcome onboarding.
+    if (authProfile.onboardingCompleted) {
+      setScreen('main');
+    } else {
+      setScreen('welcome');
+    }
+  }, [authLoading, authProfile]);
+
+  // Helper: tambah XP ke state lokal + persist ke Firestore.
+  // Dipakai oleh callback completion dari Lesson, Game, dan Challenge.
+  const awardXp = (earned) => {
+    if (!earned || earned <= 0) return;
+    const newXp = (xp || 0) + earned;
+    console.log('💎 awardXp:', { earned, oldXp: xp, newXp });
+    setXp(newXp);
+    // Persist ke Firestore (async, await supaya kita tau hasilnya di log).
+    updateUserProfile({ xp: newXp })
+      .then(() => console.log('✅ XP persisted to Firestore:', newXp))
+      .catch((err) => console.error('❌ Failed to persist XP:', err));
+  };
 
   const tabScreens = ['home', 'belajar', 'sosial', 'profil'];
 
@@ -66,7 +112,36 @@ export default function TulisNoonApp() {
       }}/>
 
       <div className="relative max-w-md mx-auto min-h-screen flex flex-col">
-        {screen === 'welcome' && <WelcomeScreen onComplete={(profile) => { setUserName(profile.name); setUserProfile(p => ({...p, ...profile})); setScreen('main'); }} />}
+        {screen === null && (
+          <div className="flex-1 flex items-center justify-center px-6">
+            <div className="text-center">
+              <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center animate-pulse" style={{ background: 'linear-gradient(135deg, #0a4d3c, #1a6b56)', transform: 'rotate(-6deg)' }}>
+                <span className="text-3xl" style={{ fontFamily: 'Amiri, serif', color: '#f3ebd9', transform: 'rotate(6deg)', display: 'inline-block' }}>ن</span>
+              </div>
+              <p className="text-sm" style={{ color: '#8b6b3d' }}>Memuat profilmu...</p>
+            </div>
+          </div>
+        )}
+        {screen === 'welcome' && <WelcomeScreen
+          initialName={user?.displayName || authProfile?.displayName || ''}
+          onComplete={async (profile) => {
+            // 1. Update state lokal supaya UI langsung reflect.
+            setUserName(profile.name);
+            setUserProfile(p => ({...p, ...profile}));
+            // 2. Persist ke Firestore + tandai onboarding selesai.
+            //    Kalau gagal save (offline misal), UI tetap lanjut ke main,
+            //    nanti useEffect routing logic akan re-evaluate dari Firestore.
+            await updateUserProfile({
+              displayName: profile.name,
+              interests: profile.interests,
+              learningStyle: profile.learningStyle,
+              accent: profile.accent,
+              dailyTime: profile.dailyTime,
+              onboardingCompleted: true,
+            });
+            setScreen('main');
+          }}
+        />}
 
         {screen === 'main' && (
           <>
@@ -83,18 +158,22 @@ export default function TulisNoonApp() {
         {screen === 'lessons' && <LessonsScreen path={selectedPath} onBack={() => setScreen('main')} onSelectLesson={(l) => { setSelectedLesson(l); setScreen('lesson'); }} progress={progress[selectedPath?.id] || 0} />}
         {screen === 'lesson' && <LessonScreen lesson={selectedLesson} onBack={() => setScreen('lessons')} onComplete={(earned) => {
           setProgress(p => ({...p, [selectedPath.id]: (p[selectedPath.id] || 0) + 1}));
-          setXp(x => x + earned);
+          awardXp(earned);
           setAchievements(a => [{ id: Date.now(), type:'lesson', text:`Selesai: ${selectedLesson?.title}`, emoji:'✅', time:'baru saja', user: userName || 'Anda' }, ...a]);
           setScreen('lessons');
         }} />}
         {screen === 'game' && <GameScreen game={selectedGame} onBack={() => setScreen('main')} onComplete={(earned) => {
-          setXp(x => x + earned);
+          awardXp(earned);
           setScreen('main');
         }} />}
-        {screen === 'challenge' && <ChallengeScreen onBack={() => setScreen('main')} onShare={(text) => {
-          setAchievements(a => [{ id: Date.now(), type:'challenge', text:text, emoji:'⚡', time:'baru saja', user: userName || 'Anda' }, ...a]);
-          setScreen('main');
-        }} />}
+        {screen === 'challenge' && <ChallengeScreen
+          onBack={() => setScreen('main')}
+          onComplete={(earned) => awardXp(earned)}
+          onShare={(text) => {
+            setAchievements(a => [{ id: Date.now(), type:'challenge', text:text, emoji:'⚡', time:'baru saja', user: userName || 'Anda' }, ...a]);
+            setScreen('main');
+          }}
+        />}
         {screen === 'guru' && <GuruScreen onBack={() => setScreen('main')} onSelectGuru={(g) => { setSelectedGuru(g); setScreen('guru-detail'); }} />}
         {screen === 'guru-detail' && <GuruDetailScreen guru={selectedGuru} onBack={() => setScreen('guru')} />}
         {screen === 'premium' && <PremiumScreen onBack={() => setScreen('main')} userProfile={userProfile} onSubmit={(motivData) => {
@@ -107,10 +186,12 @@ export default function TulisNoonApp() {
 }
 
 // ============ WELCOME / ONBOARDING ============
-function WelcomeScreen({ onComplete }) {
+function WelcomeScreen({ onComplete, initialName = '' }) {
   const [step, setStep] = useState(0);
   const [data, setData] = useState({
-    name: '',
+    // Pre-fill name dari Google account / Firestore (kalau ada),
+    // user masih bisa edit di step 1.
+    name: initialName,
     interests: [],
     learningStyle: '',
     accent: '',
@@ -455,6 +536,38 @@ function HomeTab({ userName, userProfile, xp, streak, onOpenLesson, onOpenGame, 
     ? 'Siapkan dirimu untuk perjalanan ke Arab'
     : 'Senang melihatmu lagi';
 
+  // Format tanggal Masehi (Indonesia) + Hijriah (Umm al-Qura — kalender resmi Saudi)
+  const today = new Date();
+  const gregorianDate = new Intl.DateTimeFormat('id-ID', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(today);
+
+  // Hitung Hijriah pakai formatToParts biar bisa pakai nama bulan Bahasa Indonesia
+  const hijriMonths = [
+    'Muharram', 'Safar', 'Rabiul Awal', 'Rabiul Akhir',
+    'Jumadil Awal', 'Jumadil Akhir', 'Rajab', 'Syaban',
+    'Ramadan', 'Syawal', 'Zulkaidah', 'Zulhijah',
+  ];
+  let hijriDate = '';
+  try {
+    const parts = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', {
+      day: 'numeric',
+      month: 'numeric',
+      year: 'numeric',
+    }).formatToParts(today);
+    const d = parts.find((p) => p.type === 'day')?.value;
+    const m = parts.find((p) => p.type === 'month')?.value;
+    const y = parts.find((p) => p.type === 'year')?.value;
+    if (d && m && y) {
+      hijriDate = `${d} ${hijriMonths[parseInt(m, 10) - 1]} ${y} H`;
+    }
+  } catch (e) {
+    // Browser ga support kalender islamic-umalqura — biarin kosong, fallback hanya Masehi.
+  }
+
   return (
     <div className="px-5 py-6">
       <div className="flex items-center justify-between mb-1">
@@ -473,7 +586,28 @@ function HomeTab({ userName, userProfile, xp, streak, onOpenLesson, onOpenGame, 
       <h1 className="text-2xl mb-1" style={{ fontFamily: 'Fraunces, serif', fontWeight: 600, color: '#0a4d3c' }}>
         {userName || 'Sahabat'} 👋
       </h1>
-      <p className="text-sm mb-6" style={{ color: '#8b6b3d' }}>{personalizedNote}</p>
+      <p className="text-sm mb-4" style={{ color: '#8b6b3d' }}>{personalizedNote}</p>
+
+      {/* Tanggal Masehi + Hijriah - sederet di atas card Pasar Madinah */}
+      <div
+        className="flex items-center justify-between mb-3 px-4 py-3 rounded-xl"
+        style={{
+          background: 'linear-gradient(90deg, rgba(201,169,97,0.22), rgba(10,77,60,0.10))',
+          border: '1.5px solid rgba(201,169,97,0.45)',
+        }}
+      >
+        <div className="flex items-center gap-2">
+          <Calendar size={14} style={{ color: '#0a4d3c' }} />
+          <span className="text-xs font-semibold" style={{ color: '#0a4d3c' }}>
+            {gregorianDate}
+          </span>
+        </div>
+        {hijriDate && (
+          <span className="text-xs font-semibold" style={{ color: '#8b6b3d' }}>
+            {hijriDate}
+          </span>
+        )}
+      </div>
 
       {/* Daily Challenge Card */}
       <button onClick={onOpenChallenge} className="w-full text-left rounded-2xl p-5 mb-5 relative overflow-hidden active:scale-[0.98] transition-transform" style={{ background: 'linear-gradient(135deg, #0a4d3c, #1a6b56)' }}>
@@ -579,8 +713,8 @@ function HomeTab({ userName, userProfile, xp, streak, onOpenLesson, onOpenGame, 
 function BelajarTab({ onSelectPath, onOpenGuru, progress }) {
   const paths = [
     { id: 'umrah', title: 'Wisatawan & Jamaah Umrah', arabic: 'للزائرين', desc: 'Salam, perkenalan, tanya arah', icon: MapPin, color: '#0a4d3c', lessons: 8, available: true },
-    { id: 'profesi', title: 'Profesional & Bisnis', arabic: 'للمهنيين', desc: 'Komunikasi kerja & rapat', icon: Briefcase, color: '#8b6b3d', lessons: 6, available: false },
-    { id: 'beasiswa', title: 'Pelajar Beasiswa', arabic: 'للطلاب', desc: 'Bahasa akademik & kampus', icon: GraduationCap, color: '#7a3d2a', lessons: 10, available: false },
+    { id: 'profesi', title: 'Profesional & Bisnis', arabic: 'للمهنيين', desc: 'Komunikasi kerja & rapat', icon: Briefcase, color: '#8b6b3d', lessons: 6, available: true },
+    { id: 'beasiswa', title: 'Pelajar Beasiswa', arabic: 'للطلاب', desc: 'Bahasa akademik & kampus', icon: GraduationCap, color: '#7a3d2a', lessons: 10, available: true },
   ];
 
   return (
@@ -624,7 +758,7 @@ function BelajarTab({ onSelectPath, onOpenGuru, progress }) {
 
       <div className="mt-6 p-4 rounded-2xl text-center" style={{ background: 'rgba(201,169,97,0.1)', border: '1px dashed #c9a961' }}>
         <Sparkles size={20} className="mx-auto mb-2" style={{ color: '#c9a961' }} />
-        <p className="text-sm" style={{ color: '#7a3d2a' }}>Modul lain akan terbuka di versi penuh</p>
+        <p className="text-sm" style={{ color: '#7a3d2a' }}>Semua jalur belajar terbuka — pilih sesuai kebutuhanmu</p>
       </div>
 
       {/* Guru access in Belajar tab */}
@@ -855,7 +989,9 @@ function LessonsScreen({ path, onBack, onSelectLesson, progress }) {
       <div className="space-y-2">
         {lessons.map((l, idx) => {
           const isCompleted = idx < progress;
-          const isLocked = idx > progress + 1;
+          // Semua lesson dibuka — user bebas pilih mana yang mau dipelajari dulu.
+          // (Sebelumnya: progressive lock idx > progress + 1)
+          const isLocked = false;
           return (
             <button key={l.id} onClick={() => !isLocked && onSelectLesson(l)} className="w-full text-left p-4 rounded-xl flex items-center gap-3 active:scale-[0.98] transition-transform disabled:opacity-50" disabled={isLocked} style={{ background: 'white', border: '1px solid rgba(10,77,60,0.08)' }}>
               <div className="w-11 h-11 rounded-xl flex items-center justify-center text-2xl flex-shrink-0" style={{ background: isCompleted ? '#0a4d3c' : '#f3ebd9' }}>
@@ -1446,12 +1582,23 @@ function StoryGame({ onBack, onComplete }) {
 }
 
 // ============ DAILY CHALLENGE ============
-function ChallengeScreen({ onBack, onShare }) {
+function ChallengeScreen({ onBack, onShare, onComplete }) {
   const [stage, setStage] = useState('intro'); // intro, playing, complete
   const [q, setQ] = useState(0);
   const [score, setScore] = useState(0);
   const [selected, setSelected] = useState(null);
   const [timeLeft, setTimeLeft] = useState(10);
+  const [xpAwarded, setXpAwarded] = useState(false);
+
+  // Award XP otomatis sekali aja saat masuk stage 'complete' — supaya user dapet XP
+  // meskipun langsung tap "Kembali" tanpa share.
+  useEffect(() => {
+    if (stage === 'complete' && !xpAwarded) {
+      const earnedXp = score * 6 + (score === 5 ? 10 : 0);
+      if (onComplete) onComplete(earnedXp);
+      setXpAwarded(true);
+    }
+  }, [stage, score, xpAwarded, onComplete]);
 
   const questions = [
     { ar: 'كَمِ السِّعْر؟', options: ['Apa namamu', 'Berapa harganya', 'Di mana hotel', 'Selamat datang'], correct: 1 },
