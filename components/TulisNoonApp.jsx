@@ -22,6 +22,7 @@ import PerkenalanDiriScreen from '@/components/PerkenalanDiriScreen';
 import TanyaCepatScreen, { TANYA_CEPAT_FREE_LIMIT, TANYA_CEPAT_BUNDLE_COST, TANYA_CEPAT_BUNDLE_QUOTA } from '@/components/TanyaCepatScreen';
 import TanyaCepatFAB from '@/components/TanyaCepatFAB';
 import { shouldShowTanyaCepat } from '@/lib/geo-detect';
+import { setupNativeBackButton, hideSplashScreen, setStatusBarStyle, isNative } from '@/lib/native-helpers';
 import { PERKENALAN_MATERI_COST, PERKENALAN_BUNDLE_COST } from '@/data/perkenalan-diri-materi';
 import { PREMIUM_UNLOCK_COST } from '@/lib/hafalan-tier';
 import { checkLivesRefresh } from '@/lib/lives-system';
@@ -113,6 +114,27 @@ export default function TulisNoonApp() {
       router.replace('/', { scroll: false });
     }
   }, [searchParams, router]);
+
+  // Native init: hide splash, set status bar, setup hardware back button
+  useEffect(() => {
+    let cleanup = null;
+    (async () => {
+      const native = await isNative();
+      if (!native) return;
+      // Hide splash setelah React mounted
+      setTimeout(() => hideSplashScreen(), 200);
+      // Status bar: dark text on cream background (match app theme)
+      await setStatusBarStyle('dark');
+      // Hardware back button: handle screen state, exit kalau di root
+      cleanup = await setupNativeBackButton({
+        onRootBack: () => {
+          // Di home native, tekan back → exit app
+          // (cleanup handler natural untuk WebView history first)
+        },
+      });
+    })();
+    return () => { if (cleanup) cleanup(); };
+  }, []);
 
   // Auto-refresh nyawa pas user buka app.
   // +3 nyawa tiap 24 jam (cap di maxLives). Cek sekali pas authProfile berubah.

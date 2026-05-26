@@ -10,6 +10,17 @@ html, body {
   font-family: 'DM Sans', system-ui, sans-serif;
   background: linear-gradient(180deg, #faf6ee 0%, #f3ebd9 100%);
   min-height: 100vh;
+  /* Cegah pull-to-refresh nyangkut di iOS PWA */
+  overscroll-behavior-y: none;
+  /* Disable text selection on UI chrome (still works inside <textarea>/<input>) */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+input, textarea, [contenteditable] {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 * {
@@ -19,4 +30,30 @@ html, body {
 
 input, button, textarea {
   font-family: inherit;
+}
+
+/* === Safe area handling untuk native iOS notch + Android nav gesture === */
+.pb-safe {
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+}
+.pt-safe {
+  padding-top: max(0px, env(safe-area-inset-top));
+}
+.safe-area-inset {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Hindari over-scroll bounce di iOS native */
+.no-bounce {
+  overscroll-behavior: contain;
+}
+
+/* Native app feel: smooth font rendering */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }

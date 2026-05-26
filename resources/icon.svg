@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Tulis Noon app icon — 1024×1024 SVG.
+  Convert ke PNG di Mac: rsvg-convert -w 1024 -h 1024 icon.svg > icon.png
+  Atau pakai online tool: cloudconvert.com / svg2png.com
+  Capacitor Assets akan otomatis generate semua size dari icon.png (1024x1024) + splash.png (2732x2732).
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Background gradient (dark green to lighter green — matching brand) -->
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a4d3c"/>
+      <stop offset="100%" stop-color="#1a6b56"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c9a961"/>
+      <stop offset="100%" stop-color="#d4b876"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="12"/>
+      <feOffset dx="0" dy="8"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.4"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Rounded square bg (Apple wants no rounding — iOS adds it. Android adaptive icon handles it.) -->
+  <rect width="1024" height="1024" rx="180" ry="180" fill="url(#bg)"/>
+
+  <!-- Decorative subtle pattern — Islamic geometric -->
+  <g opacity="0.08" fill="#c9a961">
+    <path d="M512 100 L612 200 L512 300 L412 200 Z"/>
+    <path d="M512 724 L612 824 L512 924 L412 824 Z"/>
+    <path d="M100 512 L200 612 L300 512 L200 412 Z"/>
+    <path d="M724 512 L824 612 L924 512 L824 412 Z"/>
+  </g>
+
+  <!-- Main element: Arabic letter Noon (ن) — yang jadi nama app "Noon" -->
+  <!-- Background circle behind letter -->
+  <circle cx="512" cy="512" r="280" fill="url(#accent)" filter="url(#shadow)"/>
+
+  <!-- Arabic Noon (ن) — drawn with paths for crisp render at any size -->
+  <!-- Using a unicode-style stroke approximation -->
+  <g transform="translate(512, 512)">
+    <!-- Noon body (curved cup shape) -->
+    <path d="M -160 -40
+             Q -180 60 -120 130
+             Q -40 200 0 200
+             Q 40 200 120 130
+             Q 180 60 160 -40
+             L 130 -40
+             Q 140 40 90 90
+             Q 30 150 0 150
+             Q -30 150 -90 90
+             Q -140 40 -130 -40
+             Z"
+          fill="#0a4d3c" stroke="#0a4d3c" stroke-width="4" stroke-linejoin="round"/>
+    <!-- Dot of Noon (titik di atas huruf) -->
+    <circle cx="0" cy="-110" r="32" fill="#0a4d3c"/>
+  </g>
+
+  <!-- Subtle wordmark below (small, decorative) -->
+  <text x="512" y="900" text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="56" font-weight="700"
+        fill="#c9a961" opacity="0.85">
+    Tulis Noon
+  </text>
+</svg>

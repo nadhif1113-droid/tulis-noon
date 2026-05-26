@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Splash screen — 2732×2732 (Capacitor default size, akan di-crop center per device).
+  Same theme as icon, dengan lebih banyak breathing room.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2732 2732" width="2732" height="2732">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0a4d3c"/>
+      <stop offset="100%" stop-color="#1a6b56"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c9a961"/>
+      <stop offset="100%" stop-color="#d4b876"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="2732" height="2732" fill="url(#bg)"/>
+
+  <!-- Subtle pattern background -->
+  <g opacity="0.05" fill="#c9a961">
+    <circle cx="500" cy="500" r="200"/>
+    <circle cx="2232" cy="500" r="200"/>
+    <circle cx="500" cy="2232" r="200"/>
+    <circle cx="2232" cy="2232" r="200"/>
+  </g>
+
+  <!-- Centered Noon letter -->
+  <g transform="translate(1366, 1300)">
+    <circle r="400" fill="url(#accent)" opacity="0.95"/>
+    <g transform="scale(1.5)">
+      <path d="M -160 -40
+               Q -180 60 -120 130
+               Q -40 200 0 200
+               Q 40 200 120 130
+               Q 180 60 160 -40
+               L 130 -40
+               Q 140 40 90 90
+               Q 30 150 0 150
+               Q -30 150 -90 90
+               Q -140 40 -130 -40
+               Z"
+            fill="#0a4d3c"/>
+      <circle cx="0" cy="-110" r="32" fill="#0a4d3c"/>
+    </g>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="1366" y="2050" text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="120" font-weight="700"
+        fill="#faf6ee">
+    Tulis Noon
+  </text>
+  <text x="1366" y="2150" text-anchor="middle"
+        font-family="-apple-system, system-ui, sans-serif"
+        font-size="48" font-weight="500"
+        fill="#c9a961" opacity="0.85">
+    Belajar Arab buat jamaah
+  </text>
+</svg>
