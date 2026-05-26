@@ -353,6 +353,7 @@ export default function TulisNoonApp() {
               user: userName || 'Anda',
             }, ...a]);
           }}
+          onUpgrade={() => setScreen('premium')}
         />}
 
         {screen === 'guru' && <GuruScreen onBack={() => setScreen('main')} onSelectGuru={(g) => { setSelectedGuru(g); setScreen('guru-detail'); }} />}

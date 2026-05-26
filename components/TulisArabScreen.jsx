@@ -11,7 +11,7 @@ import { TULIS_ARAB_PHASES, buildLetterChoices } from '@/data/tulis-arab-levels'
 // ============================================================================
 // MAIN ENTRY — manages internal flow (phases / levels / play / result)
 // ============================================================================
-export default function TulisArabScreen({ onBack, onHome, onComplete }) {
+export default function TulisArabScreen({ onBack, onHome, onComplete, onUpgrade }) {
   const [view, setView] = useState('phases'); // phases | levels | play | result
   const [selectedPhase, setSelectedPhase] = useState(null);
   const [selectedLevel, setSelectedLevel] = useState(null);
@@ -31,6 +31,23 @@ export default function TulisArabScreen({ onBack, onHome, onComplete }) {
     setFinalScore({ score, total, xpEarned });
     if (onComplete) onComplete({ earned: xpEarned, score, totalQuestions: total });
     setView('result');
+  };
+
+  // Find next playable level in current phase (same phase only).
+  // Kalau ga ada (user di level terakhir phase), nextLevel = null → trigger Premium upsell.
+  const nextLevel = selectedPhase?.levels?.find(
+    (l) => l.level === selectedLevel?.level + 1 && !l.comingSoon
+  );
+
+  const handleNextLevel = () => {
+    if (nextLevel) {
+      setSelectedLevel(nextLevel);
+      setView('play');
+    }
+  };
+
+  const handleUpgrade = () => {
+    if (onUpgrade) onUpgrade();
   };
 
   if (view === 'phases') {
@@ -65,8 +82,11 @@ export default function TulisArabScreen({ onBack, onHome, onComplete }) {
         phase={selectedPhase}
         level={selectedLevel}
         result={finalScore}
+        nextLevel={nextLevel}
         onRetry={() => setView('play')}
+        onNextLevel={handleNextLevel}
         onBack={() => setView('levels')}
+        onUpgrade={handleUpgrade}
       />
     );
   }
@@ -429,11 +449,15 @@ function PlayView({ phase, level, onBack, onComplete }) {
 }
 
 // ============================================================================
-// RESULT VIEW — score, XP, retry/back
+// RESULT VIEW — score, XP, next-level / retry / upgrade-premium / back
 // ============================================================================
-function ResultView({ phase, level, result, onRetry, onBack }) {
+function ResultView({ phase, level, result, nextLevel, onRetry, onNextLevel, onBack, onUpgrade }) {
   const isPerfect = result.score === result.total;
   const isPartial = result.score > 0 && !isPerfect;
+  const hasNextLevel = !!nextLevel;
+  // Conversion trigger: user finished last free level (no next playable) → Premium upsell
+  const isEndOfFree = !hasNextLevel && phase.isFree;
+
   const tier = isPerfect
     ? { label: 'MUMTAAZ!', emoji: '🏆', color: '#c9a961', gradient: 'linear-gradient(135deg, #d4b876, #c9a961)', message: 'Kamu udah kuasai level ini!' }
     : isPartial
@@ -441,42 +465,99 @@ function ResultView({ phase, level, result, onRetry, onBack }) {
     : { label: 'BELUM BERHASIL', emoji: '🌱', color: '#8b6b3d', gradient: 'linear-gradient(135deg, #8b6b3d, #6b4f2a)', message: 'Pelan-pelan dulu, pasti bisa.' };
 
   return (
-    <div className="flex-1 flex flex-col px-5 py-6 items-center justify-center text-center">
-      <div className="relative mb-4">
+    <div className="flex-1 flex flex-col px-5 py-6 items-center text-center overflow-y-auto">
+      <div className="relative mb-4 mt-4">
         <div className="absolute inset-0 blur-3xl opacity-50" style={{ background: tier.color, borderRadius: '50%' }} />
-        <div className="relative w-28 h-28 rounded-full flex items-center justify-center text-5xl" style={{ background: tier.gradient, boxShadow: `0 20px 40px -10px ${tier.color}80` }}>
+        <div className="relative w-24 h-24 rounded-full flex items-center justify-center text-4xl" style={{ background: tier.gradient, boxShadow: `0 20px 40px -10px ${tier.color}80` }}>
           {tier.emoji}
         </div>
       </div>
 
       <p className="text-[11px] tracking-[0.3em] uppercase mb-2 font-bold" style={{ color: tier.color }}>{tier.label}</p>
-      <h2 className="text-2xl mb-1" style={{ fontFamily: 'Fraunces, serif', fontWeight: 700, color: '#0a4d3c' }}>
+      <h2 className="text-xl mb-1" style={{ fontFamily: 'Fraunces, serif', fontWeight: 700, color: '#0a4d3c' }}>
         {level.title}
       </h2>
-      <p className="text-xs mb-4" style={{ color: '#8b6b3d' }}>{phase.emoji} {phase.title} · Level {level.level}</p>
+      <p className="text-xs mb-3" style={{ color: '#8b6b3d' }}>{phase.emoji} {phase.title} · Level {level.level}</p>
 
-      <div className="flex items-baseline gap-2 mb-3">
+      <div className="flex items-baseline gap-2 mb-2">
         <p className="text-5xl font-bold" style={{ fontFamily: 'Fraunces, serif', color: tier.color }}>{result.score}</p>
         <p className="text-base" style={{ color: '#8b6b3d' }}>/{result.total}</p>
       </div>
 
-      <div className="flex items-center gap-2 mb-4 px-4 py-1.5 rounded-full" style={{ background: `${tier.color}20`, border: `1.5px solid ${tier.color}` }}>
+      <div className="flex items-center gap-2 mb-3 px-4 py-1.5 rounded-full" style={{ background: `${tier.color}20`, border: `1.5px solid ${tier.color}` }}>
         <Star size={14} style={{ color: tier.color }} fill={tier.color} />
         <span className="text-sm font-bold" style={{ color: tier.color }}>+{result.xpEarned} XP</span>
       </div>
 
-      <p className="text-sm max-w-xs mb-6" style={{ color: '#3d2817' }}>{tier.message}</p>
+      <p className="text-sm max-w-xs mb-4" style={{ color: '#3d2817' }}>{tier.message}</p>
 
-      <div className="w-full max-w-xs space-y-2">
+      {/* PREMIUM UPSELL CARD — muncul kalau user di level terakhir free phase & perfect */}
+      {isEndOfFree && isPerfect && (
+        <div className="w-full max-w-xs mb-4 rounded-2xl p-4 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #c9a961, #d4b876)' }}>
+          <div className="absolute -right-4 -top-2 text-6xl opacity-15">🌟</div>
+          <p className="text-[10px] tracking-[0.3em] uppercase text-white opacity-90 mb-1 font-bold">Selamat!</p>
+          <h3 className="text-base text-white mb-2 leading-tight font-bold" style={{ fontFamily: 'Fraunces, serif' }}>
+            Kamu selesaikan Phase 1!
+          </h3>
+          <p className="text-xs text-white opacity-95 leading-relaxed mb-3">
+            Lanjutin perjalananmu jadi mahir tulis Arab — buka 12 level berikutnya:
+          </p>
+          <ul className="text-xs text-white opacity-95 space-y-1 mb-1 text-left">
+            <li>✓ Cara baca (suku kata, mad, tasydid)</li>
+            <li>✓ Menulis kata (vocab pasar + umrah)</li>
+            <li>✓ Menulis kalimat & paragraf</li>
+            <li>✓ Akses penuh Latihan Ngobrol</li>
+          </ul>
+        </div>
+      )}
+
+      {/* BUTTONS — urutan prioritas tergantung state */}
+      <div className="w-full max-w-xs space-y-2 pb-4">
+        {/* PRIMARY 1: Buka Premium (kalau perfect & udah di end of free phase) */}
+        {isEndOfFree && isPerfect && (
+          <button
+            onClick={onUpgrade}
+            className="w-full py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 text-white"
+            style={{ background: 'linear-gradient(135deg, #c9a961, #d4b876)', boxShadow: '0 10px 24px -8px rgba(201,169,97,0.6)' }}
+          >
+            <Sparkles size={16} /> Buka Tulis Arab Premium
+          </button>
+        )}
+
+        {/* PRIMARY 2: Lanjut ke Level X+1 (kalau perfect & ada next level playable) */}
+        {isPerfect && hasNextLevel && (
+          <button
+            onClick={onNextLevel}
+            className="w-full py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 text-white"
+            style={{ background: 'linear-gradient(135deg, #0a4d3c, #1a6b56)', boxShadow: '0 10px 24px -8px rgba(10,77,60,0.5)' }}
+          >
+            <ArrowRight size={16} /> Lanjut ke Level {nextLevel.level}
+          </button>
+        )}
+
+        {/* PRIMARY (alt): Ulangi Level (kalau belum perfect) */}
         {!isPerfect && (
           <button
             onClick={onRetry}
             className="w-full py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 text-white"
             style={{ background: tier.gradient }}
           >
-            <RefreshCw size={16} /> Ulangi Level
+            <RefreshCw size={16} /> Ulangi untuk Mumtaaz
           </button>
         )}
+
+        {/* SECONDARY: Main lagi (kalau udah perfect) */}
+        {isPerfect && (
+          <button
+            onClick={onRetry}
+            className="w-full py-2.5 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2"
+            style={{ background: 'rgba(201,169,97,0.18)', color: '#8b6b3d' }}
+          >
+            <RefreshCw size={14} /> Main lagi level ini
+          </button>
+        )}
+
+        {/* TERTIARY: Kembali ke Pilih Level */}
         <button onClick={onBack} className="w-full py-3 rounded-2xl text-sm font-semibold" style={{ background: 'rgba(10,77,60,0.08)', color: '#0a4d3c' }}>
           Kembali ke Pilih Level
         </button>
