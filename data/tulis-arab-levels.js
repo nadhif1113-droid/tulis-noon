@@ -109,7 +109,7 @@ export const TULIS_ARAB_PHASES = [
     emoji: '🔊',
     color: '#c9a961',
     bgGradient: 'linear-gradient(135deg, #c9a961, #d4b876)',
-    isFree: false,
+    isFree: true,
     levels: [
       placeholderLevel(4, 'Suku Kata Sederhana', 'Gabungin huruf + harakat jadi suku kata yang bisa dibaca: ba+ta = بَتَ.'),
       placeholderLevel(5, 'Bunyi Mad', 'Belajar baca panjang (mad) vs pendek. Contoh: قَا vs قَ.'),
@@ -128,7 +128,7 @@ export const TULIS_ARAB_PHASES = [
     emoji: '✍️',
     color: '#a05536',
     bgGradient: 'linear-gradient(135deg, #a05536, #c46a3f)',
-    isFree: false,
+    isFree: true,
     levels: [
       placeholderLevel(7, 'Kata 2-3 Huruf', 'Susun kata pendek: كَتَبَ (menulis), قَرَأَ (membaca).'),
       placeholderLevel(8, 'Vocab Pasar', 'Kosakata belanja: kurma (تَمْر), harga (سِعْر), beli (شِرَاء).'),
@@ -147,7 +147,7 @@ export const TULIS_ARAB_PHASES = [
     emoji: '📝',
     color: '#7a3d2a',
     bgGradient: 'linear-gradient(135deg, #7a3d2a, #8b4a2a)',
-    isFree: false,
+    isFree: true,
     levels: [
       placeholderLevel(10, 'Kalimat Tanya', 'Bikin pertanyaan: "Berapa harganya?", "Di mana masjid?".'),
       placeholderLevel(11, 'Kalimat Pernyataan', 'Bikin pernyataan: "Saya mau ini", "Ini bagus".'),
@@ -166,7 +166,7 @@ export const TULIS_ARAB_PHASES = [
     emoji: '📜',
     color: '#0a4d3c',
     bgGradient: 'linear-gradient(135deg, #0a4d3c, #2e8869)',
-    isFree: false,
+    isFree: true,
     levels: [
       placeholderLevel(13, 'Cerita Pendek', 'Tulis paragraf cerita 2-3 kalimat tentang aktivitas harian.'),
       placeholderLevel(14, 'Doa Harian', 'Tulis paragraf doa harian: bangun tidur, sebelum makan, dst.'),

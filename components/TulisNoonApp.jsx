@@ -11,6 +11,7 @@ import TulisArabScreen from '@/components/TulisArabScreen';
 import XpLevelInfoModal from '@/components/XpLevelInfoModal';
 import CoinInfoModal from '@/components/CoinInfoModal';
 import StreakInfoModal from '@/components/StreakInfoModal';
+import LivesInfoModal from '@/components/LivesInfoModal';
 
 export default function TulisNoonApp() {
   const router = useRouter();
@@ -63,6 +64,8 @@ export default function TulisNoonApp() {
   const [showCoinModal, setShowCoinModal] = useState(false);
   // Streak info modal — trigger dari flame pill di home.
   const [showStreakModal, setShowStreakModal] = useState(false);
+  // Lives info modal — trigger dari heart pill di home.
+  const [showLivesModal, setShowLivesModal] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -237,7 +240,7 @@ export default function TulisNoonApp() {
         {screen === 'main' && (
           <>
             <div className="flex-1 pb-20">
-              {tab === 'home' && <HomeTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} coins={authProfile?.coins || 0} onShowXpInfo={() => setShowXpModal(true)} onShowCoinInfo={() => setShowCoinModal(true)} onShowStreakInfo={() => setShowStreakModal(true)} onOpenLesson={() => { setSelectedPath({id:'umrah', title:'Wisatawan & Jamaah Umrah'}); setScreen('lessons'); }} onOpenGame={(g) => {
+              {tab === 'home' && <HomeTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} coins={authProfile?.coins || 0} lives={authProfile?.lives ?? 10} maxLives={authProfile?.maxLives ?? 10} onShowXpInfo={() => setShowXpModal(true)} onShowCoinInfo={() => setShowCoinModal(true)} onShowStreakInfo={() => setShowStreakModal(true)} onShowLivesInfo={() => setShowLivesModal(true)} onOpenLesson={() => { setSelectedPath({id:'umrah', title:'Wisatawan & Jamaah Umrah'}); setScreen('lessons'); }} onOpenGame={(g) => {
                 // Special routing untuk game yang punya screen sendiri.
                 // Game lain (image-quiz, video-quiz, story) tetap ke GameScreen placeholder.
                 if (g.id === 'chat-roleplay') {
@@ -416,6 +419,30 @@ export default function TulisNoonApp() {
         {/* Streak info modal — trigger dari flame pill di home */}
         {showStreakModal && (
           <StreakInfoModal streak={streak || 0} onClose={() => setShowStreakModal(false)} />
+        )}
+
+        {/* Lives info modal — trigger dari heart pill di home */}
+        {showLivesModal && (
+          <LivesInfoModal
+            lives={authProfile?.lives ?? 10}
+            maxLives={authProfile?.maxLives ?? 10}
+            livesResetAt={authProfile?.livesResetAt}
+            coins={authProfile?.coins || 0}
+            onClose={() => setShowLivesModal(false)}
+            onBuyLife={async () => {
+              const cur = authProfile?.coins || 0;
+              const curLives = authProfile?.lives ?? 10;
+              const maxL = authProfile?.maxLives ?? 10;
+              if (cur < 1 || curLives >= maxL) return;
+              await updateUserProfile({ coins: cur - 1, lives: curLives + 1 });
+            }}
+            onRefillAll={async () => {
+              const cur = authProfile?.coins || 0;
+              const maxL = authProfile?.maxLives ?? 10;
+              if (cur < 5) return;
+              await updateUserProfile({ coins: cur - 5, lives: maxL });
+            }}
+          />
         )}
 
         {/* Tour 4-slide overlay — kenalan dengan tab Beranda/Belajar/Sosial/Profil */}
@@ -851,7 +878,7 @@ function WelcomeScreen({ onComplete, initialName = '' }) {
 }
 
 // ============ HOME TAB ============
-function HomeTab({ userName, userProfile, xp, streak, coins, onShowXpInfo, onShowCoinInfo, onShowStreakInfo, onOpenLesson, onOpenGame, onOpenChallenge, onOpenGuru, achievements }) {
+function HomeTab({ userName, userProfile, xp, streak, coins, lives, maxLives, onShowXpInfo, onShowCoinInfo, onShowStreakInfo, onShowLivesInfo, onOpenLesson, onOpenGame, onOpenChallenge, onOpenGuru, achievements }) {
   // Personalized greeting based on interests
   const personalizedNote = userProfile?.interests?.includes('religion')
     ? 'Mari belajar bahasa Al-Quran hari ini'
@@ -896,6 +923,16 @@ function HomeTab({ userName, userProfile, xp, streak, coins, onShowXpInfo, onSho
       <div className="flex items-center justify-between mb-1">
         <p className="text-sm" style={{ color: '#8b6b3d' }}>Marhaban,</p>
         <div className="flex items-center gap-1.5">
+          {/* Lives pill — paling kiri karena paling penting (main mechanic) */}
+          <button
+            onClick={onShowLivesInfo}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full transition-transform active:scale-95"
+            style={{ background: 'rgba(198,69,69,0.12)', cursor: 'pointer' }}
+            aria-label="Pelajari tentang Nyawa"
+          >
+            <span style={{ fontSize: '12px' }}>❤️</span>
+            <span className="text-xs font-bold" style={{ color: '#c64545' }}>{lives ?? 10}/{maxLives ?? 10}</span>
+          </button>
           {/* Streak pill — clickable, jelasin apa itu flame & cara dapet milestone */}
           <button
             onClick={onShowStreakInfo}

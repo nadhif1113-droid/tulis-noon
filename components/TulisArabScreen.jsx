@@ -135,56 +135,49 @@ function PhasesView({ onBack, onHome, onSelectPhase }) {
 
       <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#8b6b3d' }}>Pilih Tahap</p>
       <div className="space-y-3">
-        {TULIS_ARAB_PHASES.map((phase) => (
-          <button
-            key={phase.id}
-            onClick={() => phase.isFree && onSelectPhase(phase)}
-            disabled={!phase.isFree}
-            className="w-full p-4 rounded-2xl text-left flex items-center gap-3 transition-transform active:scale-[0.98] disabled:active:scale-100"
-            style={{
-              background: 'white',
-              border: phase.isFree ? '1.5px solid rgba(10,77,60,0.1)' : '1.5px dashed rgba(139,107,61,0.25)',
-              opacity: phase.isFree ? 1 : 0.65,
-            }}
-          >
-            <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0 relative"
-              style={{ background: phase.bgGradient }}
+        {TULIS_ARAB_PHASES.map((phase) => {
+          // Cek apakah phase punya level playable (bukan semua comingSoon)
+          const hasPlayableLevels = phase.levels.some((l) => !l.comingSoon);
+          return (
+            <button
+              key={phase.id}
+              onClick={() => onSelectPhase(phase)}
+              className="w-full p-4 rounded-2xl text-left flex items-center gap-3 transition-transform active:scale-[0.98]"
+              style={{
+                background: 'white',
+                border: '1.5px solid rgba(10,77,60,0.1)',
+              }}
             >
-              <span style={{ opacity: phase.isFree ? 1 : 0.5 }}>{phase.emoji}</span>
-              {!phase.isFree && (
-                <div className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full flex items-center justify-center" style={{ background: '#c9a961' }}>
-                  <Lock size={12} color="white" />
-                </div>
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: `${phase.color}15`, color: phase.color }}>
-                  Phase {phase.number}
-                </span>
-                {!phase.isFree && (
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'rgba(201,169,97,0.2)', color: '#8b6b3d' }}>
-                    PREMIUM
-                  </span>
-                )}
+              <div
+                className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0"
+                style={{ background: phase.bgGradient }}
+              >
+                {phase.emoji}
               </div>
-              <p className="font-semibold text-base leading-tight" style={{ color: phase.color }}>{phase.title}</p>
-              <p className="text-xs leading-snug mt-0.5" style={{ color: '#666' }}>{phase.description}</p>
-            </div>
-            {phase.isFree ? (
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: `${phase.color}15`, color: phase.color }}>
+                    Phase {phase.number}
+                  </span>
+                  {!hasPlayableLevels && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'rgba(201,169,97,0.2)', color: '#8b6b3d' }}>
+                      AKAN DATANG
+                    </span>
+                  )}
+                </div>
+                <p className="font-semibold text-base leading-tight" style={{ color: phase.color }}>{phase.title}</p>
+                <p className="text-xs leading-snug mt-0.5" style={{ color: '#666' }}>{phase.description}</p>
+              </div>
               <ArrowRight size={18} style={{ color: '#c9a961' }} className="flex-shrink-0" />
-            ) : (
-              <Lock size={16} style={{ color: '#8b6b3d', opacity: 0.5 }} className="flex-shrink-0" />
-            )}
-          </button>
-        ))}
+            </button>
+          );
+        })}
       </div>
 
-      <div className="rounded-2xl p-3 mt-4" style={{ background: 'rgba(201,169,97,0.1)', border: '1px dashed #c9a961' }}>
-        <p className="text-[10px] tracking-widest uppercase font-bold mb-1.5" style={{ color: '#c9a961' }}>Info</p>
-        <p className="text-xs leading-relaxed" style={{ color: '#8b6b3d' }}>
-          Phase 1 gratis. Phase 2-5 akan terbuka saat versi Premium nanti — bakal ada notifikasi waktu siap.
+      <div className="rounded-2xl p-3 mt-4" style={{ background: 'rgba(10,77,60,0.06)', border: '1px solid rgba(10,77,60,0.12)' }}>
+        <p className="text-[10px] tracking-widest uppercase font-bold mb-1.5" style={{ color: '#0a4d3c' }}>Info</p>
+        <p className="text-xs leading-relaxed" style={{ color: '#3d2817' }}>
+          ✓ Semua tahap <strong>gratis</strong> dimainkan! Phase 1 sudah siap; Phase 2-5 lagi disiapkan kontennya — kamu udah bisa lihat preview level-nya. Belajar pakai nyawa harian (max 10/hari).
         </p>
       </div>
     </div>
@@ -523,40 +516,26 @@ function ResultView({ phase, level, result, nextLevel, onRetry, onNextLevel, onB
 
       <p className="text-sm max-w-xs mb-4" style={{ color: '#3d2817' }}>{tier.message}</p>
 
-      {/* PREMIUM UPSELL CARD — muncul kalau user di level terakhir free phase & perfect */}
+      {/* INFO CARD — muncul kalau user di akhir Phase 1 & perfect (Phase 2 belum playable content-wise) */}
       {isEndOfFree && isPerfect && (
-        <div className="w-full max-w-xs mb-4 rounded-2xl p-4 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #c9a961, #d4b876)' }}>
-          <div className="absolute -right-4 -top-2 text-6xl opacity-15">🌟</div>
+        <div className="w-full max-w-xs mb-4 rounded-2xl p-4 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #0a4d3c, #1a6b56)' }}>
+          <div className="absolute -right-4 -top-2 text-6xl opacity-15">🎉</div>
           <p className="text-[10px] tracking-[0.3em] uppercase text-white opacity-90 mb-1 font-bold">Selamat!</p>
           <h3 className="text-base text-white mb-2 leading-tight font-bold" style={{ fontFamily: 'Fraunces, serif' }}>
             Kamu selesaikan Phase 1!
           </h3>
-          <p className="text-xs text-white opacity-95 leading-relaxed mb-3">
-            Lanjutin perjalananmu jadi mahir tulis Arab — buka 12 level berikutnya:
+          <p className="text-xs text-white opacity-95 leading-relaxed mb-2">
+            Phase berikutnya (Cara Baca, Menulis Kata, Kalimat, Paragraf) lagi disiapkan kontennya. <strong>Semua bakal gratis dimainkan</strong>.
           </p>
-          <ul className="text-xs text-white opacity-95 space-y-1 mb-1 text-left">
-            <li>✓ Cara baca (suku kata, mad, tasydid)</li>
-            <li>✓ Menulis kata (vocab pasar + umrah)</li>
-            <li>✓ Menulis kalimat & paragraf</li>
-            <li>✓ Akses penuh Latihan Ngobrol</li>
-          </ul>
+          <p className="text-xs text-white opacity-95">
+            Sementara, ulangi level untuk perfect score atau coba game lain.
+          </p>
         </div>
       )}
 
       {/* BUTTONS — urutan prioritas tergantung state */}
       <div className="w-full max-w-xs space-y-2 pb-4">
-        {/* PRIMARY 1: Buka Premium (kalau perfect & udah di end of free phase) */}
-        {isEndOfFree && isPerfect && (
-          <button
-            onClick={onUpgrade}
-            className="w-full py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 text-white"
-            style={{ background: 'linear-gradient(135deg, #c9a961, #d4b876)', boxShadow: '0 10px 24px -8px rgba(201,169,97,0.6)' }}
-          >
-            <Sparkles size={16} /> Buka Tulis Arab Premium
-          </button>
-        )}
-
-        {/* PRIMARY 2: Lanjut ke Level X+1 (kalau perfect & ada next level playable) */}
+        {/* PRIMARY: Lanjut ke Level X+1 (kalau perfect & ada next level playable) */}
         {isPerfect && hasNextLevel && (
           <button
             onClick={onNextLevel}
