@@ -1,0 +1,102 @@
+// data/roleplay-scenarios.js
+// Client-safe roleplay scenarios — display info, vocab hints, persona descriptions.
+// System prompts (instruksi ke AI) ada di /lib/roleplay-prompts.js (server-only).
+
+export const ROLEPLAY_SCENARIOS = [
+  {
+    id: 'pasar-nawar',
+    title: 'Nawar Kurma di Pasar',
+    arTitle: 'مساومة في السوق',
+    description: 'Latihan tawar harga kurma Ajwa sama pedagang Madinah. Mulai dari 50 SAR, target turun ke 35-40 SAR.',
+    emoji: '🛍️',
+    color: '#a05536',
+    bgGradient: 'linear-gradient(135deg, #a05536, #c46a3f)',
+    difficulty: 'Daris → Mutawassith',
+    persona: {
+      name: 'Abu Salman',
+      role: 'Pedagang Kurma Pasar Madinah',
+      avatar: '🧔🏽',
+      style: 'Ramah, playful, dialek Hijazi murni',
+    },
+    objective: 'Sukses nawar harga kurma Ajwa ke 35-40 SAR/kg',
+    helpfulVocab: [
+      { ar: 'السلام عليكم', latin: 'as-salamu alaykum', id: 'Salam pembuka' },
+      { ar: 'بكم الكيلو؟', latin: 'bi kam al-kilo?', id: 'Berapa per kilo?' },
+      { ar: 'والله غالي', latin: 'wallah ghali', id: 'Demi Allah mahal' },
+      { ar: 'رخّص شوي', latin: 'rakhkhis shway', id: 'Kasih murah dikit' },
+      { ar: 'آخر سعر', latin: 'akhir si\'r', id: 'Harga terakhir' },
+      { ar: 'بـ خمسة وثلاثين', latin: 'bi khamsa wa thalathin', id: 'Dengan 35' },
+      { ar: 'خلاص خذها', latin: 'khalas khudh-ha', id: 'Oke, ambil aja' },
+    ],
+    starterMessage: 'Mulai dengan sapaan & tanya harga kurma. Coba pakai "السلام عليكم" + "بكم الكيلو؟"',
+    minTurns: 4,
+    maxTurns: 10,
+    xpReward: 75,
+  },
+  {
+    id: 'tanya-arah',
+    title: 'Tanya Arah ke Masjid Nabawi',
+    arTitle: 'السؤال عن الطريق',
+    description: 'Latihan tanya arah ke polisi Saudi yang lagi tugas. Kamu nyasar dari hotel — minta petunjuk ke Masjid Nabawi.',
+    emoji: '🚖',
+    color: '#0a4d3c',
+    bgGradient: 'linear-gradient(135deg, #0a4d3c, #1a6b56)',
+    difficulty: 'Mubtadi → Daris',
+    persona: {
+      name: 'Abu Khalid',
+      role: 'Polisi Lalu Lintas Saudi',
+      avatar: '👮🏽',
+      style: 'Helpful, semi-formal Hijazi, jelas & sabar',
+    },
+    objective: 'Dapat petunjuk arah lengkap ke Masjid Nabawi (left/right/lurus/dekat/jauh)',
+    helpfulVocab: [
+      { ar: 'لو سمحت', latin: 'law samaht', id: 'Permisi (laki ke laki)' },
+      { ar: 'وين المسجد النبوي؟', latin: 'wayn al-masjid an-nabawi?', id: 'Di mana Masjid Nabawi?' },
+      { ar: 'يمين', latin: 'yamin', id: 'Kanan' },
+      { ar: 'يسار / شمال', latin: 'yasar / shimal', id: 'Kiri' },
+      { ar: 'دغري', latin: 'dughri', id: 'Lurus' },
+      { ar: 'قريب', latin: 'qarib', id: 'Dekat' },
+      { ar: 'بعيد', latin: 'ba\'id', id: 'Jauh' },
+      { ar: 'مشي', latin: 'mashy', id: 'Jalan kaki' },
+      { ar: 'شكراً جزيلاً', latin: 'shukran jazilan', id: 'Terima kasih banyak' },
+    ],
+    starterMessage: 'Mulai dengan "لو سمحت" + tanya arah. Polisi akan kasih petunjuk pakai yamin/yasar/dughri.',
+    minTurns: 3,
+    maxTurns: 8,
+    xpReward: 60,
+  },
+  {
+    id: 'order-kopi',
+    title: 'Order Kopi di Café Saudi',
+    arTitle: 'الطلب في المقهى',
+    description: 'Latihan order qahwa arabiyya, kurma, & cari tempat duduk di café modern Madinah. Barista muda, ramah, ngobrol casual.',
+    emoji: '☕',
+    color: '#8b6b3d',
+    bgGradient: 'linear-gradient(135deg, #8b6b3d, #a87f47)',
+    difficulty: 'Daris',
+    persona: {
+      name: 'Khalid',
+      role: 'Barista Café Madinah',
+      avatar: '👨🏽‍🍳',
+      style: 'Casual, ramah, Hijazi muda, sedikit campur English',
+    },
+    objective: 'Sukses order minum + makanan + dapat tempat duduk',
+    helpfulVocab: [
+      { ar: 'أبغى', latin: 'abgha', id: 'Saya mau (Hijazi)' },
+      { ar: 'قهوة عربية', latin: 'qahwa arabiyya', id: 'Kopi Arab' },
+      { ar: 'تمر', latin: 'tamr', id: 'Kurma' },
+      { ar: 'حار / بارد', latin: 'harr / barid', id: 'Panas / Dingin' },
+      { ar: 'كم الحساب؟', latin: 'kam al-hisab?', id: 'Berapa totalnya?' },
+      { ar: 'فيه طاولة فاضية؟', latin: 'fih tawila fadhiya?', id: 'Ada meja kosong?' },
+      { ar: 'مع نفسي', latin: 'ma\'a nafsi', id: 'Untuk dibawa pulang (take away)' },
+    ],
+    starterMessage: 'Mulai dengan sapaan & langsung order. Pakai "أبغى" (saya mau) — khas Hijazi.',
+    minTurns: 4,
+    maxTurns: 10,
+    xpReward: 65,
+  },
+];
+
+export function getRoleplayScenario(id) {
+  return ROLEPLAY_SCENARIOS.find((s) => s.id === id);
+}

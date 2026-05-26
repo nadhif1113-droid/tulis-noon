@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Volume2, Mic, Check, X, Sparkles, Lock, MapPin, Briefcase, GraduationCap, Trophy, Flame, Star, Home, BookOpen, Users, User, Heart, Share2, Send, Play, Image as ImageIcon, MessageCircle, Calendar, Target, Zap, ChevronRight, Bot, Video, Clock, Award, UserCheck, Coffee, Music, Film, Gamepad2, Heart as HeartIcon, Mountain, Facebook, Instagram, Twitter, Link2, Copy } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { CHALLENGE_SCENARIOS, getTodayChallenge, getXpForLevel } from '@/data/challenge-levels';
+import { ROLEPLAY_SCENARIOS } from '@/data/roleplay-scenarios';
+import RoleplayScreen from '@/components/RoleplayScreen';
 
 export default function TulisNoonApp() {
   const router = useRouter();
@@ -17,6 +19,7 @@ export default function TulisNoonApp() {
   const [selectedPath, setSelectedPath] = useState(null);
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [selectedGame, setSelectedGame] = useState(null);
+  const [selectedRoleplay, setSelectedRoleplay] = useState(null); // AI Roleplay scenario
   const [selectedGuru, setSelectedGuru] = useState(null);
   // Challenge scenario yang lagi dimainin. Default ke "Tantangan Hari Ini" (rotasi by tanggal).
   const [selectedChallenge, setSelectedChallenge] = useState(null);
@@ -224,7 +227,16 @@ export default function TulisNoonApp() {
         {screen === 'main' && (
           <>
             <div className="flex-1 pb-20">
-              {tab === 'home' && <HomeTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} onOpenLesson={() => { setSelectedPath({id:'umrah', title:'Wisatawan & Jamaah Umrah'}); setScreen('lessons'); }} onOpenGame={(g) => { setSelectedGame(g); setScreen('game'); }} onOpenChallenge={(scenario) => { setSelectedChallenge(scenario || getTodayChallenge()); setScreen('challenge-levels'); }} onOpenGuru={() => setScreen('guru')} achievements={achievements} />}
+              {tab === 'home' && <HomeTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} onOpenLesson={() => { setSelectedPath({id:'umrah', title:'Wisatawan & Jamaah Umrah'}); setScreen('lessons'); }} onOpenGame={(g) => {
+                // Special routing: AI Roleplay -> screen baru dengan list scenario.
+                // Game lain (image-quiz, video-quiz, story) tetap ke GameScreen placeholder.
+                if (g.id === 'chat-roleplay') {
+                  setScreen('roleplay-list');
+                  return;
+                }
+                setSelectedGame(g);
+                setScreen('game');
+              }} onOpenChallenge={(scenario) => { setSelectedChallenge(scenario || getTodayChallenge()); setScreen('challenge-levels'); }} onOpenGuru={() => setScreen('guru')} achievements={achievements} />}
               {tab === 'belajar' && <BelajarTab onSelectPath={(p) => { setSelectedPath(p); setScreen('lessons'); }} onOpenGuru={() => setScreen('guru')} progress={progress} />}
               {tab === 'sosial' && <SosialTab achievements={achievements} userName={userName} />}
               {tab === 'profil' && <ProfilTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} progress={progress} onOpenPremium={() => setScreen('premium')} />}
@@ -279,6 +291,48 @@ export default function TulisNoonApp() {
             setSelectedLevel(nextLvl);
           }}
         />}
+        {/* AI Roleplay flow: roleplay-list (pilih scenario) → roleplay (chat dengan Claude) */}
+        {screen === 'roleplay-list' && <RoleplayListScreen
+          onBack={() => setScreen('main')}
+          onHome={() => { setTab('home'); setScreen('main'); }}
+          onSelectScenario={(s) => { setSelectedRoleplay(s); setScreen('roleplay'); }}
+        />}
+        {screen === 'roleplay' && selectedRoleplay && <RoleplayScreen
+          scenario={selectedRoleplay}
+          userId={user?.uid || 'anonymous'}
+          onBack={() => setScreen('roleplay-list')}
+          onComplete={({ earned, score, grade: gradeLabel }) => {
+            // Award XP + catat achievement
+            awardXp(earned);
+            setAchievements((a) => [{
+              id: Date.now(),
+              type: 'roleplay',
+              text: `${selectedRoleplay.title} — ${gradeLabel} (+${earned} XP)`,
+              emoji: selectedRoleplay.emoji,
+              time: 'baru saja',
+              user: userName || 'Anda',
+            }, ...a]);
+          }}
+          onShare={(payload) => {
+            // Share modal pakai pattern yg sama dengan challenge — catat achievement aja
+            setAchievements((a) => [{
+              id: Date.now(),
+              type: 'roleplay-share',
+              text: `Roleplay ${payload.scenarioName}: ${payload.grade} ${payload.scenarioEmoji}`,
+              emoji: '🎙️',
+              time: 'baru saja',
+              user: userName || 'Anda',
+            }, ...a]);
+            // Open native share OR WhatsApp as quick action
+            const shareText = `Saya baru aja praktik roleplay "${payload.scenarioName}" ${payload.scenarioEmoji} dapat ${payload.grade} (skor ${payload.score}) di Tulis Noon! ${payload.xpEarned} XP\n\nYuk ikutan: https://tulis-noon.vercel.app`;
+            if (typeof navigator !== 'undefined' && navigator.share) {
+              navigator.share({ title: 'Tulis Noon AI Roleplay', text: shareText, url: 'https://tulis-noon.vercel.app' }).catch(() => {});
+            } else {
+              window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
+            }
+          }}
+        />}
+
         {screen === 'guru' && <GuruScreen onBack={() => setScreen('main')} onSelectGuru={(g) => { setSelectedGuru(g); setScreen('guru-detail'); }} />}
         {screen === 'guru-detail' && <GuruDetailScreen guru={selectedGuru} onBack={() => setScreen('guru')} />}
         {screen === 'premium' && <PremiumScreen onBack={() => setScreen('main')} userProfile={userProfile} onSubmit={(motivData) => {
@@ -3539,6 +3593,95 @@ function ShareModal({ achievement, onClose }) {
             "Sebaik-baik manusia adalah yang paling bermanfaat bagi sesama" — HR. Ahmad
           </p>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// ROLEPLAY LIST SCREEN — pilih 1 dari 3 scenario AI Roleplay.
+// Tampilkan badge "Bayar API" sebagai peringatan halus (kalau ada cost concern).
+// ============================================================================
+function RoleplayListScreen({ onBack, onHome, onSelectScenario }) {
+  return (
+    <div className="flex-1 flex flex-col px-5 py-6">
+      <div className="flex items-center gap-2 mb-4">
+        <button onClick={onBack} className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(10,77,60,0.08)' }} aria-label="Kembali">
+          <ArrowLeft size={18} style={{ color: '#0a4d3c' }} />
+        </button>
+        <button onClick={onHome || onBack} className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(10,77,60,0.08)' }} aria-label="Beranda">
+          <Home size={17} style={{ color: '#0a4d3c' }} />
+        </button>
+        <div className="flex-1">
+          <p className="text-xs tracking-widest uppercase" style={{ color: '#8b6b3d' }}>AI Roleplay</p>
+          <h2 className="text-xl font-semibold" style={{ color: '#0a4d3c', fontFamily: 'Fraunces, serif' }}>
+            Ngobrol Bahasa Arab
+          </h2>
+        </div>
+      </div>
+
+      {/* Hero card */}
+      <div className="rounded-3xl p-5 mb-4 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #0a4d3c, #1a6b56)' }}>
+        <div className="absolute -right-6 -top-4 text-7xl opacity-15">🎙️</div>
+        <p className="text-[10px] tracking-[0.3em] uppercase text-white opacity-80 mb-1">Killer Feature</p>
+        <h3 className="text-xl text-white mb-2 leading-tight" style={{ fontFamily: 'Fraunces, serif', fontWeight: 700 }}>
+          Latihan ngobrol nyata
+        </h3>
+        <p className="text-sm text-white opacity-95 leading-relaxed mb-3">
+          AI bermain peran sebagai orang Saudi — pedagang, polisi, barista. Kamu praktik Hijazi sebelum beneran ngobrol di lapangan.
+        </p>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 px-2.5 py-1 rounded-full" style={{ background: 'rgba(201,169,97,0.3)' }}>
+            <Sparkles size={11} color="#c9a961" />
+            <span className="text-xs font-bold text-white">Powered by Claude</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Scenario list */}
+      <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#8b6b3d' }}>Pilih Skenario</p>
+      <div className="space-y-3 mb-4">
+        {ROLEPLAY_SCENARIOS.map((s) => (
+          <button
+            key={s.id}
+            onClick={() => onSelectScenario(s)}
+            className="w-full p-4 rounded-2xl text-left flex items-center gap-3 active:scale-[0.98] transition-transform"
+            style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.1)' }}
+          >
+            <div
+              className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0"
+              style={{ background: s.bgGradient }}
+            >
+              {s.emoji}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-0.5">
+                <p className="font-semibold text-base leading-tight" style={{ color: s.color }}>{s.title}</p>
+              </div>
+              <p className="text-xs leading-snug mb-1.5" style={{ color: '#666' }}>{s.description}</p>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold" style={{ background: `${s.color}15`, color: s.color }}>
+                  {s.difficulty}
+                </span>
+                <span className="text-[10px]" style={{ color: '#c9a961' }}>
+                  ⭐ Max +{s.xpReward} XP
+                </span>
+              </div>
+            </div>
+            <ChevronRight size={18} style={{ color: '#c9a961' }} className="flex-shrink-0" />
+          </button>
+        ))}
+      </div>
+
+      {/* Info card: how it works */}
+      <div className="rounded-2xl p-3 mt-2" style={{ background: 'rgba(201,169,97,0.1)', border: '1px dashed #c9a961' }}>
+        <p className="text-[10px] tracking-widest uppercase font-bold mb-2" style={{ color: '#c9a961' }}>Cara kerja</p>
+        <ul className="text-xs space-y-1.5" style={{ color: '#8b6b3d' }}>
+          <li>• Pilih skenario → klik Mulai → AI mulai chat in character</li>
+          <li>• Balas dalam Arab (atau Indonesia, AI akan paham)</li>
+          <li>• Nyangkut? Pencet 💡 untuk hint kalimat</li>
+          <li>• Setelah selesai → AI kasih grade (Mumtaaz/Jayyid/Maqbul) + vocab feedback</li>
+        </ul>
       </div>
     </div>
   );
