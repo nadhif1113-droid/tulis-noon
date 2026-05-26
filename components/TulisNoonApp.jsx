@@ -12,6 +12,7 @@ import XpLevelInfoModal from '@/components/XpLevelInfoModal';
 import CoinInfoModal from '@/components/CoinInfoModal';
 import StreakInfoModal from '@/components/StreakInfoModal';
 import LivesInfoModal from '@/components/LivesInfoModal';
+import { checkLivesRefresh } from '@/lib/lives-system';
 
 export default function TulisNoonApp() {
   const router = useRouter();
@@ -83,6 +84,28 @@ export default function TulisNoonApp() {
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  // Auto-refresh nyawa pas user buka app.
+  // +3 nyawa tiap 24 jam (cap di maxLives). Cek sekali pas authProfile berubah.
+  useEffect(() => {
+    if (!authProfile) return;
+    const curLives = authProfile.lives ?? 10;
+    const maxL = authProfile.maxLives ?? 10;
+    const resetAt = authProfile.livesResetAt;
+    const { newLives, newResetAt, refreshed } = checkLivesRefresh(curLives, maxL, resetAt);
+    if (refreshed && newLives !== curLives) {
+      console.log('💖 Auto-refresh nyawa:', { from: curLives, to: newLives });
+      updateUserProfile({ lives: newLives, livesResetAt: newResetAt }).catch((err) =>
+        console.error('Lives refresh failed:', err)
+      );
+    } else if (!resetAt && curLives < maxL) {
+      // Belum pernah set clock & lives < max → mulai counting sekarang
+      updateUserProfile({ livesResetAt: new Date().toISOString() }).catch((err) =>
+        console.error('Lives clock init failed:', err)
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authProfile?.lives, authProfile?.livesResetAt, authProfile?.maxLives]);
 
   // Trigger Arabic level survey modal + tour overlay untuk user yang baru masuk main.
   // Survey didahulukan kalau belum ada arabicLevel, supaya rekomendasi langsung sesuai.

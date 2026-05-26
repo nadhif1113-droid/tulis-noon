@@ -5,7 +5,17 @@
 'use client';
 
 import { X, Heart, Check } from 'lucide-react';
-import { DEFAULT_MAX_LIVES, COIN_PER_LIFE, REFILL_ALL_COST, LIVES_SOURCES, LIVES_RULES, timeUntilRefresh } from '@/lib/lives-system';
+import {
+  DEFAULT_MAX_LIVES,
+  COIN_PER_LIFE,
+  REFILL_ALL_COST,
+  LIVES_PER_REFRESH,
+  REFRESH_PERIOD_HOURS,
+  LIVES_SOURCES,
+  LIVES_RULES,
+  timeUntilNextRefresh,
+  hoursUntilFull,
+} from '@/lib/lives-system';
 
 export default function LivesInfoModal({
   lives = DEFAULT_MAX_LIVES,
@@ -16,7 +26,9 @@ export default function LivesInfoModal({
   onBuyLife,
   onRefillAll,
 }) {
-  const refreshIn = timeUntilRefresh(livesResetAt);
+  const nextRefreshIn = timeUntilNextRefresh(lives, maxLives, livesResetAt);
+  const hoursToFull = hoursUntilFull(lives, maxLives);
+  const daysToFull = Math.ceil(hoursToFull / 24);
   const isFull = lives >= maxLives;
   const isEmpty = lives <= 0;
   const canBuyOne = coins >= COIN_PER_LIFE && !isFull;
@@ -66,9 +78,14 @@ export default function LivesInfoModal({
               ))}
             </div>
             {!isFull && (
-              <p className="text-xs text-white opacity-90 mt-3">
-                ⏰ Reset otomatis dalam <strong>{refreshIn}</strong>
-              </p>
+              <div className="mt-3 space-y-1">
+                <p className="text-xs text-white opacity-90">
+                  ⏰ +{LIVES_PER_REFRESH} nyawa dalam <strong>{nextRefreshIn}</strong>
+                </p>
+                <p className="text-[10px] text-white opacity-75">
+                  Ke penuh ({maxLives}) butuh ~{daysToFull} hari
+                </p>
+              </div>
             )}
             {isFull && (
               <p className="text-xs text-white opacity-90 mt-3">
@@ -81,10 +98,16 @@ export default function LivesInfoModal({
           <p className="text-[10px] tracking-widest uppercase font-bold mb-2" style={{ color: '#c9a961' }}>Apa itu Nyawa?</p>
           <div className="rounded-2xl p-3.5 mb-4 space-y-2" style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.08)' }}>
             <p className="text-sm leading-relaxed" style={{ color: '#3d2817' }}>
-              ❤️ <strong>Nyawa</strong> adalah jatah main per hari kamu. Maksimum <strong>{maxLives} nyawa/hari</strong>.
+              ❤️ <strong>Nyawa</strong> adalah jatah main kamu. Maksimum <strong>{maxLives} nyawa</strong>.
             </p>
             <p className="text-sm leading-relaxed" style={{ color: '#3d2817' }}>
-              <strong>Semua game gratis dimainkan</strong> — tapi nyawa berkurang kalau kamu gagal/kalah. Habis? Tunggu reset 24 jam, atau beli pakai koin.
+              <strong>Semua game gratis dimainkan</strong> — tapi nyawa berkurang kalau kamu gagal/kalah.
+            </p>
+            <p className="text-sm leading-relaxed" style={{ color: '#3d2817' }}>
+              ⏰ Nyawa nambah <strong>+{LIVES_PER_REFRESH} setiap {REFRESH_PERIOD_HOURS} jam</strong> (bukan reset langsung). Dari 0 ke {maxLives} butuh sekitar <strong>{Math.ceil(maxLives / LIVES_PER_REFRESH)} hari</strong>.
+            </p>
+            <p className="text-sm leading-relaxed" style={{ color: '#a05536' }}>
+              Gak sabar? Beli pakai koin biar bisa langsung main 🪙
             </p>
           </div>
 
