@@ -6,8 +6,8 @@
 import { isPremiumUnlocked } from '@/lib/feature-flags';
 
 export const PERKENALAN_MATERI_FREE_COUNT = 4;
-export const PERKENALAN_MATERI_COST = 5; // koin per materi
-export const PERKENALAN_BUNDLE_COST = 150; // koin sekali bayar buka semua + future
+export const PERKENALAN_MATERI_COST = 20; // koin per materi (= Rp 9.000 dgn baseline Rp 450/koin)
+export const PERKENALAN_BUNDLE_COST = 150; // koin sekali bayar buka semua + future (= Rp 67.500)
 
 export const PERKENALAN_MATERI = [
   // ============================================================

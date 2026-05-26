@@ -12,7 +12,7 @@ import { ArrowLeft, Home, Mic, MicOff, Send, Volume2, Sparkles, Loader2, X, Coin
 const INTRO_STORAGE_KEY = 'tanyaCepatIntroSeen_v1';
 
 export const TANYA_CEPAT_FREE_LIMIT = 5;
-export const TANYA_CEPAT_BUNDLE_COST = 5; // koin
+export const TANYA_CEPAT_BUNDLE_COST = 20; // koin (= Rp 9.000 dgn baseline Rp 450/koin)
 export const TANYA_CEPAT_BUNDLE_QUOTA = 10; // percakapan per bundle
 
 export default function TanyaCepatScreen({
