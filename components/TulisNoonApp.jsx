@@ -8,6 +8,7 @@ import { CHALLENGE_SCENARIOS, getTodayChallenge, getXpForLevel } from '@/data/ch
 import { ROLEPLAY_SCENARIOS } from '@/data/roleplay-scenarios';
 import RoleplayScreen from '@/components/RoleplayScreen';
 import TulisArabScreen from '@/components/TulisArabScreen';
+import XpLevelInfoModal from '@/components/XpLevelInfoModal';
 
 export default function TulisNoonApp() {
   const router = useRouter();
@@ -54,6 +55,8 @@ export default function TulisNoonApp() {
   const [showTour, setShowTour] = useState(false);
   // Arabic level survey modal — untuk user lama yang belum di-survey (pre-feature users).
   const [showArabicSurvey, setShowArabicSurvey] = useState(false);
+  // XP/Level info modal — trigger dari XP pill di home (atau dari profile).
+  const [showXpModal, setShowXpModal] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -228,7 +231,7 @@ export default function TulisNoonApp() {
         {screen === 'main' && (
           <>
             <div className="flex-1 pb-20">
-              {tab === 'home' && <HomeTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} onOpenLesson={() => { setSelectedPath({id:'umrah', title:'Wisatawan & Jamaah Umrah'}); setScreen('lessons'); }} onOpenGame={(g) => {
+              {tab === 'home' && <HomeTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} onShowXpInfo={() => setShowXpModal(true)} onOpenLesson={() => { setSelectedPath({id:'umrah', title:'Wisatawan & Jamaah Umrah'}); setScreen('lessons'); }} onOpenGame={(g) => {
                 // Special routing untuk game yang punya screen sendiri.
                 // Game lain (image-quiz, video-quiz, story) tetap ke GameScreen placeholder.
                 if (g.id === 'chat-roleplay') {
@@ -384,6 +387,11 @@ export default function TulisNoonApp() {
               }
             }}
           />
+        )}
+
+        {/* XP/Level info modal — trigger dari XP pill di home */}
+        {showXpModal && (
+          <XpLevelInfoModal xp={xp || 0} onClose={() => setShowXpModal(false)} />
         )}
 
         {/* Tour 4-slide overlay — kenalan dengan tab Beranda/Belajar/Sosial/Profil */}
@@ -819,7 +827,7 @@ function WelcomeScreen({ onComplete, initialName = '' }) {
 }
 
 // ============ HOME TAB ============
-function HomeTab({ userName, userProfile, xp, streak, onOpenLesson, onOpenGame, onOpenChallenge, onOpenGuru, achievements }) {
+function HomeTab({ userName, userProfile, xp, streak, onShowXpInfo, onOpenLesson, onOpenGame, onOpenChallenge, onOpenGuru, achievements }) {
   // Personalized greeting based on interests
   const personalizedNote = userProfile?.interests?.includes('religion')
     ? 'Mari belajar bahasa Al-Quran hari ini'
@@ -868,10 +876,17 @@ function HomeTab({ userName, userProfile, xp, streak, onOpenLesson, onOpenGame, 
             <Flame size={12} style={{ color: '#c9a961' }} />
             <span className="text-xs font-bold" style={{ color: '#8b6b3d' }}>{streak}</span>
           </div>
-          <div className="flex items-center gap-1 px-2.5 py-1 rounded-full" style={{ background: 'rgba(10,77,60,0.1)' }}>
+          {/* XP pill — clickable, buka XpLevelInfoModal yg nerangin XP & cara naik level */}
+          <button
+            onClick={onShowXpInfo}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full transition-transform active:scale-95"
+            style={{ background: 'rgba(10,77,60,0.1)', cursor: 'pointer' }}
+            aria-label="Pelajari tentang XP"
+          >
             <Star size={12} style={{ color: '#0a4d3c' }} fill="#0a4d3c" />
             <span className="text-xs font-bold" style={{ color: '#0a4d3c' }}>{xp}</span>
-          </div>
+            <span className="text-[9px] opacity-50" style={{ color: '#0a4d3c' }}>ⓘ</span>
+          </button>
         </div>
       </div>
       <h1 className="text-2xl mb-1" style={{ fontFamily: 'Fraunces, serif', fontWeight: 600, color: '#0a4d3c' }}>

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '../../lib/auth-context';
 import { getXpProgress, TIERS, XP_SOURCES } from '../../lib/xp-system';
 import { Star, Flame, BookOpen, Sparkles, ArrowLeft, MapPin, LogOut, ChevronRight, Trophy, Target, Award, MessageCircle, HelpCircle, X, Lock, Check } from 'lucide-react';
+import XpLevelInfoModal from '../../components/XpLevelInfoModal';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -244,9 +245,9 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Modal: Level info & cara naik level */}
+      {/* Modal: XP & Level info — reuse shared component */}
       {showLevelInfo && (
-        <LevelInfoModal onClose={() => setShowLevelInfo(false)} currentTier={tier} currentLevel={currentLevel} />
+        <XpLevelInfoModal xp={xp} onClose={() => setShowLevelInfo(false)} />
       )}
     </div>
   );
@@ -278,99 +279,6 @@ function ProfileRow({ label, value, valueColor = '#3d2817', icon: Icon }) {
         {label}
       </span>
       <span className="text-xs font-semibold text-right truncate ml-2" style={{ color: valueColor, maxWidth: '60%' }}>{value}</span>
-    </div>
-  );
-}
-
-function LevelInfoModal({ onClose, currentTier, currentLevel }) {
-  return (
-    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ background: 'rgba(10,30,25,0.75)' }} onClick={onClose}>
-      <div
-        className="w-full max-w-md max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl shadow-2xl"
-        style={{ background: 'linear-gradient(180deg, #faf6ee 0%, #f3ebd9 100%)' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-start justify-between px-6 pt-6 pb-3 sticky top-0 z-10" style={{ background: 'linear-gradient(180deg, #faf6ee 0%, rgba(250,246,238,0.95) 100%)' }}>
-          <div className="flex-1">
-            <p className="text-[10px] tracking-[0.25em] uppercase font-bold mb-1" style={{ color: '#c9a961' }}>Sistem Level</p>
-            <h2 className="text-xl leading-tight" style={{ fontFamily: 'Fraunces, serif', fontWeight: 700, color: '#0a4d3c' }}>
-              Tingkat & cara naik
-            </h2>
-          </div>
-          <button onClick={onClose} className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(10,77,60,0.08)' }}>
-            <X size={16} style={{ color: '#0a4d3c' }} />
-          </button>
-        </div>
-
-        <div className="px-6 pb-6">
-          {/* Intro */}
-          <p className="text-sm mb-4 leading-relaxed" style={{ color: '#3d2817' }}>
-            Level kamu naik otomatis seiring XP yang kamu kumpulin dari belajar. Tiap level masuk ke salah satu dari <strong>5 tingkat</strong>:
-          </p>
-
-          {/* Tier ladder */}
-          <div className="space-y-2 mb-5">
-            {TIERS.map((t) => {
-              const isCurrent = currentTier.id === t.id;
-              const isPast = currentLevel > t.maxLevel;
-              return (
-                <div
-                  key={t.id}
-                  className="rounded-2xl p-3 flex items-center gap-3 relative"
-                  style={{
-                    background: isCurrent ? 'white' : 'rgba(255,255,255,0.6)',
-                    border: isCurrent ? `2px solid ${t.color}` : '1.5px solid rgba(10,77,60,0.08)',
-                    opacity: isPast ? 0.7 : 1,
-                  }}
-                >
-                  <div
-                    className="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
-                    style={{ background: t.bgGradient }}
-                  >
-                    {t.emoji}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <p className="font-bold text-sm leading-tight" style={{ color: t.color, fontFamily: 'Fraunces, serif' }}>{t.label}</p>
-                      <span className="text-[10px] uppercase tracking-widest" style={{ color: '#8b6b3d' }}>{t.subtitle}</span>
-                    </div>
-                    <p className="text-[11px] leading-snug" style={{ color: '#3d2817' }}>{t.description}</p>
-                    <p className="text-[10px] mt-1 font-semibold" style={{ color: '#8b6b3d' }}>
-                      Level {t.minLevel}{t.maxLevel < 999 ? `–${t.maxLevel}` : '+'}
-                    </p>
-                  </div>
-                  {isCurrent && (
-                    <div className="absolute -top-2 -right-2 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest" style={{ background: t.color, color: 'white' }}>
-                      Kamu disini
-                    </div>
-                  )}
-                  {isPast && <Check size={16} style={{ color: '#0a4d3c' }} className="flex-shrink-0" />}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* How to earn XP */}
-          <p className="text-[10px] tracking-widest uppercase font-bold mb-2" style={{ color: '#c9a961' }}>Cara dapet XP</p>
-          <div className="rounded-2xl p-3 space-y-2" style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.08)' }}>
-            {XP_SOURCES.map((src, idx) => (
-              <div key={idx} className="flex items-center justify-between py-1">
-                <span className="text-xs" style={{ color: '#3d2817' }}>{src.label}</span>
-                <span className="text-xs font-bold" style={{ color: '#c9a961' }}>{src.xp}</span>
-              </div>
-            ))}
-          </div>
-
-          <p className="text-[11px] mt-4 italic text-center" style={{ color: '#8b6b3d' }}>
-            "Tuntutlah ilmu meski jauh ke negeri Cina" — HR. Baihaqi
-          </p>
-
-          <button onClick={onClose} className="w-full mt-5 py-3.5 rounded-2xl font-semibold" style={{ background: '#0a4d3c', color: 'white' }}>
-            Paham, mulai ngumpulin XP
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
