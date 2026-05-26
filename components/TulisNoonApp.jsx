@@ -21,6 +21,8 @@ import UnlockHafalanModal from '@/components/UnlockHafalanModal';
 import PerkenalanDiriScreen from '@/components/PerkenalanDiriScreen';
 import TanyaCepatScreen, { TANYA_CEPAT_FREE_LIMIT, TANYA_CEPAT_BUNDLE_COST, TANYA_CEPAT_BUNDLE_QUOTA } from '@/components/TanyaCepatScreen';
 import TanyaCepatFAB from '@/components/TanyaCepatFAB';
+import LessonDetailScreen from '@/components/LessonDetailScreen';
+import { LEARNING_UMRAH } from '@/data/learning-umrah';
 import { shouldShowTanyaCepat } from '@/lib/geo-detect';
 import { setupNativeBackButton, hideSplashScreen, setStatusBarStyle, isNative } from '@/lib/native-helpers';
 import { PERKENALAN_MATERI_COST, PERKENALAN_BUNDLE_COST } from '@/data/perkenalan-diri-materi';
@@ -423,11 +425,29 @@ export default function TulisNoonApp() {
         )}
 
         {screen === 'lessons' && <LessonsScreen path={selectedPath} onBack={() => setScreen('main')} onSelectLesson={(l) => {
-          // Special case: Perkenalan Diri (id=2) punya screen sendiri dgn materi koin-gated
-          if (l.id === 2) { setScreen('perkenalan-diri'); return; }
+          // Special case: Perkenalan Diri (id=2 lama) punya screen sendiri dgn materi koin-gated
+          if (l.id === 2 && selectedPath?.id === 'umrah-old') { setScreen('perkenalan-diri'); return; }
+          // Modul baru dari LEARNING_UMRAH (dll) — pakai LessonDetailScreen
+          if (l.pathId) {
+            setSelectedLesson(l);
+            setScreen('lesson-detail');
+            return;
+          }
           setSelectedLesson(l);
           setScreen('lesson');
         }} progress={progress[selectedPath?.id] || 0} />}
+        {screen === 'lesson-detail' && selectedLesson && (
+          <LessonDetailScreen
+            module={selectedLesson}
+            onBack={() => setScreen('lessons')}
+            onHome={() => { setTab('home'); setScreen('main'); }}
+            onComplete={(earned) => {
+              awardXp(earned);
+              setProgress(p => ({ ...p, [selectedLesson.pathId]: Math.max((p[selectedLesson.pathId] || 0), selectedLesson.order) }));
+              setAchievements(a => [{ id: Date.now(), type:'lesson', text:`Selesai modul: ${selectedLesson.title} (+${earned} XP)`, emoji: selectedLesson.emoji, time:'baru saja', user: userName || 'Anda' }, ...a]);
+            }}
+          />
+        )}
         {screen === 'tanya-cepat' && (
           <TanyaCepatScreen
             userProfile={authProfile}
@@ -1716,9 +1736,9 @@ function HomeTab({ userName, userProfile, xp, streak, coins, lives, maxLives, ha
 // ============ BELAJAR TAB ============
 function BelajarTab({ onSelectPath, onOpenGuru, progress }) {
   const paths = [
-    { id: 'umrah', title: 'Wisatawan & Jamaah Umrah', arabic: 'للزائرين', desc: 'Salam, perkenalan, tanya arah', icon: MapPin, color: '#0a4d3c', lessons: 8, available: true },
-    { id: 'profesi', title: 'Profesional & Bisnis', arabic: 'للمهنيين', desc: 'Komunikasi kerja & rapat', icon: Briefcase, color: '#8b6b3d', lessons: 6, available: true },
-    { id: 'beasiswa', title: 'Pelajar Beasiswa', arabic: 'للطلاب', desc: 'Bahasa akademik & kampus', icon: GraduationCap, color: '#7a3d2a', lessons: 10, available: true },
+    { id: 'umrah', title: 'Wisatawan & Jamaah Umrah', arabic: 'للزائرين', desc: '15 modul · 1500 kosakata', icon: MapPin, color: '#0a4d3c', lessons: 15, available: true },
+    { id: 'profesi', title: 'Profesional & Bisnis', arabic: 'للمهنيين', desc: '20 modul · 2500 kosakata', icon: Briefcase, color: '#8b6b3d', lessons: 20, available: true },
+    { id: 'beasiswa', title: 'Pelajar / Siswa / Mahasiswa', arabic: 'للطلاب', desc: '10 modul · 1300 kosakata Fusha', icon: GraduationCap, color: '#7a3d2a', lessons: 10, available: true },
   ];
 
   return (
@@ -2021,16 +2041,35 @@ function BottomNav({ active, onChange, router }) {
 
 // ============ LESSONS LIST ============
 function LessonsScreen({ path, onBack, onSelectLesson, progress }) {
-  const lessons = [
-    { id: 1, title: 'Salam & Sapaan', arabic: 'التحية', desc: 'Cara menyapa dan membalas salam', emoji: '🤝' },
-    { id: 2, title: 'Perkenalan Diri', arabic: 'التعارف', desc: 'Memperkenalkan nama dan asal', emoji: '👋' },
-    { id: 3, title: 'Tanya Arah', arabic: 'السؤال عن الطريق', desc: 'Mencari jalan dan tempat', emoji: '🗺️' },
-    { id: 4, title: 'Di Restoran', arabic: 'في المطعم', desc: 'Memesan makanan dan minuman', emoji: '🍽️' },
-    { id: 5, title: 'Tanya Harga', arabic: 'السؤال عن السعر', desc: 'Belanja dan menawar harga', emoji: '💰' },
-    { id: 6, title: 'Darurat', arabic: 'الطوارئ', desc: 'Situasi darurat dan bantuan', emoji: '🆘' },
-    { id: 7, title: 'Hotel & Penginapan', arabic: 'الفندق', desc: 'Check-in dan layanan hotel', emoji: '🏨' },
-    { id: 8, title: 'Doa & Ibadah Umrah', arabic: 'العمرة', desc: 'Frasa penting saat ibadah', emoji: '🕋' },
-  ];
+  // Pilih data lessons sesuai path
+  let lessons;
+  if (path?.id === 'umrah') {
+    // 15 modul Umrah lengkap dgn percakapan
+    lessons = LEARNING_UMRAH.map(m => ({
+      id: m.id,
+      pathId: m.pathId,
+      order: m.order,
+      title: m.title,
+      arabic: m.arabic,
+      desc: m.description,
+      emoji: m.emoji,
+      isStub: m.isStub,
+      // Pass full module object so LessonDetailScreen can render
+      ...m,
+    }));
+  } else {
+    // Path lain (profesi/beasiswa) — masih placeholder lessons lama
+    lessons = [
+      { id: 1, title: 'Salam & Sapaan', arabic: 'التحية', desc: 'Cara menyapa dan membalas salam', emoji: '🤝' },
+      { id: 2, title: 'Perkenalan Diri', arabic: 'التعارف', desc: 'Memperkenalkan nama dan asal', emoji: '👋' },
+      { id: 3, title: 'Tanya Arah', arabic: 'السؤال عن الطريق', desc: 'Mencari jalan dan tempat', emoji: '🗺️' },
+      { id: 4, title: 'Di Restoran', arabic: 'في المطعم', desc: 'Memesan makanan dan minuman', emoji: '🍽️' },
+      { id: 5, title: 'Tanya Harga', arabic: 'السؤال عن السعر', desc: 'Belanja dan menawar harga', emoji: '💰' },
+      { id: 6, title: 'Darurat', arabic: 'الطوارئ', desc: 'Situasi darurat dan bantuan', emoji: '🆘' },
+      { id: 7, title: 'Hotel & Penginapan', arabic: 'الفندق', desc: 'Check-in dan layanan hotel', emoji: '🏨' },
+      { id: 8, title: 'Doa & Ibadah Umrah', arabic: 'العمرة', desc: 'Frasa penting saat ibadah', emoji: '🕋' },
+    ];
+  }
 
   return (
     <div className="flex-1 flex flex-col px-5 py-6 pb-24">
