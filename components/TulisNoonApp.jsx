@@ -14,6 +14,7 @@ import StreakInfoModal from '@/components/StreakInfoModal';
 import LivesInfoModal from '@/components/LivesInfoModal';
 import MatchArenaScreen from '@/components/MatchArenaScreen';
 import HafalanScreen from '@/components/HafalanScreen';
+import TebakGambarScreen from '@/components/TebakGambarScreen';
 import UnlockHafalanModal from '@/components/UnlockHafalanModal';
 import { PREMIUM_UNLOCK_COST } from '@/lib/hafalan-tier';
 import { checkLivesRefresh } from '@/lib/lives-system';
@@ -350,6 +351,10 @@ export default function TulisNoonApp() {
                   setScreen('tulis-arab');
                   return;
                 }
+                if (g.id === 'image-quiz') {
+                  setScreen('tebak-gambar');
+                  return;
+                }
                 setSelectedGame(g);
                 setScreen('game');
               }} onOpenChallenge={(scenario) => { setSelectedChallenge(scenario || getTodayChallenge()); setScreen('challenge-levels'); }} onOpenGuru={() => setScreen('guru')} achievements={achievements} />}
@@ -455,6 +460,26 @@ export default function TulisNoonApp() {
             } else {
               window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
             }
+          }}
+        />}
+
+        {/* Tebak Gambar — visual vocab quiz */}
+        {screen === 'tebak-gambar' && <TebakGambarScreen
+          lives={authProfile?.lives ?? 10}
+          onNoLives={() => setShowLivesModal(true)}
+          onBack={() => setScreen('main')}
+          onHome={() => { setTab('home'); setScreen('main'); }}
+          onComplete={({ earned, score, totalQuestions }) => {
+            awardXp(earned);
+            setAchievements((a) => [{
+              id: Date.now(),
+              type: 'tebak-gambar',
+              text: `Tebak Gambar — selesai (${score}/${totalQuestions}, +${earned} XP)`,
+              emoji: '🖼️',
+              time: 'baru saja',
+              user: userName || 'Anda',
+            }, ...a]);
+            deductLifeIfLost(score === totalQuestions);
           }}
         />}
 
