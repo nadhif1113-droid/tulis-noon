@@ -373,14 +373,28 @@ function WelcomeCard() {
 // Assistant bubble — render parsed AI response
 // ============================================================================
 function AssistantBubble({ parsed, onSpeak, onCopy, copied }) {
+  const hasArabic = parsed.ar && String(parsed.ar).trim().length > 0;
+  const hasIndo = parsed.indo && String(parsed.indo).trim().length > 0;
+  // Fallback ultimate: kalau dua-duanya kosong (AI parse fail), tampilkan raw atau pesan default
+  const fallbackText = !hasArabic && !hasIndo
+    ? 'Hmm, AI gak ngasih jawaban yang jelas. Coba reformulate pertanyaan kamu — misal: "Gimana cara bilang [X] dalam Arab Hijazi?"'
+    : null;
+
   return (
     <div className="flex items-start gap-2">
       <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, #c9a961, #d4b876)' }}>
         <Sparkles size={14} color="white" />
       </div>
       <div className="flex-1 max-w-[88%] space-y-2">
-        {/* Main Arab response */}
-        {parsed.ar && (
+        {/* FALLBACK: Kalau gak ada ar & indo */}
+        {fallbackText && (
+          <div className="rounded-2xl rounded-tl-sm p-4" style={{ background: 'rgba(160,85,54,0.08)', border: '1.5px solid rgba(160,85,54,0.25)' }}>
+            <p className="text-sm leading-snug" style={{ color: '#a05536' }}>⚠️ {fallbackText}</p>
+          </div>
+        )}
+
+        {/* PRIMARY: Arab + Latin + Indo (kalau ada Arabic) */}
+        {hasArabic && (
           <div className="rounded-2xl rounded-tl-sm p-4" style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.12)' }}>
             <div className="flex items-start justify-between mb-2">
               <span className="text-[9px] tracking-widest uppercase font-bold" style={{ color: '#c9a961' }}>JAWABAN ARAB HIJAZI</span>
@@ -388,7 +402,7 @@ function AssistantBubble({ parsed, onSpeak, onCopy, copied }) {
                 <button onClick={() => onSpeak(parsed.ar)} className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: 'rgba(10,77,60,0.08)' }} aria-label="Dengarkan">
                   <Volume2 size={12} style={{ color: '#0a4d3c' }} />
                 </button>
-                <button onClick={() => onCopy(parsed.ar + '\n' + parsed.latin)} className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: 'rgba(10,77,60,0.08)' }} aria-label="Copy">
+                <button onClick={() => onCopy(parsed.ar + '\n' + (parsed.latin || ''))} className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: 'rgba(10,77,60,0.08)' }} aria-label="Copy">
                   {copied ? <Check size={12} style={{ color: '#0a4d3c' }} /> : <Copy size={12} style={{ color: '#0a4d3c' }} />}
                 </button>
               </div>
@@ -396,8 +410,21 @@ function AssistantBubble({ parsed, onSpeak, onCopy, copied }) {
             <p className="text-2xl leading-relaxed mb-1.5" style={{ fontFamily: 'Amiri, serif', color: '#0a4d3c', direction: 'rtl' }}>
               {parsed.ar}
             </p>
-            <p className="text-xs italic mb-1" style={{ color: '#8b6b3d' }}>{parsed.latin}</p>
-            <p className="text-xs leading-snug" style={{ color: '#3d2817' }}>{parsed.indo}</p>
+            {parsed.latin && (
+              <p className="text-xs italic mb-1" style={{ color: '#8b6b3d' }}>{parsed.latin}</p>
+            )}
+            {parsed.indo && (
+              <p className="text-xs leading-snug" style={{ color: '#3d2817' }}>
+                <strong style={{ color: '#0a4d3c' }}>Arti:</strong> {parsed.indo}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* SECONDARY: Indo doang (kalau gak ada Arabic — misal AI nolak / non-translation) */}
+        {!hasArabic && hasIndo && (
+          <div className="rounded-2xl rounded-tl-sm p-4" style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.12)' }}>
+            <p className="text-sm leading-relaxed" style={{ color: '#3d2817' }}>{parsed.indo}</p>
           </div>
         )}
 

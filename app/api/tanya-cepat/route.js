@@ -105,35 +105,58 @@ export async function POST(request) {
 
     const anthropic = new Anthropic({ apiKey });
 
+    // Prefill technique: paksa Claude output JSON dengan prefill '{'
+    // Ini reliable banget — Claude akan otomatis lanjutin sebagai JSON valid.
     const response = await anthropic.messages.create({
       model: MODEL,
       max_tokens: MAX_TOKENS,
       system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: question.trim() }],
+      messages: [
+        { role: 'user', content: question.trim() },
+        { role: 'assistant', content: '{' },  // prefill — forces JSON continuation
+      ],
     });
 
-    const text = response.content?.[0]?.text || '';
+    const rawText = response.content?.[0]?.text || '';
+    // Prepend the '{' we used as prefill (Claude continues AFTER it)
+    const fullText = '{' + rawText;
 
-    // Parse JSON dari response
+    // Robust JSON extraction — handle case where Claude adds explanation after JSON
     let parsed;
     try {
-      // Strip code fence jika ada
-      const cleaned = text.replace(/```json\s*/g, '').replace(/```\s*$/g, '').trim();
-      parsed = JSON.parse(cleaned);
-    } catch (e) {
-      console.error('Tanya Cepat: failed to parse JSON:', text);
-      return NextResponse.json({
-        error: 'AI response format error.',
-        raw: text,
-      }, { status: 500 });
-    }
-
-    // Validate shape
-    if (!parsed.ar && !parsed.indo) {
-      return NextResponse.json({
-        error: 'AI response missing required fields.',
-        raw: text,
-      }, { status: 500 });
+      // Strategy 1: Try direct parse
+      parsed = JSON.parse(fullText.trim());
+    } catch (e1) {
+      try {
+        // Strategy 2: Extract first balanced { ... } block
+        const match = fullText.match(/\{[\s\S]*?\}(?=\s*$|[^}])/);
+        if (match) {
+          parsed = JSON.parse(match[0]);
+        } else {
+          throw new Error('No JSON block found');
+        }
+      } catch (e2) {
+        try {
+          // Strategy 3: Find largest balanced { ... }
+          const firstBrace = fullText.indexOf('{');
+          const lastBrace = fullText.lastIndexOf('}');
+          if (firstBrace !== -1 && lastBrace > firstBrace) {
+            parsed = JSON.parse(fullText.slice(firstBrace, lastBrace + 1));
+          } else {
+            throw new Error('No JSON braces');
+          }
+        } catch (e3) {
+          // Final fallback: treat the raw text as a plain answer in indo
+          console.error('Tanya Cepat JSON parse failed. Raw:', fullText.slice(0, 500));
+          parsed = {
+            ar: '',
+            latin: '',
+            indo: fullText.replace(/[{}"]/g, '').replace(/\s+/g, ' ').trim().slice(0, 400) || 'AI gak ngasih jawaban yang valid. Coba reformulate pertanyaan kamu.',
+            tips: '',
+            alternatif: [],
+          };
+        }
+      }
     }
 
     return NextResponse.json({
