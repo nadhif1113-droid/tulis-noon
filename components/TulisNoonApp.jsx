@@ -13,6 +13,7 @@ import CoinInfoModal from '@/components/CoinInfoModal';
 import StreakInfoModal from '@/components/StreakInfoModal';
 import LivesInfoModal from '@/components/LivesInfoModal';
 import MatchArenaScreen from '@/components/MatchArenaScreen';
+import HafalanScreen from '@/components/HafalanScreen';
 import { checkLivesRefresh } from '@/lib/lives-system';
 import { calculateStreakUpdate, getStreakMilestoneReward } from '@/lib/streak-system';
 import { updateDailyXp } from '@/lib/tournament-system';
@@ -334,7 +335,7 @@ export default function TulisNoonApp() {
         {screen === 'main' && (
           <>
             <div className="flex-1 pb-20">
-              {tab === 'home' && <HomeTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} coins={authProfile?.coins || 0} lives={authProfile?.lives ?? 10} maxLives={authProfile?.maxLives ?? 10} onShowXpInfo={() => setShowXpModal(true)} onShowCoinInfo={() => setShowCoinModal(true)} onShowStreakInfo={() => setShowStreakModal(true)} onShowLivesInfo={() => setShowLivesModal(true)} onOpenLesson={() => { setSelectedPath({id:'umrah', title:'Wisatawan & Jamaah Umrah'}); setScreen('lessons'); }} onOpenGame={(g) => {
+              {tab === 'home' && <HomeTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} coins={authProfile?.coins || 0} lives={authProfile?.lives ?? 10} maxLives={authProfile?.maxLives ?? 10} hafalanProgress={authProfile?.hafalanProgress || {}} onOpenHafalan={() => setScreen('hafalan')} onShowXpInfo={() => setShowXpModal(true)} onShowCoinInfo={() => setShowCoinModal(true)} onShowStreakInfo={() => setShowStreakModal(true)} onShowLivesInfo={() => setShowLivesModal(true)} onOpenLesson={() => { setSelectedPath({id:'umrah', title:'Wisatawan & Jamaah Umrah'}); setScreen('lessons'); }} onOpenGame={(g) => {
                 // Special routing untuk game yang punya screen sendiri.
                 // Game lain (image-quiz, video-quiz, story) tetap ke GameScreen placeholder.
                 if (g.id === 'chat-roleplay') {
@@ -450,6 +451,40 @@ export default function TulisNoonApp() {
             } else {
               window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
             }
+          }}
+        />}
+
+        {/* Hafalan Quran — fitur menghafal surat pendek (BUKAN game, no lives cost) */}
+        {screen === 'hafalan' && <HafalanScreen
+          hafalanProgress={authProfile?.hafalanProgress || {}}
+          onBack={() => setScreen('main')}
+          onHome={() => { setTab('home'); setScreen('main'); }}
+          onToggleAyat={(suratId, ayatNum) => {
+            // Toggle ayat di hafalanProgress.{suratId}.[ayatNum]
+            const current = authProfile?.hafalanProgress || {};
+            const suratAyat = current[suratId] || [];
+            const isAlreadyMemorized = suratAyat.includes(ayatNum);
+            const newAyat = isAlreadyMemorized
+              ? suratAyat.filter((n) => n !== ayatNum)
+              : [...suratAyat, ayatNum].sort((a, b) => a - b);
+
+            const newProgress = { ...current, [suratId]: newAyat };
+            updateUserProfile({ hafalanProgress: newProgress })
+              .then(() => {
+                // Kasih XP +5 per ayat baru dihafal (tidak deduct kalau un-mark)
+                if (!isAlreadyMemorized) {
+                  awardXp(5);
+                  setAchievements((a) => [{
+                    id: Date.now(),
+                    type: 'hafalan',
+                    text: `Hafal 1 ayat baru — total ${newAyat.length} ayat di surat ini`,
+                    emoji: '📖',
+                    time: 'baru saja',
+                    user: userName || 'Anda',
+                  }, ...a]);
+                }
+              })
+              .catch((err) => console.error('Hafalan toggle error:', err));
           }}
         />}
 
@@ -1028,7 +1063,7 @@ function WelcomeScreen({ onComplete, initialName = '' }) {
 }
 
 // ============ HOME TAB ============
-function HomeTab({ userName, userProfile, xp, streak, coins, lives, maxLives, onShowXpInfo, onShowCoinInfo, onShowStreakInfo, onShowLivesInfo, onOpenLesson, onOpenGame, onOpenChallenge, onOpenGuru, achievements }) {
+function HomeTab({ userName, userProfile, xp, streak, coins, lives, maxLives, hafalanProgress, onOpenHafalan, onShowXpInfo, onShowCoinInfo, onShowStreakInfo, onShowLivesInfo, onOpenLesson, onOpenGame, onOpenChallenge, onOpenGuru, achievements }) {
   // Personalized greeting based on interests
   const personalizedNote = userProfile?.interests?.includes('religion')
     ? 'Mari belajar bahasa Al-Quran hari ini'
@@ -1191,7 +1226,7 @@ function HomeTab({ userName, userProfile, xp, streak, coins, lives, maxLives, on
 
       {/* Continue Learning */}
       <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#8b6b3d' }}>Lanjut Belajar</p>
-      <button onClick={onOpenLesson} className="w-full p-4 rounded-2xl flex items-center gap-3 mb-6 active:scale-[0.98] transition-transform" style={{ background: 'white', border: '1px solid rgba(10,77,60,0.08)' }}>
+      <button onClick={onOpenLesson} className="w-full p-4 rounded-2xl flex items-center gap-3 mb-3 active:scale-[0.98] transition-transform" style={{ background: 'white', border: '1px solid rgba(10,77,60,0.08)' }}>
         <div className="w-12 h-12 rounded-xl flex items-center justify-center text-xl" style={{ background: 'rgba(10,77,60,0.1)' }}>🤝</div>
         <div className="flex-1 text-left">
           <p className="font-semibold text-sm" style={{ color: '#1a1a1a' }}>Perkenalan Diri</p>
@@ -1202,6 +1237,37 @@ function HomeTab({ userName, userProfile, xp, streak, coins, lives, maxLives, on
         </div>
         <ChevronRight size={18} style={{ color: '#8b6b3d' }} />
       </button>
+
+      {/* Hafalan Quran — fitur menghafal surat (BUKAN game, no lives cost) */}
+      {(() => {
+        // Hitung total ayat yang udah dihafal user (semua surat)
+        const totalMemorized = Object.values(hafalanProgress || {}).reduce((acc, arr) => acc + (arr?.length || 0), 0);
+        return (
+          <button onClick={onOpenHafalan} className="w-full p-4 rounded-2xl flex items-center gap-3 mb-6 active:scale-[0.98] transition-transform relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #0a4d3c, #1a6b56)' }}>
+            <div className="absolute -right-4 -top-2 text-5xl opacity-15" style={{ fontFamily: 'Amiri, serif', color: '#c9a961' }}>﷽</div>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0" style={{ background: 'rgba(201,169,97,0.25)' }}>
+              📖
+            </div>
+            <div className="flex-1 text-left min-w-0">
+              <div className="flex items-center gap-2 mb-0.5">
+                <p className="font-semibold text-sm text-white">Hafalan Quran</p>
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded text-white" style={{ background: 'rgba(201,169,97,0.4)' }}>
+                  BUKAN GAME
+                </span>
+              </div>
+              <p className="text-xs text-white opacity-90">
+                {totalMemorized > 0
+                  ? `${totalMemorized} ayat udah dihafal · lanjutin yuk`
+                  : 'Mulai hafalin surat pendek Juz Amma'}
+              </p>
+              <p className="text-[10px] text-white opacity-70 mt-0.5 italic">
+                Gak konsumsi nyawa · cuma belajar
+              </p>
+            </div>
+            <ChevronRight size={18} style={{ color: '#c9a961' }} />
+          </button>
+        );
+      })()}
 
       {/* Quick Games — di-rekomendasi berdasarkan minat user dari onboarding */}
       {(() => {
