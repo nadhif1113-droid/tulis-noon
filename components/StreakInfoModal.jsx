@@ -102,7 +102,7 @@ export default function StreakInfoModal({ streak = 0, onClose }) {
           <div className="rounded-2xl p-3 mb-4" style={{ background: 'rgba(201,169,97,0.1)', border: '1px dashed #c9a961' }}>
             <p className="text-[10px] tracking-widest uppercase font-bold mb-1.5" style={{ color: '#c9a961' }}>Tips</p>
             <p className="text-xs leading-relaxed" style={{ color: '#8b6b3d' }}>
-              Set pengingat tiap hari (mis. setelah Subuh atau Maghrib) buat buka Tulis Noon 2-5 menit. Konsistensi kecil > burst intensif.
+              Set pengingat tiap hari (mis. setelah Subuh atau Maghrib) buat buka Tulis Noon 2-5 menit. Konsistensi kecil &gt; burst intensif.
             </p>
           </div>
 
