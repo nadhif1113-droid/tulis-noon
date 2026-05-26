@@ -1,40 +1,82 @@
 // components/HafalanScreen.jsx
-// Fitur Hafalan Quran — list surat pendek + detail per ayat dgn audio.
-// Track progress hafalan: ayat yang udah ditandai "Sudah hafal" di Firestore.
-// BUKAN game — gak konsumsi nyawa, gak ada skor. Cuma tools belajar.
+// Hafalan Quran v2 — 5-stage method dgn audio syekh Alafasy + voice recognition.
+// Surat dibagi chunk max 5 ayat. Tiap chunk lewat 5 stage:
+//   1. Listen tiap ayat 3x
+//   2. Listen full chunk
+//   3. Recite per ayat (voice rec)
+//   4. Recite full WITH text visible
+//   5. Recite full WITHOUT text (memory)
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { ArrowLeft, Home, Volume2, Check, BookOpen, Sparkles, ChevronRight, RotateCcw } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { ArrowLeft, Home, Volume2, Check, Mic, MicOff, BookOpen, Sparkles, ChevronRight, RotateCcw, Star, X, Play, Pause } from 'lucide-react';
 import { HAFALAN_SURAT } from '@/data/hafalan-surat';
+import {
+  getAyatAudioUrl,
+  splitIntoChunks,
+  compareArabicSpeech,
+  isSpeechRecognitionSupported,
+  STAGES,
+  REQUIRED_LISTEN_COUNT,
+  CHUNK_COMPLETION_REWARD,
+} from '@/lib/hafalan-method';
 
-export default function HafalanScreen({ hafalanProgress = {}, onBack, onHome, onToggleAyat }) {
-  const [view, setView] = useState('list'); // list | surat
+export default function HafalanScreen({ hafalanProgress = {}, onBack, onHome, onChunkComplete }) {
+  const [view, setView] = useState('list'); // list | chunks | memorize
   const [selectedSurat, setSelectedSurat] = useState(null);
+  const [selectedChunkIdx, setSelectedChunkIdx] = useState(0);
 
-  if (view === 'surat' && selectedSurat) {
+  if (view === 'memorize' && selectedSurat) {
+    const chunks = splitIntoChunks(selectedSurat.ayat);
+    const chunk = chunks[selectedChunkIdx];
     return (
-      <SuratView
+      <MemorizeFlow
         surat={selectedSurat}
-        memorizedAyat={hafalanProgress[selectedSurat.id] || []}
-        onBack={() => setView('list')}
-        onToggleAyat={(ayatNum) => onToggleAyat && onToggleAyat(selectedSurat.id, ayatNum)}
+        chunk={chunk}
+        chunkIdx={selectedChunkIdx}
+        totalChunks={chunks.length}
+        onComplete={() => {
+          if (onChunkComplete) onChunkComplete(selectedSurat.id, selectedChunkIdx);
+          // Kalau ada chunk berikutnya, auto-arah ke chunks view biar user pilih
+          setView('chunks');
+        }}
+        onBack={() => setView('chunks')}
       />
     );
   }
 
-  return <ListView hafalanProgress={hafalanProgress} onBack={onBack} onHome={onHome} onSelect={(s) => { setSelectedSurat(s); setView('surat'); }} />;
+  if (view === 'chunks' && selectedSurat) {
+    return (
+      <ChunksView
+        surat={selectedSurat}
+        progress={hafalanProgress[selectedSurat.id] || []}
+        onBack={() => setView('list')}
+        onHome={onHome}
+        onSelectChunk={(idx) => {
+          setSelectedChunkIdx(idx);
+          setView('memorize');
+        }}
+      />
+    );
+  }
+
+  return <ListView hafalanProgress={hafalanProgress} onBack={onBack} onHome={onHome} onSelect={(s) => { setSelectedSurat(s); setView('chunks'); }} />;
 }
 
 // ============================================================================
-// LIST VIEW — daftar surat Juz Amma + progress per surat
+// LIST VIEW — daftar surat + progress chunk per surat
 // ============================================================================
 function ListView({ hafalanProgress, onBack, onHome, onSelect }) {
-  // Hitung total ayat hafalan dari semua surat
-  const totalMemorized = Object.values(hafalanProgress).reduce((acc, arr) => acc + (arr?.length || 0), 0);
-  const totalAyat = HAFALAN_SURAT.reduce((acc, s) => acc + s.totalAyat, 0);
-  const percent = totalAyat > 0 ? Math.round((totalMemorized / totalAyat) * 100) : 0;
+  const totalChunksCompleted = Object.values(hafalanProgress).reduce(
+    (acc, arr) => acc + (Array.isArray(arr) ? arr.length : 0),
+    0
+  );
+  const totalChunksAll = HAFALAN_SURAT.reduce(
+    (acc, s) => acc + splitIntoChunks(s.ayat).length,
+    0
+  );
+  const percent = totalChunksAll > 0 ? Math.round((totalChunksCompleted / totalChunksAll) * 100) : 0;
 
   return (
     <div className="flex-1 flex flex-col px-5 py-6">
@@ -53,31 +95,31 @@ function ListView({ hafalanProgress, onBack, onHome, onSelect }) {
         </div>
       </div>
 
-      {/* Hero card */}
       <div className="rounded-3xl p-5 mb-4 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #0a4d3c, #1a6b56)' }}>
         <div className="absolute -right-6 -top-2 text-7xl opacity-15" style={{ fontFamily: 'Amiri, serif', color: '#c9a961' }}>﷽</div>
-        <p className="text-[10px] tracking-[0.3em] uppercase text-white opacity-80 mb-1 font-bold">Hafalan</p>
+        <p className="text-[10px] tracking-[0.3em] uppercase text-white opacity-80 mb-1 font-bold">Metode 5-Tahap</p>
         <h3 className="text-xl text-white mb-2 leading-tight" style={{ fontFamily: 'Fraunces, serif', fontWeight: 700 }}>
-          Hafalin pelan-pelan
+          Hafalin dengan benar
         </h3>
         <p className="text-sm text-white opacity-95 leading-relaxed mb-3">
-          Mulai dari surat pendek. Dengarkan, baca, ulang sampai hafal. Centang ayat yang udah dikuasai.
+          Dengar audio syekh Alafasy → ulang → baca → cek bacaanmu sendiri. Surat &gt; 5 ayat dipecah jadi chunk biar nyaman.
         </p>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1 px-2.5 py-1 rounded-full" style={{ background: 'rgba(201,169,97,0.3)' }}>
             <Sparkles size={11} color="#c9a961" />
-            <span className="text-xs font-bold text-white">{totalMemorized} / {totalAyat} ayat</span>
+            <span className="text-xs font-bold text-white">{totalChunksCompleted}/{totalChunksAll} chunk</span>
           </div>
-          <span className="text-xs text-white opacity-90">{percent}% terhafal</span>
+          <span className="text-xs text-white opacity-90">{percent}% selesai</span>
         </div>
       </div>
 
       <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#8b6b3d' }}>Surat Pendek (Juz Amma)</p>
       <div className="space-y-2">
         {HAFALAN_SURAT.map((s) => {
-          const memorized = (hafalanProgress[s.id] || []).length;
-          const isComplete = memorized >= s.totalAyat;
-          const percentSurat = Math.round((memorized / s.totalAyat) * 100);
+          const chunks = splitIntoChunks(s.ayat);
+          const completedChunks = (hafalanProgress[s.id] || []).length;
+          const isComplete = completedChunks >= chunks.length;
+          const percentSurat = chunks.length > 0 ? Math.round((completedChunks / chunks.length) * 100) : 0;
           return (
             <button
               key={s.id}
@@ -96,13 +138,13 @@ function ListView({ hafalanProgress, onBack, onHome, onSelect }) {
                   <p className="font-semibold text-base leading-tight" style={{ color: '#0a4d3c' }}>{s.name}</p>
                   <span className="text-base" style={{ fontFamily: 'Amiri, serif', color: '#c9a961' }}>{s.arName}</span>
                 </div>
-                <p className="text-[11px] leading-snug" style={{ color: '#666' }}>{s.description}</p>
+                <p className="text-[11px] leading-snug" style={{ color: '#666' }}>{s.totalAyat} ayat · {chunks.length} chunk</p>
                 <div className="flex items-center gap-2 mt-1.5">
                   <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(10,77,60,0.1)' }}>
                     <div className="h-full transition-all rounded-full" style={{ width: `${percentSurat}%`, background: isComplete ? '#c9a961' : '#0a4d3c' }} />
                   </div>
                   <span className="text-[10px] font-bold" style={{ color: '#8b6b3d' }}>
-                    {memorized}/{s.totalAyat}
+                    {completedChunks}/{chunks.length}
                   </span>
                 </div>
               </div>
@@ -113,64 +155,25 @@ function ListView({ hafalanProgress, onBack, onHome, onSelect }) {
       </div>
 
       <p className="text-[11px] text-center mt-4 italic" style={{ color: '#8b6b3d' }}>
-        "Sebaik-baik kalian adalah yang belajar Al-Quran dan mengajarkannya"<br/>
-        <span className="text-[10px] opacity-80">— HR. Bukhari</span>
+        "Sebaik-baik kalian adalah yang belajar Al-Quran dan mengajarkannya" — HR. Bukhari
       </p>
     </div>
   );
 }
 
 // ============================================================================
-// SURAT VIEW — detail ayat dgn audio + tombol hafal
+// CHUNKS VIEW — daftar chunks dalam 1 surat
 // ============================================================================
-function SuratView({ surat, memorizedAyat, onBack, onToggleAyat }) {
-  const [playingAyat, setPlayingAyat] = useState(null);
-
-  // TTS Arabic — ar-SA voice
-  const playAudio = (ayat) => {
-    if (typeof window === 'undefined') return;
-    const synth = window.speechSynthesis;
-    if (!synth) return;
-    synth.cancel();
-    setPlayingAyat(ayat.num);
-    const utter = new SpeechSynthesisUtterance(ayat.ar);
-    utter.lang = 'ar-SA';
-    utter.rate = 0.7;
-    utter.onend = () => setPlayingAyat(null);
-    utter.onerror = () => setPlayingAyat(null);
-    synth.speak(utter);
-  };
-
-  // Play seluruh surat ayat-by-ayat
-  const playWholeSurat = () => {
-    if (typeof window === 'undefined') return;
-    const synth = window.speechSynthesis;
-    if (!synth) return;
-    synth.cancel();
-    surat.ayat.forEach((ayat, i) => {
-      const utter = new SpeechSynthesisUtterance(ayat.ar);
-      utter.lang = 'ar-SA';
-      utter.rate = 0.7;
-      if (i === 0) {
-        utter.onstart = () => setPlayingAyat(ayat.num);
-      } else {
-        utter.onstart = () => setPlayingAyat(ayat.num);
-      }
-      if (i === surat.ayat.length - 1) {
-        utter.onend = () => setPlayingAyat(null);
-      }
-      synth.speak(utter);
-    });
-  };
-
-  const memorizedCount = memorizedAyat.length;
-  const isComplete = memorizedCount >= surat.totalAyat;
-
+function ChunksView({ surat, progress = [], onBack, onHome, onSelectChunk }) {
+  const chunks = splitIntoChunks(surat.ayat);
   return (
-    <div className="flex-1 flex flex-col px-5 py-6 pb-20">
+    <div className="flex-1 flex flex-col px-5 py-6">
       <div className="flex items-center gap-2 mb-4">
         <button onClick={onBack} className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(10,77,60,0.08)' }}>
           <ArrowLeft size={18} style={{ color: '#0a4d3c' }} />
+        </button>
+        <button onClick={onHome || onBack} className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(10,77,60,0.08)' }}>
+          <Home size={17} style={{ color: '#0a4d3c' }} />
         </button>
         <div className="flex-1">
           <p className="text-xs tracking-widest uppercase" style={{ color: '#8b6b3d' }}>Surat {surat.number}</p>
@@ -178,111 +181,776 @@ function SuratView({ surat, memorizedAyat, onBack, onToggleAyat }) {
             {surat.name}
           </h2>
         </div>
-        <button
-          onClick={playWholeSurat}
-          className="px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5"
-          style={{ background: 'rgba(10,77,60,0.08)', color: '#0a4d3c' }}
-        >
-          <Volume2 size={12} /> Putar Semua
-        </button>
       </div>
 
-      {/* Surat header */}
       <div className="rounded-3xl p-5 mb-4 text-center relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #0a4d3c, #1a6b56)' }}>
         <div className="absolute -right-2 -top-2 text-7xl opacity-15" style={{ fontFamily: 'Amiri, serif', color: '#c9a961' }}>﷽</div>
         <p className="text-4xl mb-1 text-white" style={{ fontFamily: 'Amiri, serif' }}>{surat.arName}</p>
         <p className="text-xs text-white opacity-90 mb-2">{surat.meaning} · {surat.totalAyat} ayat</p>
-        <p className="text-base text-white" style={{ fontFamily: 'Amiri, serif' }}>بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
-        <p className="text-xs italic text-white opacity-80 mt-1">(Dengan nama Allah Yang Maha Pengasih lagi Maha Penyayang)</p>
-        <div className="mt-3 flex items-center justify-center gap-2">
-          <div className="flex items-center gap-1 px-2.5 py-1 rounded-full" style={{ background: 'rgba(201,169,97,0.3)' }}>
-            <Sparkles size={11} color="#c9a961" />
-            <span className="text-xs font-bold text-white">{memorizedCount}/{surat.totalAyat} ayat dihafal</span>
+        <p className="text-xs text-white opacity-80 italic">{surat.description}</p>
+      </div>
+
+      <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#8b6b3d' }}>
+        Pilih Bagian ({chunks.length} chunk)
+      </p>
+      <div className="space-y-3">
+        {chunks.map((chunk, idx) => {
+          const isCompleted = progress.includes(idx);
+          const isLocked = idx > 0 && !progress.includes(idx - 1);
+          return (
+            <button
+              key={idx}
+              onClick={() => !isLocked && onSelectChunk(idx)}
+              disabled={isLocked}
+              className="w-full p-4 rounded-2xl text-left flex items-center gap-3 transition-transform active:scale-[0.98] disabled:active:scale-100"
+              style={{
+                background: 'white',
+                border: isCompleted ? '1.5px solid #c9a961' : isLocked ? '1.5px dashed rgba(139,107,61,0.3)' : '1.5px solid rgba(10,77,60,0.12)',
+                opacity: isLocked ? 0.6 : 1,
+              }}
+            >
+              <div
+                className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
+                style={{ background: isCompleted ? 'linear-gradient(135deg, #c9a961, #d4b876)' : isLocked ? 'rgba(139,107,61,0.15)' : 'linear-gradient(135deg, #0a4d3c, #1a6b56)' }}
+              >
+                {isCompleted ? '⭐' : isLocked ? '🔒' : '📖'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-base leading-tight" style={{ color: '#0a4d3c' }}>
+                  Chunk {idx + 1} · Ayat {chunk.startAyat}–{chunk.endAyat}
+                </p>
+                <p className="text-xs leading-snug" style={{ color: '#666' }}>
+                  {chunk.ayat.length} ayat · 5 tahap metode hafalan
+                </p>
+                {isCompleted && (
+                  <p className="text-[11px] mt-1 font-bold" style={{ color: '#c9a961' }}>
+                    ✓ Sudah dihafal
+                  </p>
+                )}
+                {isLocked && (
+                  <p className="text-[11px] mt-1 font-bold" style={{ color: '#8b6b3d' }}>
+                    Selesaikan chunk sebelumnya dulu
+                  </p>
+                )}
+              </div>
+              {!isLocked && <ChevronRight size={16} style={{ color: '#c9a961' }} className="flex-shrink-0" />}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="rounded-2xl p-3 mt-4" style={{ background: 'rgba(201,169,97,0.1)', border: '1px dashed #c9a961' }}>
+        <p className="text-[10px] tracking-widest uppercase font-bold mb-1.5" style={{ color: '#c9a961' }}>5 Tahap per Chunk</p>
+        <ul className="text-xs space-y-1" style={{ color: '#8b6b3d' }}>
+          <li>1. 🎧 Dengar tiap ayat min 3x</li>
+          <li>2. 📻 Dengar utuh sekaligus</li>
+          <li>3. 🎤 Baca per ayat — cek bacaanmu</li>
+          <li>4. 📖 Baca utuh dengan teks</li>
+          <li>5. 🌟 Hafalan penuh tanpa teks</li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// MEMORIZE FLOW — orchestrator untuk 5 stage
+// ============================================================================
+function MemorizeFlow({ surat, chunk, chunkIdx, totalChunks, onComplete, onBack }) {
+  const [stageId, setStageId] = useState(1);
+  const totalStages = STAGES.length;
+
+  const advanceStage = () => {
+    if (stageId < totalStages) {
+      setStageId(stageId + 1);
+    } else {
+      onComplete();
+    }
+  };
+
+  return (
+    <div className="flex-1 flex flex-col">
+      {/* Sticky header */}
+      <div className="px-5 pt-5 pb-3" style={{ background: 'linear-gradient(180deg, #faf6ee 0%, rgba(250,246,238,0.95) 100%)' }}>
+        <div className="flex items-center justify-between mb-3">
+          <button onClick={onBack} className="text-xs font-semibold flex items-center gap-1" style={{ color: '#8b6b3d' }}>
+            <ArrowLeft size={14} /> Keluar
+          </button>
+          <p className="text-xs tracking-widest uppercase font-bold" style={{ color: '#0a4d3c' }}>
+            Chunk {chunkIdx + 1}/{totalChunks} · {surat.name}
+          </p>
+          <span className="text-[10px] font-semibold" style={{ color: '#8b6b3d' }}>
+            Tahap {stageId}/{totalStages}
+          </span>
+        </div>
+
+        {/* Stage progress dots */}
+        <div className="flex gap-1 mb-2">
+          {STAGES.map((s) => (
+            <div
+              key={s.id}
+              className="flex-1 h-1.5 rounded-full transition-all"
+              style={{
+                background: s.id < stageId ? '#c9a961' : s.id === stageId ? '#0a4d3c' : 'rgba(10,77,60,0.15)',
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Stage label */}
+        <div className="flex items-center gap-2 mt-1">
+          <span className="text-lg">{STAGES.find((s) => s.id === stageId).emoji}</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold" style={{ color: '#0a4d3c' }}>
+              {STAGES.find((s) => s.id === stageId).label}
+            </p>
+            <p className="text-[11px] leading-tight" style={{ color: '#8b6b3d' }}>
+              {STAGES.find((s) => s.id === stageId).desc}
+            </p>
           </div>
-          {isComplete && <span className="text-xs font-bold text-white">⭐ SELESAI</span>}
         </div>
       </div>
 
-      {/* Ayat list */}
-      <div className="space-y-3">
-        {surat.ayat.map((ayat) => {
-          const isMemorized = memorizedAyat.includes(ayat.num);
-          const isPlaying = playingAyat === ayat.num;
-          return (
+      {/* Stage content */}
+      <div className="flex-1 overflow-y-auto">
+        {stageId === 1 && <Stage1ListenEach surat={surat} chunk={chunk} onComplete={advanceStage} />}
+        {stageId === 2 && <Stage2ListenFull surat={surat} chunk={chunk} onComplete={advanceStage} />}
+        {stageId === 3 && <Stage3ReciteEach surat={surat} chunk={chunk} onComplete={advanceStage} />}
+        {stageId === 4 && <Stage4ReciteFullVisible surat={surat} chunk={chunk} onComplete={advanceStage} />}
+        {stageId === 5 && <Stage5ReciteMemory surat={surat} chunk={chunk} onComplete={advanceStage} />}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// STAGE 1 — Listen each ayat min 3x, auto-advance
+// ============================================================================
+function Stage1ListenEach({ surat, chunk, onComplete }) {
+  const [ayatIdx, setAyatIdx] = useState(0);
+  const [listenCount, setListenCount] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef(null);
+
+  const currentAyat = chunk.ayat[ayatIdx];
+  const audioUrl = getAyatAudioUrl(surat.number, currentAyat.num);
+  const isFinishedAyat = listenCount >= REQUIRED_LISTEN_COUNT;
+  const isFinishedAll = ayatIdx >= chunk.ayat.length - 1 && isFinishedAyat;
+
+  const playAudio = () => {
+    if (!audioRef.current) return;
+    audioRef.current.currentTime = 0;
+    audioRef.current.play();
+    setIsPlaying(true);
+  };
+
+  const handleAudioEnd = () => {
+    setIsPlaying(false);
+    setListenCount((c) => c + 1);
+  };
+
+  const advanceAyat = () => {
+    if (ayatIdx < chunk.ayat.length - 1) {
+      setAyatIdx(ayatIdx + 1);
+      setListenCount(0);
+    } else {
+      onComplete();
+    }
+  };
+
+  return (
+    <div className="px-5 py-4">
+      <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: '#8b6b3d' }}>Ayat {currentAyat.num}</p>
+
+      {/* Ayat card */}
+      <div className="rounded-2xl p-5 mb-4" style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.1)' }}>
+        <p className="leading-relaxed mb-3" style={{ fontFamily: 'Amiri, serif', fontSize: '28px', color: '#0a4d3c', direction: 'rtl', textAlign: 'right' }}>
+          {currentAyat.ar}
+        </p>
+        <p className="text-sm italic mb-2" style={{ color: '#a87f47' }}>
+          {currentAyat.latin}
+        </p>
+        <p className="text-xs leading-relaxed" style={{ color: '#3d2817' }}>
+          {currentAyat.id}
+        </p>
+      </div>
+
+      {/* Audio control */}
+      <audio ref={audioRef} src={audioUrl} onEnded={handleAudioEnd} preload="auto" />
+      <button
+        onClick={playAudio}
+        disabled={isPlaying}
+        className="w-full py-5 rounded-2xl flex items-center justify-center gap-3 mb-3 transition-transform active:scale-[0.98] disabled:opacity-70"
+        style={{ background: 'linear-gradient(135deg, #0a4d3c, #1a6b56)', color: 'white' }}
+      >
+        {isPlaying ? <Pause size={20} /> : <Play size={20} fill="white" />}
+        <span className="font-bold text-base">
+          {isPlaying ? 'Sedang diputar...' : listenCount === 0 ? 'Putar Audio Ayat' : 'Putar Lagi'}
+        </span>
+      </button>
+
+      {/* Listen counter */}
+      <div className="rounded-2xl p-4 mb-4 text-center" style={{ background: 'rgba(201,169,97,0.1)', border: '1.5px dashed #c9a961' }}>
+        <p className="text-[10px] uppercase tracking-widest font-bold mb-1" style={{ color: '#c9a961' }}>Hitungan Dengar</p>
+        <div className="flex items-center justify-center gap-2 mb-2">
+          {[1, 2, 3].map((n) => (
             <div
-              key={ayat.num}
-              className="rounded-2xl p-4 relative"
+              key={n}
+              className="w-10 h-10 rounded-full flex items-center justify-center text-xl"
               style={{
-                background: 'white',
-                border: isMemorized ? '1.5px solid #c9a961' : '1px solid rgba(10,77,60,0.1)',
+                background: n <= listenCount ? '#c9a961' : 'rgba(201,169,97,0.2)',
+                color: n <= listenCount ? 'white' : '#8b6b3d',
               }}
             >
-              {/* Header ayat number + buttons */}
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: isMemorized ? '#c9a961' : 'rgba(10,77,60,0.08)', color: isMemorized ? 'white' : '#0a4d3c' }}>
-                    {ayat.num}
-                  </div>
-                  <span className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: '#8b6b3d' }}>
-                    Ayat {ayat.num}
-                  </span>
+              {n <= listenCount ? '✓' : n}
+            </div>
+          ))}
+        </div>
+        <p className="text-xs" style={{ color: '#8b6b3d' }}>
+          {isFinishedAyat ? '✨ Sudah cukup! Lanjutkan ke ayat berikutnya.' : `Dengar ${REQUIRED_LISTEN_COUNT - listenCount}x lagi minimal`}
+        </p>
+      </div>
+
+      {/* Advance button */}
+      {isFinishedAyat && (
+        <button
+          onClick={advanceAyat}
+          className="w-full py-4 rounded-2xl text-white font-bold flex items-center justify-center gap-2"
+          style={{ background: '#c9a961' }}
+        >
+          {isFinishedAll ? 'Lanjut Tahap 2 — Dengar Penuh' : `Lanjut Ayat ${chunk.ayat[ayatIdx + 1]?.num}`}
+          <ChevronRight size={18} />
+        </button>
+      )}
+
+      {/* Progress indicator */}
+      <div className="flex items-center justify-center gap-1 mt-4">
+        {chunk.ayat.map((_, i) => (
+          <div
+            key={i}
+            className="w-2 h-2 rounded-full"
+            style={{
+              background: i < ayatIdx ? '#c9a961' : i === ayatIdx ? '#0a4d3c' : 'rgba(10,77,60,0.15)',
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// STAGE 2 — Listen full chunk (semua ayat berurutan)
+// ============================================================================
+function Stage2ListenFull({ surat, chunk, onComplete }) {
+  const [playingIdx, setPlayingIdx] = useState(-1);
+  const [hasListenedFull, setHasListenedFull] = useState(false);
+  const audioRef = useRef(null);
+
+  const playAll = () => {
+    setPlayingIdx(0);
+    playAyatAt(0);
+  };
+
+  const playAyatAt = (idx) => {
+    if (idx >= chunk.ayat.length) {
+      setPlayingIdx(-1);
+      setHasListenedFull(true);
+      return;
+    }
+    setPlayingIdx(idx);
+    if (audioRef.current) {
+      audioRef.current.src = getAyatAudioUrl(surat.number, chunk.ayat[idx].num);
+      audioRef.current.play();
+    }
+  };
+
+  const handleEnded = () => {
+    playAyatAt(playingIdx + 1);
+  };
+
+  return (
+    <div className="px-5 py-4">
+      <audio ref={audioRef} onEnded={handleEnded} preload="auto" />
+
+      {/* Full chunk text */}
+      <div className="rounded-2xl p-5 mb-4 space-y-3" style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.1)' }}>
+        {chunk.ayat.map((a, i) => {
+          const isCurrent = playingIdx === i;
+          const isPast = playingIdx > i || (playingIdx === -1 && hasListenedFull);
+          return (
+            <div
+              key={a.num}
+              className="pb-3 transition-all"
+              style={{
+                borderBottom: i < chunk.ayat.length - 1 ? '1px solid rgba(10,77,60,0.08)' : 'none',
+                opacity: isCurrent ? 1 : isPast ? 0.5 : 0.8,
+                background: isCurrent ? 'rgba(201,169,97,0.08)' : 'transparent',
+                margin: isCurrent ? '0 -8px' : '0',
+                padding: isCurrent ? '8px' : '0 0 12px 0',
+                borderRadius: isCurrent ? '12px' : '0',
+              }}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold" style={{ background: isCurrent ? '#0a4d3c' : 'rgba(10,77,60,0.1)', color: isCurrent ? 'white' : '#0a4d3c' }}>
+                  {a.num}
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => playAudio(ayat)}
-                    className="w-9 h-9 rounded-full flex items-center justify-center transition-transform active:scale-90"
-                    style={{ background: isPlaying ? 'rgba(10,77,60,0.15)' : 'rgba(10,77,60,0.05)' }}
-                    aria-label="Putar audio"
-                  >
-                    {isPlaying ? (
-                      <span className="text-base">🔊</span>
-                    ) : (
-                      <Volume2 size={15} style={{ color: '#0a4d3c' }} />
-                    )}
-                  </button>
-                  <button
-                    onClick={() => onToggleAyat(ayat.num)}
-                    className="px-3 py-2 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-transform active:scale-95"
-                    style={{
-                      background: isMemorized ? '#c9a961' : 'rgba(10,77,60,0.08)',
-                      color: isMemorized ? 'white' : '#0a4d3c',
-                    }}
-                  >
-                    {isMemorized ? (
-                      <><Check size={13} /> Hafal</>
-                    ) : (
-                      <>Tandai Hafal</>
-                    )}
-                  </button>
-                </div>
+                {isCurrent && <span className="text-xs font-bold animate-pulse" style={{ color: '#0a4d3c' }}>🔊 Sedang diputar</span>}
               </div>
-
-              {/* Arabic */}
-              <p className="leading-relaxed mb-2" style={{ fontFamily: 'Amiri, serif', fontSize: '24px', color: '#0a4d3c', direction: 'rtl', textAlign: 'right' }}>
-                {ayat.ar}
-              </p>
-
-              {/* Latin */}
-              <p className="text-sm italic leading-snug mb-2" style={{ color: '#a87f47' }}>
-                {ayat.latin}
-              </p>
-
-              {/* Indonesia */}
-              <p className="text-xs leading-relaxed" style={{ color: '#3d2817' }}>
-                {ayat.id}
+              <p className="leading-relaxed" style={{ fontFamily: 'Amiri, serif', fontSize: '20px', color: '#0a4d3c', direction: 'rtl', textAlign: 'right' }}>
+                {a.ar}
               </p>
             </div>
           );
         })}
       </div>
 
-      {/* Footer message */}
-      <div className="rounded-2xl p-3 mt-4" style={{ background: 'rgba(201,169,97,0.1)', border: '1px dashed #c9a961' }}>
-        <p className="text-[10px] tracking-widest uppercase font-bold mb-1" style={{ color: '#c9a961' }}>Tips Menghafal</p>
-        <p className="text-xs leading-relaxed" style={{ color: '#8b6b3d' }}>
-          Putar audio dulu, baca pelan-pelan sambil ikut. Ulangi 5-10 kali. Tutup arabnya, coba baca dari ingatan. Kalau lancar, centang "Tandai Hafal".
+      {/* Play full button */}
+      <button
+        onClick={playAll}
+        disabled={playingIdx >= 0}
+        className="w-full py-4 rounded-2xl text-white font-bold flex items-center justify-center gap-2 mb-3 disabled:opacity-70"
+        style={{ background: 'linear-gradient(135deg, #0a4d3c, #1a6b56)' }}
+      >
+        {playingIdx >= 0 ? <><Pause size={18} /> Memutar ayat {chunk.ayat[playingIdx]?.num}...</> : <><Play size={18} fill="white" /> Putar Semua Ayat</>}
+      </button>
+
+      {/* Status */}
+      {hasListenedFull && (
+        <div className="rounded-2xl p-3 mb-3 text-center" style={{ background: 'rgba(10,77,60,0.06)', border: '1px solid rgba(10,77,60,0.15)' }}>
+          <p className="text-sm font-bold" style={{ color: '#0a4d3c' }}>✓ Sudah dengar penuh!</p>
+          <p className="text-xs mt-0.5" style={{ color: '#8b6b3d' }}>Putar lagi kalau perlu, atau lanjut ke tahap baca.</p>
+        </div>
+      )}
+
+      <button
+        onClick={onComplete}
+        disabled={!hasListenedFull}
+        className="w-full py-4 rounded-2xl text-white font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+        style={{ background: '#c9a961' }}
+      >
+        Lanjut Tahap 3 — Baca per Ayat <ChevronRight size={18} />
+      </button>
+    </div>
+  );
+}
+
+// ============================================================================
+// STAGE 3 — Recite per ayat (voice recognition)
+// ============================================================================
+function Stage3ReciteEach({ surat, chunk, onComplete }) {
+  const [ayatIdx, setAyatIdx] = useState(0);
+  const [attempts, setAttempts] = useState(0);
+  const [recognized, setRecognized] = useState(null); // { transcript, similarity, isMatch }
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
+
+  const supported = isSpeechRecognitionSupported();
+  const currentAyat = chunk.ayat[ayatIdx];
+  const isFinishedAll = ayatIdx >= chunk.ayat.length;
+
+  useEffect(() => {
+    if (!supported || typeof window === 'undefined') return;
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const rec = new SR();
+    rec.lang = 'ar-SA';
+    rec.continuous = false;
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+    rec.onresult = (event) => {
+      const transcript = event.results[0]?.[0]?.transcript || '';
+      const result = compareArabicSpeech(transcript, currentAyat.ar);
+      setRecognized({ transcript, ...result });
+      setIsListening(false);
+    };
+    rec.onerror = (e) => {
+      console.error('Speech recognition error:', e);
+      setIsListening(false);
+    };
+    rec.onend = () => {
+      setIsListening(false);
+    };
+    recognitionRef.current = rec;
+    return () => {
+      try { rec.stop(); } catch {}
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ayatIdx, supported]);
+
+  const startListening = () => {
+    if (!recognitionRef.current) return;
+    setRecognized(null);
+    setIsListening(true);
+    try {
+      recognitionRef.current.start();
+    } catch (e) {
+      setIsListening(false);
+    }
+  };
+
+  const advanceAyat = () => {
+    setAyatIdx(ayatIdx + 1);
+    setAttempts(0);
+    setRecognized(null);
+  };
+
+  const skipAyat = () => {
+    advanceAyat();
+  };
+
+  if (isFinishedAll) {
+    return (
+      <div className="px-5 py-6 text-center">
+        <div className="text-6xl mb-3">✨</div>
+        <h3 className="text-xl font-bold mb-2" style={{ fontFamily: 'Fraunces, serif', color: '#0a4d3c' }}>
+          Semua ayat sudah dibaca!
+        </h3>
+        <p className="text-sm mb-6" style={{ color: '#8b6b3d' }}>
+          Lanjut ke tahap baca penuh dengan teks.
         </p>
+        <button
+          onClick={onComplete}
+          className="w-full max-w-xs py-4 rounded-2xl text-white font-bold flex items-center justify-center gap-2 mx-auto"
+          style={{ background: '#c9a961' }}
+        >
+          Lanjut Tahap 4 <ChevronRight size={18} />
+        </button>
       </div>
+    );
+  }
+
+  return (
+    <div className="px-5 py-4">
+      <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: '#8b6b3d' }}>
+        Bacakan Ayat {currentAyat.num} ({ayatIdx + 1}/{chunk.ayat.length})
+      </p>
+
+      {/* Ayat card */}
+      <div className="rounded-2xl p-5 mb-4" style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.1)' }}>
+        <p className="leading-relaxed mb-2" style={{ fontFamily: 'Amiri, serif', fontSize: '26px', color: '#0a4d3c', direction: 'rtl', textAlign: 'right' }}>
+          {currentAyat.ar}
+        </p>
+        <p className="text-xs italic" style={{ color: '#a87f47' }}>{currentAyat.latin}</p>
+      </div>
+
+      {!supported && (
+        <div className="rounded-2xl p-3 mb-3" style={{ background: 'rgba(160,85,54,0.12)', border: '1px solid rgba(160,85,54,0.25)' }}>
+          <p className="text-xs leading-relaxed" style={{ color: '#a05536' }}>
+            Browser kamu belum support voice recognition. Skip tahap ini dengan tombol di bawah.
+          </p>
+        </div>
+      )}
+
+      {/* Mic button */}
+      {supported && (
+        <button
+          onClick={startListening}
+          disabled={isListening}
+          className="w-full py-6 rounded-2xl flex flex-col items-center justify-center gap-2 mb-3 transition-transform active:scale-[0.98]"
+          style={{ background: isListening ? 'linear-gradient(135deg, #c64545, #e76b6b)' : 'linear-gradient(135deg, #0a4d3c, #1a6b56)', color: 'white' }}
+        >
+          {isListening ? <MicOff size={32} className="animate-pulse" /> : <Mic size={32} />}
+          <span className="font-bold text-base">
+            {isListening ? 'Sedang mendengar... bacakan ayatnya' : 'Tap & Bacakan'}
+          </span>
+        </button>
+      )}
+
+      {/* Result feedback */}
+      {recognized && (
+        <div
+          className="rounded-2xl p-4 mb-3"
+          style={{
+            background: recognized.isMatch ? 'rgba(10,77,60,0.08)' : 'rgba(160,85,54,0.12)',
+            border: `1.5px solid ${recognized.isMatch ? '#0a4d3c' : '#a05536'}`,
+          }}
+        >
+          <p className="text-sm font-bold mb-1" style={{ color: recognized.isMatch ? '#0a4d3c' : '#a05536' }}>
+            {recognized.isMatch ? '✓ Bacaanmu cukup tepat!' : '✗ Belum sesuai, coba lagi'}
+          </p>
+          <p className="text-[11px]" style={{ color: '#666' }}>
+            Kemiripan: {Math.round(recognized.similarity * 100)}%
+          </p>
+          {recognized.transcript && (
+            <p className="text-xs mt-1" style={{ color: '#3d2817', fontFamily: 'Amiri, serif', direction: 'rtl' }}>
+              Terdengar: "{recognized.transcript}"
+            </p>
+          )}
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        {recognized?.isMatch && (
+          <button
+            onClick={advanceAyat}
+            className="flex-1 py-3.5 rounded-2xl text-white font-bold flex items-center justify-center gap-1.5"
+            style={{ background: '#c9a961' }}
+          >
+            Lanjut <ChevronRight size={16} />
+          </button>
+        )}
+        <button
+          onClick={skipAyat}
+          className="flex-1 py-3.5 rounded-2xl text-sm font-semibold"
+          style={{ background: 'rgba(10,77,60,0.08)', color: '#0a4d3c' }}
+        >
+          Lewati ayat
+        </button>
+      </div>
+
+      <p className="text-[11px] text-center mt-3 italic" style={{ color: '#8b6b3d' }}>
+        Tip: bacakan dengan jelas, browser pakai voice recognition AI
+      </p>
+    </div>
+  );
+}
+
+// ============================================================================
+// STAGE 4 — Recite full WITH text visible
+// ============================================================================
+function Stage4ReciteFullVisible({ surat, chunk, onComplete }) {
+  const [recognized, setRecognized] = useState(null);
+  const [isListening, setIsListening] = useState(false);
+  const [hasTried, setHasTried] = useState(false);
+  const recognitionRef = useRef(null);
+  const supported = isSpeechRecognitionSupported();
+
+  const fullText = chunk.ayat.map((a) => a.ar).join(' ');
+
+  useEffect(() => {
+    if (!supported || typeof window === 'undefined') return;
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const rec = new SR();
+    rec.lang = 'ar-SA';
+    rec.continuous = true;
+    rec.interimResults = false;
+    rec.onresult = (event) => {
+      let transcript = '';
+      for (let i = 0; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript + ' ';
+      }
+      const result = compareArabicSpeech(transcript, fullText);
+      setRecognized({ transcript: transcript.trim(), ...result });
+      setIsListening(false);
+      setHasTried(true);
+    };
+    rec.onerror = () => setIsListening(false);
+    rec.onend = () => setIsListening(false);
+    recognitionRef.current = rec;
+    return () => { try { rec.stop(); } catch {} };
+  }, [supported, fullText]);
+
+  const startListening = () => {
+    if (!recognitionRef.current) return;
+    setRecognized(null);
+    setIsListening(true);
+    try { recognitionRef.current.start(); } catch {}
+  };
+
+  const stopListening = () => {
+    if (!recognitionRef.current) return;
+    try { recognitionRef.current.stop(); } catch {}
+  };
+
+  return (
+    <div className="px-5 py-4">
+      <div className="rounded-2xl p-4 mb-4 space-y-2" style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.1)' }}>
+        <p className="text-[10px] uppercase tracking-widest font-bold mb-1" style={{ color: '#c9a961' }}>Baca semuanya:</p>
+        {chunk.ayat.map((a) => (
+          <div key={a.num} className="flex items-start gap-2 pb-2" style={{ borderBottom: '1px solid rgba(10,77,60,0.06)' }}>
+            <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-1" style={{ background: 'rgba(10,77,60,0.1)', color: '#0a4d3c' }}>
+              {a.num}
+            </span>
+            <p className="flex-1" style={{ fontFamily: 'Amiri, serif', fontSize: '20px', color: '#0a4d3c', direction: 'rtl', textAlign: 'right' }}>
+              {a.ar}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {!supported && (
+        <div className="rounded-2xl p-3 mb-3" style={{ background: 'rgba(160,85,54,0.12)', border: '1px solid rgba(160,85,54,0.25)' }}>
+          <p className="text-xs leading-relaxed" style={{ color: '#a05536' }}>
+            Voice recognition ga didukung. Skip tahap ini.
+          </p>
+        </div>
+      )}
+
+      {supported && (
+        <button
+          onClick={isListening ? stopListening : startListening}
+          className="w-full py-5 rounded-2xl flex items-center justify-center gap-2 mb-3 transition-transform active:scale-[0.98]"
+          style={{ background: isListening ? 'linear-gradient(135deg, #c64545, #e76b6b)' : 'linear-gradient(135deg, #0a4d3c, #1a6b56)', color: 'white' }}
+        >
+          {isListening ? <><MicOff size={22} className="animate-pulse" /> <span className="font-bold">Tekan untuk stop</span></> : <><Mic size={22} /> <span className="font-bold">Tap & Bacakan Semua</span></>}
+        </button>
+      )}
+
+      {recognized && (
+        <div
+          className="rounded-2xl p-3 mb-3"
+          style={{
+            background: recognized.isMatch ? 'rgba(10,77,60,0.08)' : 'rgba(201,169,97,0.12)',
+            border: `1.5px solid ${recognized.isMatch ? '#0a4d3c' : '#c9a961'}`,
+          }}
+        >
+          <p className="text-sm font-bold" style={{ color: recognized.isMatch ? '#0a4d3c' : '#8b6b3d' }}>
+            {recognized.isMatch ? '✓ Bacaanmu sudah baik!' : `${Math.round(recognized.similarity * 100)}% mirip — bisa lebih baik`}
+          </p>
+        </div>
+      )}
+
+      <button
+        onClick={onComplete}
+        disabled={!hasTried && supported}
+        className="w-full py-4 rounded-2xl text-white font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+        style={{ background: '#c9a961' }}
+      >
+        Lanjut Tahap Final <ChevronRight size={18} />
+      </button>
+    </div>
+  );
+}
+
+// ============================================================================
+// STAGE 5 — Recite from MEMORY (no Arabic text, only translation cue)
+// ============================================================================
+function Stage5ReciteMemory({ surat, chunk, onComplete }) {
+  const [recognized, setRecognized] = useState(null);
+  const [isListening, setIsListening] = useState(false);
+  const [hasTried, setHasTried] = useState(false);
+  const recognitionRef = useRef(null);
+  const supported = isSpeechRecognitionSupported();
+
+  const fullText = chunk.ayat.map((a) => a.ar).join(' ');
+
+  useEffect(() => {
+    if (!supported || typeof window === 'undefined') return;
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const rec = new SR();
+    rec.lang = 'ar-SA';
+    rec.continuous = true;
+    rec.interimResults = false;
+    rec.onresult = (event) => {
+      let transcript = '';
+      for (let i = 0; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript + ' ';
+      }
+      const result = compareArabicSpeech(transcript, fullText);
+      setRecognized({ transcript: transcript.trim(), ...result });
+      setIsListening(false);
+      setHasTried(true);
+    };
+    rec.onerror = () => setIsListening(false);
+    rec.onend = () => setIsListening(false);
+    recognitionRef.current = rec;
+    return () => { try { rec.stop(); } catch {} };
+  }, [supported, fullText]);
+
+  const startListening = () => {
+    if (!recognitionRef.current) return;
+    setRecognized(null);
+    setIsListening(true);
+    try { recognitionRef.current.start(); } catch {}
+  };
+
+  const stopListening = () => {
+    if (!recognitionRef.current) return;
+    try { recognitionRef.current.stop(); } catch {}
+  };
+
+  const passed = recognized?.isMatch;
+
+  if (passed) {
+    return (
+      <div className="px-5 py-6 text-center">
+        <div className="text-7xl mb-3">🌟</div>
+        <p className="text-[10px] tracking-[0.3em] uppercase mb-2 font-bold" style={{ color: '#c9a961' }}>MUMTAAZ!</p>
+        <h3 className="text-2xl font-bold mb-1" style={{ fontFamily: 'Fraunces, serif', color: '#0a4d3c' }}>
+          Sudah Hafal!
+        </h3>
+        <p className="text-xs mb-4" style={{ color: '#8b6b3d' }}>
+          {surat.name} ayat {chunk.startAyat}–{chunk.endAyat}
+        </p>
+
+        <div className="rounded-2xl p-4 mb-4" style={{ background: 'linear-gradient(135deg, #c9a961, #d4b876)' }}>
+          <p className="text-[10px] uppercase tracking-widest font-bold text-white opacity-90 mb-1">Reward</p>
+          <p className="text-2xl font-bold text-white mb-1" style={{ fontFamily: 'Fraunces, serif' }}>
+            +{CHUNK_COMPLETION_REWARD.xp} XP · +{CHUNK_COMPLETION_REWARD.coins} 🪙
+          </p>
+        </div>
+
+        <button
+          onClick={onComplete}
+          className="w-full max-w-xs py-4 rounded-2xl text-white font-bold flex items-center justify-center gap-2 mx-auto"
+          style={{ background: '#0a4d3c' }}
+        >
+          <Sparkles size={16} /> Selesai
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-5 py-4">
+      {/* Cue only — terjemahan, tanpa Arab */}
+      <div className="rounded-2xl p-4 mb-4 space-y-2" style={{ background: 'rgba(10,77,60,0.04)', border: '1.5px dashed rgba(10,77,60,0.2)' }}>
+        <p className="text-[10px] uppercase tracking-widest font-bold mb-2" style={{ color: '#c9a961' }}>
+          Coba bacakan dari hafalan — petunjuk arti:
+        </p>
+        {chunk.ayat.map((a) => (
+          <div key={a.num} className="flex items-start gap-2 py-1" style={{ borderBottom: '1px solid rgba(10,77,60,0.06)' }}>
+            <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5" style={{ background: 'rgba(10,77,60,0.1)', color: '#0a4d3c' }}>
+              {a.num}
+            </span>
+            <p className="text-xs leading-relaxed italic flex-1" style={{ color: '#666' }}>
+              {a.id}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {!supported && (
+        <div className="rounded-2xl p-3 mb-3" style={{ background: 'rgba(160,85,54,0.12)' }}>
+          <p className="text-xs" style={{ color: '#a05536' }}>
+            Voice recognition tidak tersedia. Tap selesai kalau yakin sudah hafal.
+          </p>
+        </div>
+      )}
+
+      {supported && (
+        <button
+          onClick={isListening ? stopListening : startListening}
+          className="w-full py-6 rounded-2xl flex flex-col items-center justify-center gap-2 mb-3"
+          style={{ background: isListening ? 'linear-gradient(135deg, #c64545, #e76b6b)' : 'linear-gradient(135deg, #c9a961, #d4b876)', color: 'white' }}
+        >
+          {isListening ? <MicOff size={32} className="animate-pulse" /> : <Mic size={32} />}
+          <span className="font-bold text-base">
+            {isListening ? 'Sedang mendengar... bacakan dari hafalan' : 'Tap & Bacakan dari Hafalan'}
+          </span>
+        </button>
+      )}
+
+      {recognized && !recognized.isMatch && (
+        <div className="rounded-2xl p-3 mb-3" style={{ background: 'rgba(160,85,54,0.12)', border: '1.5px solid rgba(160,85,54,0.3)' }}>
+          <p className="text-sm font-bold" style={{ color: '#a05536' }}>
+            ✗ Belum sesuai ({Math.round(recognized.similarity * 100)}% mirip)
+          </p>
+          <p className="text-[11px] mt-1" style={{ color: '#8b6b3d' }}>
+            Coba lagi — kalau perlu, kembali ke tahap 4 untuk review.
+          </p>
+        </div>
+      )}
+
+      {!supported && (
+        <button
+          onClick={onComplete}
+          className="w-full py-4 rounded-2xl text-white font-bold flex items-center justify-center gap-2"
+          style={{ background: '#0a4d3c' }}
+        >
+          Tandai Selesai (Tanpa Voice Check)
+        </button>
+      )}
     </div>
   );
 }

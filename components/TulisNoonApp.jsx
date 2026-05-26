@@ -454,37 +454,41 @@ export default function TulisNoonApp() {
           }}
         />}
 
-        {/* Hafalan Quran — fitur menghafal surat pendek (BUKAN game, no lives cost) */}
+        {/* Hafalan Quran v2 — 5-stage method + audio syekh Alafasy + voice rec */}
         {screen === 'hafalan' && <HafalanScreen
           hafalanProgress={authProfile?.hafalanProgress || {}}
           onBack={() => setScreen('main')}
           onHome={() => { setTab('home'); setScreen('main'); }}
-          onToggleAyat={(suratId, ayatNum) => {
-            // Toggle ayat di hafalanProgress.{suratId}.[ayatNum]
+          onChunkComplete={(suratId, chunkIdx) => {
+            // Hafalan progress sekarang track CHUNKS yang selesai (array of indices)
+            // Bukan ayat individual lagi.
             const current = authProfile?.hafalanProgress || {};
-            const suratAyat = current[suratId] || [];
-            const isAlreadyMemorized = suratAyat.includes(ayatNum);
-            const newAyat = isAlreadyMemorized
-              ? suratAyat.filter((n) => n !== ayatNum)
-              : [...suratAyat, ayatNum].sort((a, b) => a - b);
+            const existing = current[suratId] || [];
+            if (existing.includes(chunkIdx)) return; // udah selesai, skip
+            const newChunks = [...existing, chunkIdx].sort((a, b) => a - b);
+            const newProgress = { ...current, [suratId]: newChunks };
 
-            const newProgress = { ...current, [suratId]: newAyat };
-            updateUserProfile({ hafalanProgress: newProgress })
+            // Reward XP + koin per chunk selesai
+            const REWARD_XP = 75;
+            const REWARD_COIN = 2;
+            const curCoins = authProfile?.coins || 0;
+
+            updateUserProfile({
+              hafalanProgress: newProgress,
+              coins: curCoins + REWARD_COIN,
+            })
               .then(() => {
-                // Kasih XP +5 per ayat baru dihafal (tidak deduct kalau un-mark)
-                if (!isAlreadyMemorized) {
-                  awardXp(5);
-                  setAchievements((a) => [{
-                    id: Date.now(),
-                    type: 'hafalan',
-                    text: `Hafal 1 ayat baru — total ${newAyat.length} ayat di surat ini`,
-                    emoji: '📖',
-                    time: 'baru saja',
-                    user: userName || 'Anda',
-                  }, ...a]);
-                }
+                awardXp(REWARD_XP);
+                setAchievements((a) => [{
+                  id: Date.now(),
+                  type: 'hafalan-chunk',
+                  text: `Hafal chunk ${chunkIdx + 1} surat ini — +${REWARD_XP} XP, +${REWARD_COIN} 🪙`,
+                  emoji: '🌟',
+                  time: 'baru saja',
+                  user: userName || 'Anda',
+                }, ...a]);
               })
-              .catch((err) => console.error('Hafalan toggle error:', err));
+              .catch((err) => console.error('Hafalan chunk complete error:', err));
           }}
         />}
 
