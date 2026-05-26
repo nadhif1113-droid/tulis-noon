@@ -110,15 +110,12 @@ export async function POST(request) {
 
     const reply = response.content?.[0]?.text || '';
 
-    // Parse [USER_TRANSLATED] block kalau ada — terjemahan apa yang user mau
-    // omongin kalau pakai bahasa Arab. Block-nya dihapus dari AI reply, lalu
-    // dikirim balik sbg `userTranslation` supaya frontend bisa attach ke user bubble.
+    // Parse [USER_TRANSLATED] block — terjemahan apa yang user mau omongin
     let userTranslation = null;
     const translatedMatch = reply.match(/\[USER_TRANSLATED\]([\s\S]*?)\[\/USER_TRANSLATED\]/);
     if (translatedMatch) {
       const inside = translatedMatch[1].trim();
       const lines = inside.split('\n').map((l) => l.trim()).filter((l) => l);
-      // Line 1 harus Arabic (cek char), line 2 Latin
       const arabic = lines.find((l) => /[؀-ۿ]/.test(l));
       const latin = lines.find((l) => !/[؀-ۿ]/.test(l));
       if (arabic && latin) {
@@ -126,19 +123,39 @@ export async function POST(request) {
       }
     }
 
+    // Parse [SUGGESTIONS] block — quick reply opsi buat user.
+    // Format per line: "Arabic | Latin | Indonesia"
+    let suggestions = null;
+    const suggestionsMatch = reply.match(/\[SUGGESTIONS\]([\s\S]*?)\[\/SUGGESTIONS\]/);
+    if (suggestionsMatch) {
+      const inside = suggestionsMatch[1].trim();
+      const lines = inside.split('\n').map((l) => l.trim()).filter((l) => l && l.includes('|'));
+      suggestions = lines
+        .map((line) => {
+          const parts = line.split('|').map((p) => p.trim());
+          if (parts.length < 3) return null;
+          return { arabic: parts[0], latin: parts[1], indonesia: parts[2] };
+        })
+        .filter((s) => s && s.arabic && s.indonesia)
+        .slice(0, 3); // max 3 suggestions
+      if (suggestions.length === 0) suggestions = null;
+    }
+
     // Detect end token
     const endDetected = reply.includes('[END_SCENARIO]');
-    // Strip [USER_TRANSLATED] block + [END_SCENARIO] token dari reply
+    // Strip semua structured blocks + token dari reply
     const cleanReply = reply
       .replace(/\[USER_TRANSLATED\][\s\S]*?\[\/USER_TRANSLATED\]/, '')
+      .replace(/\[SUGGESTIONS\][\s\S]*?\[\/SUGGESTIONS\]/, '')
       .replace('[END_SCENARIO]', '')
       .trim();
 
     return NextResponse.json({
       reply: cleanReply,
-      userTranslation, // null kalau user pakai Arabic, atau {arabic, latin} kalau Indo/English
+      userTranslation, // {arabic, latin} kalau user pakai non-Arab
+      suggestions,     // [{arabic, latin, indonesia}] x 2-3 untuk quick reply
       endScenario: endDetected,
-      usage: response.usage, // untuk debug cost
+      usage: response.usage,
     });
   } catch (error) {
     console.error('Roleplay API error:', error);

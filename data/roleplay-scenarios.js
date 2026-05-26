@@ -29,8 +29,8 @@ export const ROLEPLAY_SCENARIOS = [
       { ar: 'خلاص خذها', latin: 'khalas khudh-ha', id: 'Oke, ambil aja' },
     ],
     starterMessage: 'Mulai dengan sapaan & tanya harga kurma. Coba pakai "السلام عليكم" + "بكم الكيلو؟"',
-    minTurns: 4,
-    maxTurns: 10,
+    minTurns: 3,
+    maxTurns: 7,
     xpReward: 75,
   },
   {
@@ -61,8 +61,8 @@ export const ROLEPLAY_SCENARIOS = [
       { ar: 'شكراً جزيلاً', latin: 'shukran jazilan', id: 'Terima kasih banyak' },
     ],
     starterMessage: 'Mulai dengan "لو سمحت" + tanya arah. Polisi akan kasih petunjuk pakai yamin/yasar/dughri.',
-    minTurns: 3,
-    maxTurns: 8,
+    minTurns: 2,
+    maxTurns: 5,
     xpReward: 60,
   },
   {
@@ -91,8 +91,8 @@ export const ROLEPLAY_SCENARIOS = [
       { ar: 'مع نفسي', latin: 'ma\'a nafsi', id: 'Untuk dibawa pulang (take away)' },
     ],
     starterMessage: 'Mulai dengan sapaan & langsung order. Pakai "أبغى" (saya mau) — khas Hijazi.',
-    minTurns: 4,
-    maxTurns: 10,
+    minTurns: 3,
+    maxTurns: 7,
     xpReward: 65,
   },
 ];

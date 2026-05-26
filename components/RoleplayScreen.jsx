@@ -53,7 +53,11 @@ export default function RoleplayScreen({ scenario, userId, onBack, onComplete, o
       // Tampilkan salam user + AI greeting sebagai pesan pertama
       setMessages([
         openingMessage,
-        { role: 'assistant', content: data.reply },
+        {
+          role: 'assistant',
+          content: data.reply,
+          suggestions: data.suggestions, // quick-reply opsi
+        },
       ]);
       if (data.endScenario) setEndDetected(true);
     } catch (e) {
@@ -99,9 +103,22 @@ export default function RoleplayScreen({ scenario, userId, onBack, onComplete, o
         };
       }
 
+      // Strip suggestions dari AI message LAMA (cuma message TERAKHIR yang punya suggestions)
+      const messagesWithoutOldSuggestions = userMessagesWithTranslation.map((m) => {
+        if (m.role === 'assistant' && m.suggestions) {
+          const { suggestions, ...rest } = m;
+          return rest;
+        }
+        return m;
+      });
+
       const finalMessages = [
-        ...userMessagesWithTranslation,
-        { role: 'assistant', content: data.reply },
+        ...messagesWithoutOldSuggestions,
+        {
+          role: 'assistant',
+          content: data.reply,
+          suggestions: data.suggestions, // quick-reply opsi (cuma di message terbaru)
+        },
       ];
       setMessages(finalMessages);
 
@@ -428,7 +445,14 @@ export default function RoleplayScreen({ scenario, userId, onBack, onComplete, o
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3" style={{ background: 'linear-gradient(180deg, #faf6ee 0%, #f3ebd9 100%)' }}>
         {messages.map((m, i) => (
-          <MessageBubble key={i} message={m} scenarioColor={scenario.color} personaAvatar={scenario.persona.avatar} />
+          <MessageBubble
+            key={i}
+            message={m}
+            scenarioColor={scenario.color}
+            personaAvatar={scenario.persona.avatar}
+            onSuggestionTap={(arabicText) => sendMessage(arabicText)}
+            disableSuggestions={loading || endDetected}
+          />
         ))}
         {loading && (
           <div className="flex items-end gap-2">
@@ -503,7 +527,7 @@ export default function RoleplayScreen({ scenario, userId, onBack, onComplete, o
 //   3. Translation Indonesia dalam ( ) (ditampilkan kecil, warna muted)
 // Parsing robust: deteksi line by content (Arab vs Latin vs Indo dalam kurung).
 // ============================================================================
-function MessageBubble({ message, scenarioColor, personaAvatar }) {
+function MessageBubble({ message, scenarioColor, personaAvatar, onSuggestionTap, disableSuggestions }) {
   const isUser = message.role === 'user';
 
   // Parse AI message ke 3 komponen
@@ -599,55 +623,110 @@ function MessageBubble({ message, scenarioColor, personaAvatar }) {
   }
 
   const { arabic, latin, translation } = parseAiMessage(message.content);
+  const hasSuggestions = message.suggestions && message.suggestions.length > 0;
 
   return (
-    <div className="flex items-end gap-2">
-      <div className="w-7 h-7 rounded-full flex items-center justify-center text-sm flex-shrink-0" style={{ background: 'rgba(201,169,97,0.15)' }}>
-        {personaAvatar}
+    <div>
+      <div className="flex items-end gap-2">
+        <div className="w-7 h-7 rounded-full flex items-center justify-center text-sm flex-shrink-0" style={{ background: 'rgba(201,169,97,0.15)' }}>
+          {personaAvatar}
+        </div>
+        <div
+          className="max-w-[82%] rounded-2xl rounded-bl-md px-4 py-3 shadow-sm"
+          style={{ background: 'white', border: '1px solid rgba(10,77,60,0.08)' }}
+        >
+          {/* Baris 1: Arabic dengan harakat — paling prominent */}
+          {arabic && (
+            <p
+              className="leading-relaxed"
+              style={{
+                fontFamily: 'Amiri, serif',
+                color: scenarioColor,
+                direction: 'rtl',
+                fontSize: '19px',
+                fontWeight: 500,
+              }}
+            >
+              {arabic}
+            </p>
+          )}
+          {/* Baris 2: Transliterasi Latin — italic, sedang */}
+          {latin && (
+            <p
+              className="leading-snug italic"
+              style={{
+                color: '#a87f47',
+                fontSize: '13px',
+                marginTop: '4px',
+                letterSpacing: '0.01em',
+              }}
+            >
+              {latin}
+            </p>
+          )}
+          {/* Baris 3: Translation Indonesia — kecil, muted */}
+          {translation && (
+            <p
+              className="text-xs leading-snug"
+              style={{ color: '#8b6b3d', marginTop: '6px' }}
+            >
+              <span style={{ opacity: 0.6 }}>"</span>{translation}<span style={{ opacity: 0.6 }}>"</span>
+            </p>
+          )}
+        </div>
       </div>
-      <div
-        className="max-w-[82%] rounded-2xl rounded-bl-md px-4 py-3 shadow-sm"
-        style={{ background: 'white', border: '1px solid rgba(10,77,60,0.08)' }}
-      >
-        {/* Baris 1: Arabic dengan harakat — paling prominent */}
-        {arabic && (
-          <p
-            className="leading-relaxed"
-            style={{
-              fontFamily: 'Amiri, serif',
-              color: scenarioColor,
-              direction: 'rtl',
-              fontSize: '19px',
-              fontWeight: 500,
-            }}
-          >
-            {arabic}
+
+      {/* SUGGESTION CHIPS — quick reply opsi buat user.
+          Hanya muncul di message AI terakhir, dgn 2-3 opsi (Arab/Latin/Indo).
+          Tap → kirim sbg user message (Arab). */}
+      {hasSuggestions && (
+        <div className="mt-2 ml-9 mr-1 space-y-1.5">
+          <p className="text-[10px] tracking-widest uppercase font-bold flex items-center gap-1" style={{ color: '#c9a961' }}>
+            <span>💡</span> Saran balasan
           </p>
-        )}
-        {/* Baris 2: Transliterasi Latin — italic, sedang */}
-        {latin && (
-          <p
-            className="leading-snug italic"
-            style={{
-              color: '#a87f47',
-              fontSize: '13px',
-              marginTop: '4px',
-              letterSpacing: '0.01em',
-            }}
-          >
-            {latin}
-          </p>
-        )}
-        {/* Baris 3: Translation Indonesia — kecil, muted */}
-        {translation && (
-          <p
-            className="text-xs leading-snug"
-            style={{ color: '#8b6b3d', marginTop: '6px' }}
-          >
-            <span style={{ opacity: 0.6 }}>"</span>{translation}<span style={{ opacity: 0.6 }}>"</span>
-          </p>
-        )}
-      </div>
+          {message.suggestions.map((s, idx) => (
+            <button
+              key={idx}
+              onClick={() => onSuggestionTap && onSuggestionTap(s.arabic)}
+              disabled={disableSuggestions}
+              className="w-full rounded-2xl p-2.5 text-left transition-transform active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
+              style={{
+                background: 'rgba(201,169,97,0.1)',
+                border: '1.5px solid rgba(201,169,97,0.35)',
+              }}
+            >
+              <p
+                className="leading-snug"
+                style={{
+                  fontFamily: 'Amiri, serif',
+                  color: scenarioColor,
+                  direction: 'rtl',
+                  fontSize: '16px',
+                  fontWeight: 500,
+                }}
+              >
+                {s.arabic}
+              </p>
+              {s.latin && (
+                <p
+                  className="text-[11px] italic leading-snug mt-0.5"
+                  style={{ color: '#a87f47' }}
+                >
+                  {s.latin}
+                </p>
+              )}
+              {s.indonesia && (
+                <p
+                  className="text-xs leading-snug mt-1"
+                  style={{ color: '#8b6b3d' }}
+                >
+                  → {s.indonesia}
+                </p>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
