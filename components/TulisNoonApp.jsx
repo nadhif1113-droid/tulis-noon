@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Volume2, Mic, Check, X, Sparkles, Lock, MapPin, Briefcase, GraduationCap, Trophy, Flame, Star, Home, BookOpen, Users, User, Heart, Share2, Send, Play, Image as ImageIcon, MessageCircle, Calendar, Target, Zap, ChevronRight, Bot, Video, Clock, Award, UserCheck, Coffee, Music, Film, Gamepad2, Heart as HeartIcon, Mountain, Facebook, Instagram, Twitter, Link2, Copy } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { CHALLENGE_SCENARIOS, getTodayChallenge, getXpForLevel } from '@/data/challenge-levels';
@@ -20,6 +20,8 @@ import CeritaScreen from '@/components/CeritaScreen';
 import UnlockHafalanModal from '@/components/UnlockHafalanModal';
 import PerkenalanDiriScreen from '@/components/PerkenalanDiriScreen';
 import TanyaCepatScreen, { TANYA_CEPAT_FREE_LIMIT, TANYA_CEPAT_BUNDLE_COST, TANYA_CEPAT_BUNDLE_QUOTA } from '@/components/TanyaCepatScreen';
+import TanyaCepatFAB from '@/components/TanyaCepatFAB';
+import { shouldShowTanyaCepat } from '@/lib/geo-detect';
 import { PERKENALAN_MATERI_COST, PERKENALAN_BUNDLE_COST } from '@/data/perkenalan-diri-materi';
 import { PREMIUM_UNLOCK_COST } from '@/lib/hafalan-tier';
 import { checkLivesRefresh } from '@/lib/lives-system';
@@ -28,6 +30,7 @@ import { updateDailyXp } from '@/lib/tournament-system';
 
 export default function TulisNoonApp() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, userProfile: authProfile, loading: authLoading, updateUserProfile, saveChallengeProgress } = useAuth();
   // null = belum ditentukan (masih loading auth/profile).
   // 'welcome' = user baru yang belum selesai onboarding.
@@ -99,6 +102,17 @@ export default function TulisNoonApp() {
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  // Deep-link via ?screen=... (dari Profile page "Tanya Cepat" entry)
+  useEffect(() => {
+    if (!searchParams) return;
+    const targetScreen = searchParams.get('screen');
+    if (targetScreen === 'tanya-cepat') {
+      setScreen('tanya-cepat');
+      // Bersihin query param dari URL biar gak nyangkut
+      router.replace('/', { scroll: false });
+    }
+  }, [searchParams, router]);
 
   // Auto-refresh nyawa pas user buka app.
   // +3 nyawa tiap 24 jam (cap di maxLives). Cek sekali pas authProfile berubah.
@@ -373,6 +387,16 @@ export default function TulisNoonApp() {
               {tab === 'profil' && <ProfilTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} progress={progress} onOpenPremium={() => setScreen('premium')} />}
             </div>
             <BottomNav active={tab} onChange={setTab} router={router} />
+            {/* Floating Tanya Cepat — cuma muncul kalau user di Saudi/Timur Tengah */}
+            {shouldShowTanyaCepat(authProfile) && (
+              <TanyaCepatFAB
+                onClick={() => setScreen('tanya-cepat')}
+                hasQuotaLow={
+                  Math.max(0, TANYA_CEPAT_FREE_LIMIT - (authProfile?.tanyaCepatFreeUsed || 0)) +
+                    (authProfile?.tanyaCepatBundleQuota || 0) <= 1
+                }
+              />
+            )}
           </>
         )}
 
@@ -1380,61 +1404,6 @@ function HomeTab({ userName, userProfile, xp, streak, coins, lives, maxLives, ha
         )}
       </div>
 
-      {/* ⚡ TANYA CEPAT — mencolok, hero feature untuk jamaah TKI/umrah/haji */}
-      {(() => {
-        const freeRem = Math.max(0, 5 - (tanyaCepatFreeUsed || 0));
-        const bundleRem = tanyaCepatBundleQuota || 0;
-        const totalRem = freeRem + bundleRem;
-        return (
-          <button
-            onClick={onOpenTanyaCepat}
-            className="w-full text-left rounded-3xl p-5 mb-4 relative overflow-hidden active:scale-[0.98] transition-transform"
-            style={{
-              background: 'linear-gradient(135deg, #c9a961 0%, #d4b876 45%, #c9a961 100%)',
-              boxShadow: '0 12px 32px -8px rgba(201,169,97,0.5), 0 0 0 2px rgba(255,255,255,0.6) inset',
-              animation: 'pulse-glow 3s ease-in-out infinite',
-            }}
-          >
-            <div className="absolute -right-4 -top-4 text-8xl opacity-15">⚡</div>
-            <div className="absolute -left-2 -bottom-2 text-6xl opacity-10">💬</div>
-            <div className="relative">
-              <div className="flex items-center gap-2 mb-1.5">
-                <div className="px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.95)' }}>
-                  <p className="text-[9px] tracking-widest uppercase font-bold" style={{ color: '#8b6b3d' }}>⚡ BARU</p>
-                </div>
-                <p className="text-[10px] tracking-widest uppercase text-white opacity-90 font-bold">Untuk Jamaah TKI / Umrah / Haji</p>
-              </div>
-              <h3 className="text-2xl text-white mb-1.5 leading-tight" style={{ fontFamily: 'Fraunces, serif', fontWeight: 700, textShadow: '0 2px 4px rgba(0,0,0,0.15)' }}>
-                Tanya Cepat Bahasa Arab
-              </h3>
-              <p className="text-sm text-white opacity-95 mb-3 leading-snug">
-                Ngomong Indonesia → AI jawab Arab <strong>Hijazi</strong> dengan suara native. Buat tanya arah, harga, sholat, dll.
-              </p>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.95)' }}>
-                    <Mic size={14} style={{ color: '#8b6b3d' }} />
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-white opacity-90 font-bold">SISA QUOTA</p>
-                    <p className="text-xs text-white font-bold">{totalRem} percakapan {freeRem > 0 && '(' + freeRem + ' free)'}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 text-white font-bold text-sm">
-                  Mulai <ArrowRight size={16} />
-                </div>
-              </div>
-            </div>
-          </button>
-        );
-      })()}
-      <style jsx>{`
-        @keyframes pulse-glow {
-          0%, 100% { box-shadow: 0 12px 32px -8px rgba(201,169,97,0.5), 0 0 0 2px rgba(255,255,255,0.6) inset; }
-          50% { box-shadow: 0 16px 40px -8px rgba(201,169,97,0.7), 0 0 0 2px rgba(255,255,255,0.8) inset; }
-        }
-      `}</style>
-
       {/* Daily Challenge Card — rotasi berdasarkan tanggal */}
       {(() => {
         const todayChallenge = getTodayChallenge();
@@ -2013,7 +1982,11 @@ function BottomNav({ active, onChange, router }) {
           const Icon = t.icon;
           const isActive = active === t.id;
           return (
-            <button key={t.id} onClick={() => { if(t.id === 'profil') { router?.push('/profile'); } else { onChange(t.id); } }} className="flex flex-col items-center justify-center py-2 px-1">
+            <button key={t.id} onClick={() => {
+              // FIX BUG back-button HP: pakai router.replace biar /profile gak nimpa history.
+              // Tadinya pakai push → user buka game lalu HW back → balik ke /profile, bukan ke home.
+              if(t.id === 'profil') { router?.replace('/profile'); } else { onChange(t.id); }
+            }} className="flex flex-col items-center justify-center py-2 px-1">
               <Icon size={22} style={{ color: isActive ? '#0a4d3c' : '#8b6b3d' }} fill={isActive ? '#0a4d3c' : 'transparent'} strokeWidth={isActive ? 2 : 1.5} />
               <span className="text-[10px] mt-1 font-medium" style={{ color: isActive ? '#0a4d3c' : '#8b6b3d' }}>{t.l}</span>
             </button>

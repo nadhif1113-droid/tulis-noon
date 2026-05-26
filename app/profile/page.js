@@ -5,13 +5,22 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../../lib/auth-context';
 import { getXpProgress, TIERS, XP_SOURCES } from '../../lib/xp-system';
-import { Star, Flame, BookOpen, Sparkles, ArrowLeft, MapPin, LogOut, ChevronRight, Trophy, Target, Award, MessageCircle, HelpCircle, X, Lock, Check } from 'lucide-react';
+import { Star, Flame, BookOpen, Sparkles, ArrowLeft, MapPin, LogOut, ChevronRight, Trophy, Target, Award, MessageCircle, HelpCircle, X, Lock, Check, Mic, Globe } from 'lucide-react';
 import XpLevelInfoModal from '../../components/XpLevelInfoModal';
+import { isInMiddleEast, isInIndonesia, getUserTimezone } from '../../lib/geo-detect';
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { user, userProfile, loading, signOut } = useAuth();
+  const { user, userProfile, loading, signOut, updateUserProfile } = useAuth();
   const [showLevelInfo, setShowLevelInfo] = useState(false);
+  const [detectedTz, setDetectedTz] = useState(null);
+  useEffect(() => { setDetectedTz(getUserTimezone()); }, []);
+  const isME = isInMiddleEast();
+  const isID = isInIndonesia();
+  const userOverride = userProfile?.locationOverride;
+  // Tampilin entry kalau user override = ME, atau auto-detect ME, atau user override = indonesia (kasih kesempatan tetap buka)
+  const showTanyaEntry = userOverride === 'middle-east' || (isME && userOverride !== 'indonesia');
+  const showTanyaIDLocked = (isID || userOverride === 'indonesia') && userOverride !== 'middle-east';
 
   useEffect(() => {
     if (!loading && !user) {
@@ -22,7 +31,7 @@ export default function ProfilePage() {
   async function handleSignOut() {
     const result = await signOut();
     if (result.success) {
-      router.push('/');
+      router.replace('/');
     }
   }
 
@@ -87,11 +96,13 @@ export default function ProfilePage() {
       }} />
 
       <div className="relative max-w-md mx-auto min-h-screen pb-24">
-        {/* Top bar */}
+        {/* Top bar — pakai router.replace biar /profile gak nimpa history.
+            Tadinya <Link href="/"> (push) → user buka game di home lalu HW back → kembali ke /profile,
+            harusnya kembali ke wherever sebelum profile. */}
         <div className="px-5 pt-6 pb-3 flex items-center gap-3">
-          <Link href="/" className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(10,77,60,0.08)' }}>
+          <button onClick={() => router.replace('/')} className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(10,77,60,0.08)' }}>
             <ArrowLeft size={18} style={{ color: '#0a4d3c' }} />
-          </Link>
+          </button>
           <div className="flex-1">
             <p className="text-xs tracking-widest uppercase" style={{ color: '#8b6b3d' }}>Akun</p>
             <h1 className="text-xl font-semibold" style={{ color: '#0a4d3c', fontFamily: 'Fraunces, serif' }}>
@@ -227,7 +238,81 @@ export default function ProfilePage() {
             <ProfileRow label="Verifikasi" value={user.emailVerified ? '✓ Terverifikasi' : '⚠ Belum diverifikasi'} valueColor={user.emailVerified ? '#0a4d3c' : '#a05536'} />
             <ProfileRow label="Gabung sejak" value={memberSinceText} />
             <ProfileRow label="Lokasi" value={userProfile?.location?.city || 'Madinah'} icon={MapPin} />
+            <ProfileRow label="Zona Waktu" value={detectedTz || '-'} icon={Globe} />
           </div>
+        </div>
+
+        {/* Lokasi override — manual toggle untuk Tanya Cepat */}
+        <div className="px-5 mb-4">
+          <div className="rounded-2xl p-4" style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.08)' }}>
+            <p className="text-[10px] tracking-widest uppercase font-bold mb-2" style={{ color: '#c9a961' }}>Saya Sedang Berada Di</p>
+            <p className="text-[11px] mb-3" style={{ color: '#8b6b3d' }}>
+              Fitur <strong>Tanya Cepat</strong> (asisten Arab Hijazi) cuma muncul kalau kamu lagi di Timur Tengah. Override di sini kalau auto-detect salah:
+            </p>
+            <div className="grid grid-cols-3 gap-1.5">
+              {[
+                { id: 'auto', label: 'Auto', emoji: '🌐', desc: 'Deteksi otomatis' },
+                { id: 'middle-east', label: 'Timur Tengah', emoji: '🕋', desc: 'Saudi/UAE/Mesir/dll' },
+                { id: 'indonesia', label: 'Indonesia', emoji: '🇮🇩', desc: 'Belum berangkat' },
+              ].map((opt) => {
+                const isActive = (opt.id === 'auto' && !userOverride) || userOverride === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={async () => {
+                      try {
+                        await updateUserProfile({ locationOverride: opt.id === 'auto' ? null : opt.id });
+                      } catch (e) { console.error(e); }
+                    }}
+                    className="p-2 rounded-xl text-center transition-all"
+                    style={{
+                      background: isActive ? 'linear-gradient(135deg, #0a4d3c, #1a6b56)' : 'rgba(10,77,60,0.05)',
+                      border: isActive ? 'none' : '1.5px solid rgba(10,77,60,0.1)',
+                    }}
+                  >
+                    <div className="text-lg mb-0.5">{opt.emoji}</div>
+                    <p className="text-[10px] font-bold leading-tight" style={{ color: isActive ? 'white' : '#0a4d3c' }}>{opt.label}</p>
+                    <p className="text-[9px] leading-tight mt-0.5" style={{ color: isActive ? 'rgba(255,255,255,0.8)' : '#8b6b3d' }}>{opt.desc}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Entry ke Tanya Cepat (selalu ada di Profile, fallback kalau FAB ke-hide) */}
+        <div className="px-5 mb-4">
+          {showTanyaEntry ? (
+            <button
+              onClick={() => router.replace('/?screen=tanya-cepat')}
+              className="block w-full p-4 rounded-2xl active:scale-[0.98] transition-transform relative overflow-hidden text-left"
+              style={{ background: 'linear-gradient(135deg, #c9a961, #d4b876)', boxShadow: '0 8px 20px -6px rgba(201,169,97,0.4)' }}
+            >
+              <div className="absolute -right-2 -top-2 text-5xl opacity-15">⚡</div>
+              <div className="flex items-center gap-3 relative">
+                <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,0.95)' }}>
+                  <Mic size={18} style={{ color: '#8b6b3d' }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] tracking-widest uppercase font-bold text-white opacity-90">⚡ ASISTEN HIJAZI</p>
+                  <p className="text-base font-bold text-white leading-tight">Tanya Cepat</p>
+                  <p className="text-[11px] text-white opacity-90 leading-snug">Ngomong Indonesia → AI jawab Arab Hijazi</p>
+                </div>
+                <ChevronRight size={18} className="text-white flex-shrink-0" />
+              </div>
+            </button>
+          ) : (
+            <div className="rounded-2xl p-4" style={{ background: 'rgba(10,77,60,0.04)', border: '1.5px dashed rgba(10,77,60,0.2)' }}>
+              <div className="flex items-center gap-2 mb-1.5">
+                <Lock size={14} style={{ color: '#8b6b3d' }} />
+                <p className="text-xs font-bold" style={{ color: '#0a4d3c' }}>Tanya Cepat — Khusus di Timur Tengah</p>
+              </div>
+              <p className="text-[11px] leading-snug" style={{ color: '#8b6b3d' }}>
+                Fitur ini didesain buat jamaah yang <strong>sedang berada</strong> di Saudi/UAE/Mesir/dll — buat tanya cepat ke native Arab.
+                Kalau kamu lagi di Indonesia, fokus dulu di pelajaran rutin. Aktifin manual di toggle di atas kalau auto-detect salah.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Sign out */}
