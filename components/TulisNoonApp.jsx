@@ -14,6 +14,8 @@ import StreakInfoModal from '@/components/StreakInfoModal';
 import LivesInfoModal from '@/components/LivesInfoModal';
 import MatchArenaScreen from '@/components/MatchArenaScreen';
 import { checkLivesRefresh } from '@/lib/lives-system';
+import { calculateStreakUpdate, getStreakMilestoneReward } from '@/lib/streak-system';
+import { updateDailyXp } from '@/lib/tournament-system';
 
 export default function TulisNoonApp() {
   const router = useRouter();
@@ -203,16 +205,53 @@ export default function TulisNoonApp() {
   };
 
   // Helper: tambah XP ke state lokal + persist ke Firestore.
-  // Dipakai oleh callback completion dari Lesson, Game, dan Challenge.
+  // Plus: auto-update streak harian + tournament dailyXp tiap kali XP earned.
   const awardXp = (earned) => {
     if (!earned || earned <= 0) return;
     const newXp = (xp || 0) + earned;
     console.log('💎 awardXp:', { earned, oldXp: xp, newXp });
     setXp(newXp);
-    // Persist ke Firestore (async, await supaya kita tau hasilnya di log).
-    updateUserProfile({ xp: newXp })
-      .then(() => console.log('✅ XP persisted to Firestore:', newXp))
-      .catch((err) => console.error('❌ Failed to persist XP:', err));
+
+    const updates = { xp: newXp };
+
+    // 1. Update streak — kalau hari baru, increment atau reset
+    const streakUpdate = calculateStreakUpdate(
+      authProfile?.streak || 0,
+      authProfile?.lastStreakDate
+    );
+    if (streakUpdate) {
+      updates.streak = streakUpdate.streak;
+      updates.lastStreakDate = streakUpdate.lastStreakDate;
+      setStreak(streakUpdate.streak);
+      console.log('🔥 Streak update:', streakUpdate);
+      // Milestone reward!
+      if (streakUpdate.isMilestone) {
+        const reward = getStreakMilestoneReward(streakUpdate.streak);
+        if (reward) {
+          updates.xp = newXp + reward.xp;
+          updates.coins = (authProfile?.coins || 0) + reward.coins;
+          setXp(newXp + reward.xp);
+          console.log('🎉 Streak milestone reward:', reward);
+          // Catat achievement
+          setAchievements((a) => [{
+            id: Date.now(),
+            type: 'streak-milestone',
+            text: `Milestone ${streakUpdate.streak} hari — "${reward.label}" (+${reward.xp} XP, +${reward.coins} 🪙)`,
+            emoji: '🔥',
+            time: 'baru saja',
+            user: userName || 'Anda',
+          }, ...a]);
+        }
+      }
+    }
+
+    // 2. Update tournament dailyXp — track XP earned hari ini
+    updates.dailyXp = updateDailyXp(authProfile?.dailyXp, earned);
+
+    // Persist ke Firestore
+    updateUserProfile(updates)
+      .then(() => console.log('✅ XP+streak+dailyXp persisted:', updates))
+      .catch((err) => console.error('❌ Failed to persist:', err));
   };
 
   const tabScreens = ['home', 'belajar', 'sosial', 'profil'];
