@@ -10,8 +10,9 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Home, Volume2, Check, Mic, MicOff, BookOpen, Sparkles, ChevronRight, RotateCcw, Star, X, Play, Pause } from 'lucide-react';
+import { ArrowLeft, Home, Volume2, Check, Mic, MicOff, BookOpen, Sparkles, ChevronRight, RotateCcw, Star, X, Play, Pause, Lock } from 'lucide-react';
 import { HAFALAN_SURAT } from '@/data/hafalan-surat';
+import { QURAN_SURAT } from '@/data/quran-metadata';
 import {
   getAyatAudioUrl,
   splitIntoChunks,
@@ -21,8 +22,18 @@ import {
   REQUIRED_LISTEN_COUNT,
   CHUNK_COMPLETION_REWARD,
 } from '@/lib/hafalan-method';
+import { isSuratFree, isSuratUnlocked, PREMIUM_UNLOCK_COST } from '@/lib/hafalan-tier';
 
-export default function HafalanScreen({ hafalanProgress = {}, onBack, onHome, onChunkComplete }) {
+export default function HafalanScreen({
+  hafalanProgress = {},
+  userProfile,
+  coins = 0,
+  onBack,
+  onHome,
+  onChunkComplete,
+  onUnlockPremium,
+  onShowUnlockModal,
+}) {
   const [view, setView] = useState('list'); // list | chunks | memorize
   const [selectedSurat, setSelectedSurat] = useState(null);
   const [selectedChunkIdx, setSelectedChunkIdx] = useState(0);
@@ -66,22 +77,51 @@ export default function HafalanScreen({ hafalanProgress = {}, onBack, onHome, on
     );
   }
 
-  return <ListView hafalanProgress={hafalanProgress} onBack={onBack} onHome={onHome} onSelect={(s) => { setSelectedSurat(s); setView('chunks'); }} />;
+  return <ListView
+    hafalanProgress={hafalanProgress}
+    userProfile={userProfile}
+    coins={coins}
+    onBack={onBack}
+    onHome={onHome}
+    onShowUnlockModal={onShowUnlockModal}
+    onSelect={(s) => { setSelectedSurat(s); setView('chunks'); }}
+  />;
 }
 
 // ============================================================================
 // LIST VIEW — daftar surat + progress chunk per surat
 // ============================================================================
-function ListView({ hafalanProgress, onBack, onHome, onSelect }) {
+function ListView({ hafalanProgress, userProfile, coins, onBack, onHome, onShowUnlockModal, onSelect }) {
+  // Map seeded content (id-based) ke surat number untuk quick lookup
+  const seededByNumber = new Map(HAFALAN_SURAT.map((s) => [s.number, s]));
+
+  // Pisahkan surat ke 3 section: Al-Fatihah, Juz 30, Premium (Juz 1-29)
+  const alFatihahMeta = QURAN_SURAT.find((s) => s.number === 1);
+  const juz30Surat = QURAN_SURAT.filter((s) => s.number !== 1 && s.juz.includes(30));
+  const premiumSurat = QURAN_SURAT.filter((s) => s.number !== 1 && !s.juz.includes(30));
+  const isPremiumUnlocked = !!userProfile?.hafalanFullUnlocked;
+
+  // Progress: hitung total chunks completed across all hafalan
   const totalChunksCompleted = Object.values(hafalanProgress).reduce(
     (acc, arr) => acc + (Array.isArray(arr) ? arr.length : 0),
     0
   );
-  const totalChunksAll = HAFALAN_SURAT.reduce(
-    (acc, s) => acc + splitIntoChunks(s.ayat).length,
-    0
-  );
-  const percent = totalChunksAll > 0 ? Math.round((totalChunksCompleted / totalChunksAll) * 100) : 0;
+
+  // Handler: tap surat — gating logic
+  const handleSelectSurat = (meta) => {
+    const seeded = seededByNumber.get(meta.number);
+    if (!seeded) {
+      // Surat content belum di-seed — kasih tau user
+      alert(`Konten ${meta.name} sedang disiapkan. Akan tersedia di update berikutnya.\n\nUntuk sekarang, coba: Al-Fatihah, Al-Fil, Quraisy, Al-Maun, Al-Kautsar, Al-Kafirun, An-Nasr, Al-Lahab, Al-Ikhlas, Al-Falaq, An-Naas.`);
+      return;
+    }
+    if (!isSuratUnlocked(meta, userProfile)) {
+      // Premium locked — buka unlock modal
+      if (onShowUnlockModal) onShowUnlockModal();
+      return;
+    }
+    onSelect(seeded);
+  };
 
   return (
     <div className="flex-1 flex flex-col px-5 py-6">
@@ -102,59 +142,89 @@ function ListView({ hafalanProgress, onBack, onHome, onSelect }) {
 
       <div className="rounded-3xl p-5 mb-4 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #0a4d3c, #1a6b56)' }}>
         <div className="absolute -right-6 -top-2 text-7xl opacity-15" style={{ fontFamily: 'Amiri, serif', color: '#c9a961' }}>﷽</div>
-        <p className="text-[10px] tracking-[0.3em] uppercase text-white opacity-80 mb-1 font-bold">Metode 5-Tahap</p>
+        <p className="text-[10px] tracking-[0.3em] uppercase text-white opacity-80 mb-1 font-bold">Hafalan Al-Quran</p>
         <h3 className="text-xl text-white mb-2 leading-tight" style={{ fontFamily: 'Fraunces, serif', fontWeight: 700 }}>
-          Hafalin dengan benar
+          Mulai dari Al-Fatihah
         </h3>
         <p className="text-sm text-white opacity-95 leading-relaxed mb-3">
-          Dengar audio syekh Alafasy → ulang → baca → cek bacaanmu sendiri. Surat &gt; 5 ayat dipecah jadi chunk biar nyaman.
+          Audio syekh Alafasy + cek bacaan via mic. Free: Al-Fatihah + 37 surat Juz Amma. Premium: 30 juz penuh ({PREMIUM_UNLOCK_COST} 🪙 sekali bayar).
         </p>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-1 px-2.5 py-1 rounded-full" style={{ background: 'rgba(201,169,97,0.3)' }}>
             <Sparkles size={11} color="#c9a961" />
-            <span className="text-xs font-bold text-white">{totalChunksCompleted}/{totalChunksAll} chunk</span>
+            <span className="text-xs font-bold text-white">{totalChunksCompleted} sesi dihafal</span>
           </div>
-          <span className="text-xs text-white opacity-90">{percent}% selesai</span>
+          {isPremiumUnlocked && (
+            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full" style={{ background: 'rgba(255,255,255,0.25)' }}>
+              <span className="text-xs font-bold text-white">⭐ 30 JUZ UNLOCKED</span>
+            </div>
+          )}
         </div>
       </div>
 
-      <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#8b6b3d' }}>Surat Pendek (Juz Amma)</p>
-      <div className="space-y-2">
-        {HAFALAN_SURAT.map((s) => {
-          const chunks = splitIntoChunks(s.ayat);
-          const completedChunks = (hafalanProgress[s.id] || []).length;
-          const isComplete = completedChunks >= chunks.length;
-          const percentSurat = chunks.length > 0 ? Math.round((completedChunks / chunks.length) * 100) : 0;
+      {/* SECTION 1: Al-Fatihah — starter */}
+      <p className="text-xs tracking-widest uppercase mb-3 flex items-center gap-2" style={{ color: '#0a4d3c' }}>
+        🌟 Permulaan — Surat Al-Fatihah
+      </p>
+      <div className="mb-5">
+        <SuratCard
+          meta={alFatihahMeta}
+          seeded={seededByNumber.get(1)}
+          progress={hafalanProgress[seededByNumber.get(1)?.id] || []}
+          isUnlocked={true}
+          onSelect={() => handleSelectSurat(alFatihahMeta)}
+          accentColor="#c9a961"
+          isStarter
+        />
+      </div>
+
+      {/* SECTION 2: Juz 30 — Juz Amma (free) */}
+      <p className="text-xs tracking-widest uppercase mb-3 flex items-center gap-2" style={{ color: '#0a4d3c' }}>
+        📖 Juz 30 (Juz Amma) — Gratis
+      </p>
+      <div className="space-y-2 mb-5">
+        {juz30Surat.map((meta) => {
+          const seeded = seededByNumber.get(meta.number);
           return (
-            <button
-              key={s.id}
-              onClick={() => onSelect(s)}
-              className="w-full p-4 rounded-2xl text-left flex items-center gap-3 transition-transform active:scale-[0.98]"
-              style={{ background: 'white', border: isComplete ? '1.5px solid #c9a961' : '1.5px solid rgba(10,77,60,0.1)' }}
-            >
-              <div
-                className="w-12 h-12 rounded-2xl flex items-center justify-center text-base font-bold flex-shrink-0"
-                style={{ background: isComplete ? 'linear-gradient(135deg, #c9a961, #d4b876)' : 'linear-gradient(135deg, #0a4d3c, #1a6b56)', color: 'white', fontFamily: 'Fraunces, serif' }}
-              >
-                {isComplete ? '⭐' : s.number}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <p className="font-semibold text-base leading-tight" style={{ color: '#0a4d3c' }}>{s.name}</p>
-                  <span className="text-base" style={{ fontFamily: 'Amiri, serif', color: '#c9a961' }}>{s.arName}</span>
-                </div>
-                <p className="text-[11px] leading-snug" style={{ color: '#666' }}>{s.totalAyat} ayat · {chunks.length} chunk</p>
-                <div className="flex items-center gap-2 mt-1.5">
-                  <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(10,77,60,0.1)' }}>
-                    <div className="h-full transition-all rounded-full" style={{ width: `${percentSurat}%`, background: isComplete ? '#c9a961' : '#0a4d3c' }} />
-                  </div>
-                  <span className="text-[10px] font-bold" style={{ color: '#8b6b3d' }}>
-                    {completedChunks}/{chunks.length}
-                  </span>
-                </div>
-              </div>
-              <ChevronRight size={16} style={{ color: '#c9a961' }} className="flex-shrink-0" />
-            </button>
+            <SuratCard
+              key={meta.number}
+              meta={meta}
+              seeded={seeded}
+              progress={seeded ? (hafalanProgress[seeded.id] || []) : []}
+              isUnlocked={true}
+              onSelect={() => handleSelectSurat(meta)}
+            />
+          );
+        })}
+      </div>
+
+      {/* SECTION 3: Juz 1-29 — Premium */}
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs tracking-widest uppercase flex items-center gap-2" style={{ color: isPremiumUnlocked ? '#0a4d3c' : '#8b6b3d' }}>
+          {isPremiumUnlocked ? '🕌 Juz 1-29 — UNLOCKED' : '🔒 Juz 1-29 — Premium'}
+        </p>
+        {!isPremiumUnlocked && (
+          <button
+            onClick={onShowUnlockModal}
+            className="text-[10px] font-bold px-2.5 py-1 rounded-full"
+            style={{ background: '#c9a961', color: 'white' }}
+          >
+            {PREMIUM_UNLOCK_COST} 🪙 unlock
+          </button>
+        )}
+      </div>
+      <div className="space-y-2 mb-4">
+        {premiumSurat.map((meta) => {
+          const seeded = seededByNumber.get(meta.number);
+          return (
+            <SuratCard
+              key={meta.number}
+              meta={meta}
+              seeded={seeded}
+              progress={seeded ? (hafalanProgress[seeded.id] || []) : []}
+              isUnlocked={isPremiumUnlocked}
+              onSelect={() => handleSelectSurat(meta)}
+            />
           );
         })}
       </div>
@@ -163,6 +233,85 @@ function ListView({ hafalanProgress, onBack, onHome, onSelect }) {
         "Sebaik-baik kalian adalah yang belajar Al-Quran dan mengajarkannya" — HR. Bukhari
       </p>
     </div>
+  );
+}
+
+// ============================================================================
+// SURAT CARD — display 1 surat dgn lock state, progress, content readiness
+// ============================================================================
+function SuratCard({ meta, seeded, progress, isUnlocked, onSelect, accentColor, isStarter }) {
+  const chunks = seeded ? splitIntoChunks(seeded.ayat) : [];
+  const completedChunks = progress.length;
+  const totalChunks = chunks.length;
+  const isComplete = totalChunks > 0 && completedChunks >= totalChunks;
+  const percent = totalChunks > 0 ? Math.round((completedChunks / totalChunks) * 100) : 0;
+  const hasContent = !!seeded;
+
+  // Visual styling
+  const cardBorder = !isUnlocked
+    ? '1.5px dashed rgba(139,107,61,0.3)'
+    : isComplete
+    ? '1.5px solid #c9a961'
+    : isStarter
+    ? '2px solid #c9a961'
+    : '1.5px solid rgba(10,77,60,0.1)';
+
+  const iconBg = !isUnlocked
+    ? 'rgba(139,107,61,0.15)'
+    : isComplete
+    ? 'linear-gradient(135deg, #c9a961, #d4b876)'
+    : isStarter
+    ? 'linear-gradient(135deg, #c9a961, #d4b876)'
+    : 'linear-gradient(135deg, #0a4d3c, #1a6b56)';
+
+  const iconContent = !isUnlocked ? '🔒' : isComplete ? '⭐' : isStarter ? '🌟' : meta.number;
+
+  return (
+    <button
+      onClick={onSelect}
+      className="w-full p-4 rounded-2xl text-left flex items-center gap-3 transition-transform active:scale-[0.98]"
+      style={{
+        background: 'white',
+        border: cardBorder,
+        opacity: !isUnlocked ? 0.7 : 1,
+      }}
+    >
+      <div
+        className="w-12 h-12 rounded-2xl flex items-center justify-center text-base font-bold flex-shrink-0"
+        style={{ background: iconBg, color: !isUnlocked ? '#8b6b3d' : 'white', fontFamily: 'Fraunces, serif' }}
+      >
+        {iconContent}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+          <p className="font-semibold text-base leading-tight" style={{ color: !isUnlocked ? '#8b6b3d' : '#0a4d3c' }}>
+            {meta.number}. {meta.name}
+          </p>
+          <span className="text-base" style={{ fontFamily: 'Amiri, serif', color: !isUnlocked ? '#a87f47' : '#c9a961' }}>
+            {meta.arName}
+          </span>
+        </div>
+        <p className="text-[11px] leading-snug" style={{ color: '#666' }}>
+          {meta.totalAyat} ayat · {meta.meaning}
+          {!hasContent && isUnlocked && <span style={{ color: '#a05536' }}> · Konten segera datang</span>}
+        </p>
+        {hasContent && isUnlocked && totalChunks > 0 && (
+          <div className="flex items-center gap-2 mt-1.5">
+            <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(10,77,60,0.1)' }}>
+              <div className="h-full transition-all rounded-full" style={{ width: `${percent}%`, background: isComplete ? '#c9a961' : '#0a4d3c' }} />
+            </div>
+            <span className="text-[10px] font-bold" style={{ color: '#8b6b3d' }}>
+              {completedChunks}/{totalChunks}
+            </span>
+          </div>
+        )}
+      </div>
+      {!isUnlocked ? (
+        <Lock size={14} style={{ color: '#8b6b3d', opacity: 0.6 }} className="flex-shrink-0" />
+      ) : (
+        <ChevronRight size={16} style={{ color: '#c9a961' }} className="flex-shrink-0" />
+      )}
+    </button>
   );
 }
 

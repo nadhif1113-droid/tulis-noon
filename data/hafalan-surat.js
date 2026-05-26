@@ -5,6 +5,24 @@
 
 export const HAFALAN_SURAT = [
   {
+    id: 'al-fatihah',
+    number: 1,
+    name: 'Al-Fatihah',
+    arName: 'الْفَاتِحَة',
+    meaning: 'Pembukaan',
+    totalAyat: 7,
+    description: 'Induk Al-Quran — dibaca tiap rakaat shalat',
+    ayat: [
+      { num: 1, ar: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ', latin: 'bismillāhi ar-raḥmāni ar-raḥīm', id: '"Dengan menyebut nama Allah Yang Maha Pemurah lagi Maha Penyayang."' },
+      { num: 2, ar: 'الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ', latin: 'al-ḥamdu lillāhi rabbi al-\'ālamīn', id: '"Segala puji bagi Allah, Tuhan semesta alam."' },
+      { num: 3, ar: 'الرَّحْمَٰنِ الرَّحِيمِ', latin: 'ar-raḥmāni ar-raḥīm', id: '"Maha Pemurah lagi Maha Penyayang."' },
+      { num: 4, ar: 'مَالِكِ يَوْمِ الدِّينِ', latin: 'māliki yawmi ad-dīn', id: '"Yang menguasai di Hari Pembalasan."' },
+      { num: 5, ar: 'إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ', latin: "iyyāka na'budu wa-iyyāka nasta'īn", id: '"Hanya Engkaulah yang kami sembah, dan hanya kepada Engkaulah kami meminta pertolongan."' },
+      { num: 6, ar: 'اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ', latin: 'ihdinā aṣ-ṣirāṭa al-mustaqīm', id: '"Tunjukilah kami jalan yang lurus,"' },
+      { num: 7, ar: 'صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ', latin: "ṣirāṭa al-ladzīna an'amta 'alayhim ghayri al-maghḍūbi 'alayhim wa-lā aḍ-ḍāllīn", id: '"(yaitu) jalan orang-orang yang telah Engkau anugerahkan nikmat kepada mereka; bukan (jalan) mereka yang dimurkai dan bukan (pula jalan) mereka yang sesat."' },
+    ],
+  },
+  {
     id: 'an-naas',
     number: 114,
     name: 'An-Naas',

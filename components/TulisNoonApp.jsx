@@ -14,6 +14,8 @@ import StreakInfoModal from '@/components/StreakInfoModal';
 import LivesInfoModal from '@/components/LivesInfoModal';
 import MatchArenaScreen from '@/components/MatchArenaScreen';
 import HafalanScreen from '@/components/HafalanScreen';
+import UnlockHafalanModal from '@/components/UnlockHafalanModal';
+import { PREMIUM_UNLOCK_COST } from '@/lib/hafalan-tier';
 import { checkLivesRefresh } from '@/lib/lives-system';
 import { calculateStreakUpdate, getStreakMilestoneReward } from '@/lib/streak-system';
 import { updateDailyXp } from '@/lib/tournament-system';
@@ -71,6 +73,8 @@ export default function TulisNoonApp() {
   const [showStreakModal, setShowStreakModal] = useState(false);
   // Lives info modal — trigger dari heart pill di home.
   const [showLivesModal, setShowLivesModal] = useState(false);
+  // Hafalan Premium unlock modal — trigger pas user tap surat locked.
+  const [showUnlockHafalan, setShowUnlockHafalan] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -457,6 +461,9 @@ export default function TulisNoonApp() {
         {/* Hafalan Quran v2 — 5-stage method + audio syekh Alafasy + voice rec */}
         {screen === 'hafalan' && <HafalanScreen
           hafalanProgress={authProfile?.hafalanProgress || {}}
+          userProfile={authProfile}
+          coins={authProfile?.coins || 0}
+          onShowUnlockModal={() => setShowUnlockHafalan(true)}
           onBack={() => setScreen('main')}
           onHome={() => { setTab('home'); setScreen('main'); }}
           onChunkComplete={(suratId, chunkIdx, chunkMeta = {}) => {
@@ -618,6 +625,35 @@ export default function TulisNoonApp() {
         {/* Streak info modal — trigger dari flame pill di home */}
         {showStreakModal && (
           <StreakInfoModal streak={streak || 0} onClose={() => setShowStreakModal(false)} />
+        )}
+
+        {/* Hafalan Premium unlock modal — 120 koin one-time */}
+        {showUnlockHafalan && (
+          <UnlockHafalanModal
+            coins={authProfile?.coins || 0}
+            onClose={() => setShowUnlockHafalan(false)}
+            onUnlock={async () => {
+              const curCoins = authProfile?.coins || 0;
+              if (curCoins < PREMIUM_UNLOCK_COST) return;
+              try {
+                await updateUserProfile({
+                  coins: curCoins - PREMIUM_UNLOCK_COST,
+                  hafalanFullUnlocked: true,
+                });
+                setAchievements((a) => [{
+                  id: Date.now(),
+                  type: 'hafalan-unlock',
+                  text: `🕌 Unlocked Hafalan 30 Juz penuh! Selamat memulai perjalanan hafalan.`,
+                  emoji: '🌟',
+                  time: 'baru saja',
+                  user: userName || 'Anda',
+                }, ...a]);
+                setShowUnlockHafalan(false);
+              } catch (err) {
+                console.error('Unlock Hafalan failed:', err);
+              }
+            }}
+          />
         )}
 
         {/* Lives info modal — trigger dari heart pill di home */}
