@@ -123,21 +123,40 @@ export default function TulisNoonApp() {
     }
   }, [searchParams, router]);
 
+  // Ref untuk current screen state — diakses oleh native back button handler
+  // (gak bisa pakai closure langsung karena useEffect cuma jalan sekali)
+  const navStateRef = useRef({ screen: null, tab: null });
+  useEffect(() => { navStateRef.current = { screen, tab }; }, [screen, tab]);
+
   // Native init: hide splash, set status bar, setup hardware back button
   useEffect(() => {
     let cleanup = null;
     (async () => {
       const native = await isNative();
       if (!native) return;
-      // Hide splash setelah React mounted
       setTimeout(() => hideSplashScreen(), 200);
-      // Status bar: dark text on cream background (match app theme)
       await setStatusBarStyle('dark');
-      // Hardware back button: handle screen state, exit kalau di root
       cleanup = await setupNativeBackButton({
-        onRootBack: () => {
-          // Di home native, tekan back → exit app
-          // (cleanup handler natural untuk WebView history first)
+        onBack: () => {
+          // React state-aware back: map current screen → previous screen state
+          const { screen: s } = navStateRef.current;
+          // Sub-screens → parent
+          if (s === 'lesson-detail') { setScreen('lessons'); return true; }
+          if (s === 'lessons') { setScreen('main'); return true; }
+          if (s === 'lesson') { setScreen('lessons'); return true; }
+          if (s === 'perkenalan-diri') { setScreen('main'); return true; }
+          if (s === 'tanya-cepat') { setScreen('main'); return true; }
+          if (s === 'hafalan') { setScreen('main'); return true; }
+          if (s === 'challenge') { setScreen('challenge-levels'); return true; }
+          if (s === 'challenge-levels') { setScreen('main'); return true; }
+          if (s === 'game') { setScreen('main'); return true; }
+          if (s === 'roleplay') { setScreen('roleplay-list'); return true; }
+          if (s === 'roleplay-list') { setScreen('main'); return true; }
+          if (s === 'match') { setScreen('main'); return true; }
+          if (s === 'guru') { setScreen('main'); return true; }
+          if (s === 'premium') { setScreen('main'); return true; }
+          // Di 'main' → let default handle (exit app)
+          return false;
         },
       });
     })();
@@ -2119,6 +2138,23 @@ function BottomNav({ active, onChange, router }) {
 
 // ============ LESSONS LIST ============
 function LessonsScreen({ path, onBack, onSelectLesson, progress, userProfile, onUnlockModule }) {
+  // Defensive: kalau path kehilangan state (mis. balik dari deep link), auto-back ke main
+  useEffect(() => {
+    if (!path) {
+      const t = setTimeout(() => { try { onBack?.(); } catch {} }, 200);
+      return () => clearTimeout(t);
+    }
+  }, [path, onBack]);
+  if (!path) {
+    return (
+      <div className="flex-1 flex items-center justify-center px-6 text-center">
+        <div>
+          <div className="text-5xl mb-3">📚</div>
+          <p className="text-sm" style={{ color: '#8b6b3d' }}>Memuat ulang halaman...</p>
+        </div>
+      </div>
+    );
+  }
   // Pilih data lessons sesuai path
   let lessons;
   const pathData = path?.id === 'umrah' ? LEARNING_UMRAH
