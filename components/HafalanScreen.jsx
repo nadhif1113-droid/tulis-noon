@@ -337,11 +337,42 @@ function Stage1ListenEach({ surat, chunk, onComplete }) {
   const isFinishedAyat = listenCount >= REQUIRED_LISTEN_COUNT;
   const isFinishedAll = ayatIdx >= chunk.ayat.length - 1 && isFinishedAyat;
 
+  // Reset audio state pas ganti ayat — supaya audio element re-load src baru
+  useEffect(() => {
+    setIsPlaying(false);
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current.load(); // re-load src dari attribute
+    }
+  }, [ayatIdx]);
+
+  // Play audio dgn proper Promise handling (untuk iOS Safari & Chrome quirks).
+  // Setelah audio pernah selesai, play() bisa reject — kita handle dengan load() retry.
   const playAudio = () => {
-    if (!audioRef.current) return;
-    audioRef.current.currentTime = 0;
-    audioRef.current.play();
-    setIsPlaying(true);
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.pause();
+    audio.currentTime = 0;
+    const playPromise = audio.play();
+    if (playPromise instanceof Promise) {
+      playPromise
+        .then(() => setIsPlaying(true))
+        .catch((err) => {
+          console.warn('Audio play failed, retry dgn load():', err?.message);
+          // Fallback: force re-load src lalu play lagi
+          audio.load();
+          audio
+            .play()
+            .then(() => setIsPlaying(true))
+            .catch((err2) => {
+              console.error('Audio play retry failed:', err2);
+              setIsPlaying(false);
+            });
+        });
+    } else {
+      setIsPlaying(true);
+    }
   };
 
   const handleAudioEnd = () => {
@@ -459,9 +490,19 @@ function Stage2ListenFull({ surat, chunk, onComplete }) {
       return;
     }
     setPlayingIdx(idx);
-    if (audioRef.current) {
-      audioRef.current.src = getAyatAudioUrl(surat.number, chunk.ayat[idx].num);
-      audioRef.current.play();
+    const audio = audioRef.current;
+    if (!audio) return;
+    // Set src baru + load + play dgn Promise handling
+    audio.pause();
+    audio.src = getAyatAudioUrl(surat.number, chunk.ayat[idx].num);
+    audio.load();
+    const playPromise = audio.play();
+    if (playPromise instanceof Promise) {
+      playPromise.catch((err) => {
+        console.warn('Sequential play failed:', err?.message);
+        // Skip ke ayat berikutnya kalau gagal
+        setTimeout(() => playAyatAt(idx + 1), 200);
+      });
     }
   };
 
