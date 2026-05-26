@@ -29,6 +29,7 @@ import { LEARNING_PROFESIONAL } from '@/data/learning-profesional';
 import { getPricing as getLearningPricing, isModuleFree as isModuleFreeFn, isModuleUnlocked as isModuleUnlockedFn, unlockedModulesKey } from '@/lib/learning-pricing';
 import { shouldShowTanyaCepat } from '@/lib/geo-detect';
 import { setupNativeBackButton, hideSplashScreen, setStatusBarStyle, isNative, setupPushNotifications, addPushNotificationListener } from '@/lib/native-helpers';
+import { schedulePrayerNotifications } from '@/lib/local-prayer-notifications';
 import { PERKENALAN_MATERI_COST, PERKENALAN_BUNDLE_COST } from '@/data/perkenalan-diri-materi';
 import { PREMIUM_UNLOCK_COST } from '@/lib/hafalan-tier';
 import { checkLivesRefresh } from '@/lib/lives-system';
@@ -150,6 +151,17 @@ export default function TulisNoonApp() {
             console.log('Push token saved to Firestore');
           }
         }
+        // Schedule local prayer notifications 7 hari ke depan
+        // (re-schedule otomatis tiap kali app dibuka biar selalu fresh)
+        if (authProfile?.prayerReminder?.enabled !== false) {
+          try {
+            const count = await schedulePrayerNotifications(authProfile, 7);
+            if (count > 0) console.log(`Scheduled ${count} prayer notifications`);
+          } catch (e) {
+            console.error('Schedule prayer notifs error:', e);
+          }
+        }
+
         // Listen incoming notifications saat app foreground
         pushListenerCleanup = await addPushNotificationListener(({ title, body }) => {
           // Tampilkan sebagai achievement feed
