@@ -221,23 +221,64 @@ function ListView({ hafalanProgress, userProfile, coins, onBack, onHome, onShowU
         </button>
       )}
 
-      {/* SEARCH BAR — cari surat by name/number */}
-      <div className="rounded-2xl mb-4 flex items-center gap-2 px-4 py-3" style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.1)' }}>
-        <span className="text-lg" style={{ opacity: 0.5 }}>🔍</span>
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => handleSearchChange(e.target.value)}
-          placeholder="Cari surat: nama, nomor, atau arti..."
-          className="flex-1 outline-none text-sm"
-          style={{ background: 'transparent', color: '#1a1a1a' }}
-        />
-        {searchQuery && (
-          <button onClick={() => handleSearchChange('')} className="text-xs font-semibold" style={{ color: '#8b6b3d' }}>
-            ✕ clear
-          </button>
-        )}
+      {/* DROPDOWN SEARCH — pilih surat tanpa mengetik (native picker di mobile) */}
+      <div className="grid grid-cols-2 gap-2 mb-4">
+        {/* Dropdown by Name */}
+        <div className="rounded-2xl flex items-center gap-2 px-3 py-2.5 relative" style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.12)' }}>
+          <span className="text-base flex-shrink-0">📖</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-[9px] uppercase tracking-widest font-bold" style={{ color: '#8b6b3d' }}>Cari Nama</p>
+            <select
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="w-full outline-none text-sm font-semibold appearance-none cursor-pointer"
+              style={{ background: 'transparent', color: '#0a4d3c', WebkitAppearance: 'none' }}
+            >
+              <option value="">Semua surat</option>
+              {QURAN_SURAT.map((s) => (
+                <option key={s.number} value={s.name}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <span className="text-xs flex-shrink-0" style={{ color: '#c9a961' }}>▼</span>
+        </div>
+
+        {/* Dropdown by Number */}
+        <div className="rounded-2xl flex items-center gap-2 px-3 py-2.5 relative" style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.12)' }}>
+          <span className="text-base flex-shrink-0">🔢</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-[9px] uppercase tracking-widest font-bold" style={{ color: '#8b6b3d' }}>Cari Nomor</p>
+            <select
+              value={/^\d+$/.test(searchQuery) ? searchQuery : ''}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="w-full outline-none text-sm font-semibold appearance-none cursor-pointer"
+              style={{ background: 'transparent', color: '#0a4d3c', WebkitAppearance: 'none' }}
+            >
+              <option value="">No.</option>
+              {QURAN_SURAT.map((s) => (
+                <option key={s.number} value={s.number.toString()}>
+                  {s.number}. {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <span className="text-xs flex-shrink-0" style={{ color: '#c9a961' }}>▼</span>
+        </div>
       </div>
+
+      {/* Active filter indicator + clear */}
+      {searchQuery && (
+        <div className="flex items-center justify-between mb-3 px-3 py-2 rounded-xl" style={{ background: 'rgba(201,169,97,0.12)', border: '1px dashed #c9a961' }}>
+          <p className="text-xs" style={{ color: '#8b6b3d' }}>
+            🎯 Filter aktif: <strong>"{searchQuery}"</strong>
+          </p>
+          <button onClick={() => handleSearchChange('')} className="text-xs font-bold" style={{ color: '#a05536' }}>
+            ✕ Reset
+          </button>
+        </div>
+      )}
 
       {/* AL-FATIHAH — always shown at top (kecuali pas search & ga match) */}
       {(!searchQuery || alFatihahMatches) && (
