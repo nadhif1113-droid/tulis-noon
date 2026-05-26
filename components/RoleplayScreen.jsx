@@ -481,44 +481,71 @@ export default function RoleplayScreen({ scenario, userId, onBack, onComplete, o
 
 // ============================================================================
 // MESSAGE BUBBLE — render satu pesan (user atau AI).
-// AI message: parse text yg ada format "Arabic\n(Indonesian translation)" → tampilkan 2 baris.
+// AI message format 3 baris:
+//   1. Arabic dengan harakat (ditampilkan besar, font Amiri serif)
+//   2. Transliterasi Latin (ditampilkan italic, ukuran sedang)
+//   3. Translation Indonesia dalam ( ) (ditampilkan kecil, warna muted)
+// Parsing robust: deteksi line by content (Arab vs Latin vs Indo dalam kurung).
 // ============================================================================
 function MessageBubble({ message, scenarioColor, personaAvatar }) {
   const isUser = message.role === 'user';
 
-  // Parse AI message: cari pattern "Arabic line\n(translation)" atau split by parentheses
+  // Parse AI message ke 3 komponen
   const parseAiMessage = (text) => {
-    // Coba split by line dulu (kalau formatnya 2 baris: Arab + translation)
-    const lines = text.split('\n').filter((l) => l.trim());
-    if (lines.length >= 2) {
-      // Asumsi: line pertama Arab, line setelahnya translation
-      const arabic = lines[0];
-      const translation = lines.slice(1).join(' ');
-      return { arabic, translation };
+    const lines = text.split('\n').map((l) => l.trim()).filter((l) => l);
+    let arabic = '';
+    let latin = '';
+    let translation = '';
+
+    for (const line of lines) {
+      // Deteksi translation: line yang dimulai dengan '(' atau seluruhnya dalam ( )
+      if (/^\(.+\)$/.test(line) || (line.startsWith('(') && line.endsWith(')'))) {
+        translation = line.replace(/^\(|\)$/g, '').trim();
+        continue;
+      }
+      // Deteksi Arabic: mengandung karakter Unicode Arabic (؀-ۿ)
+      if (/[؀-ۿ]/.test(line)) {
+        // Kalau Arabic line kedua, gabungkan
+        arabic = arabic ? `${arabic} ${line}` : line;
+        continue;
+      }
+      // Sisanya: Latin transliteration
+      latin = latin ? `${latin} ${line}` : line;
     }
-    // Fallback: cari pattern "Arab (translation)"
-    const match = text.match(/^(.+?)\s*\((.+)\)\s*$/);
-    if (match) {
-      return { arabic: match[1].trim(), translation: match[2].trim() };
+
+    // Fallback: kalau parsing gagal (cuma 1 line tanpa format), tampilkan as-is
+    if (!arabic && !latin && !translation) {
+      return { arabic: text, latin: '', translation: '' };
     }
-    // Ga ada pattern — tampilkan as-is
-    return { arabic: text, translation: null };
+    return { arabic, latin, translation };
   };
 
   if (isUser) {
+    // User message: kalau Arab, render rtl + Amiri font. Kalau Indo/English, render normal.
+    const hasArabic = /[؀-ۿ]/.test(message.content);
     return (
       <div className="flex justify-end">
         <div
           className="max-w-[78%] rounded-2xl rounded-br-md px-4 py-2.5 shadow-sm"
           style={{ background: scenarioColor, color: 'white' }}
         >
-          <p className="text-sm leading-relaxed whitespace-pre-wrap" dir="auto">{message.content}</p>
+          <p
+            className="leading-relaxed whitespace-pre-wrap"
+            style={{
+              fontFamily: hasArabic ? 'Amiri, serif' : 'inherit',
+              fontSize: hasArabic ? '17px' : '14px',
+              direction: hasArabic ? 'rtl' : 'ltr',
+            }}
+            dir="auto"
+          >
+            {message.content}
+          </p>
         </div>
       </div>
     );
   }
 
-  const { arabic, translation } = parseAiMessage(message.content);
+  const { arabic, latin, translation } = parseAiMessage(message.content);
 
   return (
     <div className="flex items-end gap-2">
@@ -526,15 +553,45 @@ function MessageBubble({ message, scenarioColor, personaAvatar }) {
         {personaAvatar}
       </div>
       <div
-        className="max-w-[78%] rounded-2xl rounded-bl-md px-4 py-3 shadow-sm"
+        className="max-w-[82%] rounded-2xl rounded-bl-md px-4 py-3 shadow-sm"
         style={{ background: 'white', border: '1px solid rgba(10,77,60,0.08)' }}
       >
-        <p className="text-base leading-relaxed" style={{ fontFamily: 'Amiri, serif', color: scenarioColor, direction: 'rtl' }}>
-          {arabic}
-        </p>
+        {/* Baris 1: Arabic dengan harakat — paling prominent */}
+        {arabic && (
+          <p
+            className="leading-relaxed"
+            style={{
+              fontFamily: 'Amiri, serif',
+              color: scenarioColor,
+              direction: 'rtl',
+              fontSize: '19px',
+              fontWeight: 500,
+            }}
+          >
+            {arabic}
+          </p>
+        )}
+        {/* Baris 2: Transliterasi Latin — italic, sedang */}
+        {latin && (
+          <p
+            className="leading-snug italic"
+            style={{
+              color: '#a87f47',
+              fontSize: '13px',
+              marginTop: '4px',
+              letterSpacing: '0.01em',
+            }}
+          >
+            {latin}
+          </p>
+        )}
+        {/* Baris 3: Translation Indonesia — kecil, muted */}
         {translation && (
-          <p className="text-xs italic mt-1.5" style={{ color: '#8b6b3d' }}>
-            {translation.startsWith('(') ? translation : `(${translation})`}
+          <p
+            className="text-xs leading-snug"
+            style={{ color: '#8b6b3d', marginTop: '6px' }}
+          >
+            <span style={{ opacity: 0.6 }}>"</span>{translation}<span style={{ opacity: 0.6 }}>"</span>
           </p>
         )}
       </div>
