@@ -23,6 +23,8 @@ import TanyaCepatScreen, { TANYA_CEPAT_FREE_LIMIT, TANYA_CEPAT_BUNDLE_COST, TANY
 import TanyaCepatFAB from '@/components/TanyaCepatFAB';
 import LessonDetailScreen from '@/components/LessonDetailScreen';
 import { LEARNING_UMRAH } from '@/data/learning-umrah';
+import { LEARNING_PELAJAR } from '@/data/learning-pelajar';
+import { LEARNING_PROFESIONAL } from '@/data/learning-profesional';
 import { getPricing as getLearningPricing, isModuleFree as isModuleFreeFn, isModuleUnlocked as isModuleUnlockedFn, unlockedModulesKey } from '@/lib/learning-pricing';
 import { shouldShowTanyaCepat } from '@/lib/geo-detect';
 import { setupNativeBackButton, hideSplashScreen, setStatusBarStyle, isNative } from '@/lib/native-helpers';
@@ -2083,9 +2085,12 @@ function BottomNav({ active, onChange, router }) {
 function LessonsScreen({ path, onBack, onSelectLesson, progress, userProfile, onUnlockModule }) {
   // Pilih data lessons sesuai path
   let lessons;
-  if (path?.id === 'umrah') {
-    // 15 modul Umrah lengkap dgn percakapan
-    lessons = LEARNING_UMRAH.map(m => ({
+  const pathData = path?.id === 'umrah' ? LEARNING_UMRAH
+    : path?.id === 'profesi' ? LEARNING_PROFESIONAL
+    : path?.id === 'beasiswa' ? LEARNING_PELAJAR
+    : null;
+  if (pathData) {
+    lessons = pathData.map(m => ({
       id: m.id,
       pathId: m.pathId,
       order: m.order,
@@ -2098,17 +2103,7 @@ function LessonsScreen({ path, onBack, onSelectLesson, progress, userProfile, on
       ...m,
     }));
   } else {
-    // Path lain (profesi/beasiswa) — masih placeholder lessons lama
-    lessons = [
-      { id: 1, title: 'Salam & Sapaan', arabic: 'التحية', desc: 'Cara menyapa dan membalas salam', emoji: '🤝' },
-      { id: 2, title: 'Perkenalan Diri', arabic: 'التعارف', desc: 'Memperkenalkan nama dan asal', emoji: '👋' },
-      { id: 3, title: 'Tanya Arah', arabic: 'السؤال عن الطريق', desc: 'Mencari jalan dan tempat', emoji: '🗺️' },
-      { id: 4, title: 'Di Restoran', arabic: 'في المطعم', desc: 'Memesan makanan dan minuman', emoji: '🍽️' },
-      { id: 5, title: 'Tanya Harga', arabic: 'السؤال عن السعر', desc: 'Belanja dan menawar harga', emoji: '💰' },
-      { id: 6, title: 'Darurat', arabic: 'الطوارئ', desc: 'Situasi darurat dan bantuan', emoji: '🆘' },
-      { id: 7, title: 'Hotel & Penginapan', arabic: 'الفندق', desc: 'Check-in dan layanan hotel', emoji: '🏨' },
-      { id: 8, title: 'Doa & Ibadah Umrah', arabic: 'العمرة', desc: 'Frasa penting saat ibadah', emoji: '🕋' },
-    ];
+    lessons = [];
   }
 
   return (
