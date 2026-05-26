@@ -4,13 +4,19 @@ PODS:
   - CapacitorApp (6.0.3):
     - Capacitor
   - CapacitorCordova (6.2.1)
+  - CapacitorGeolocation (6.1.1):
+    - Capacitor
   - CapacitorHaptics (6.0.3):
     - Capacitor
   - CapacitorKeyboard (6.0.4):
     - Capacitor
+  - CapacitorLocalNotifications (6.1.3):
+    - Capacitor
   - CapacitorNetwork (6.0.4):
     - Capacitor
   - CapacitorPreferences (6.0.4):
+    - Capacitor
+  - CapacitorPushNotifications (6.0.5):
     - Capacitor
   - CapacitorSplashScreen (6.0.4):
     - Capacitor
@@ -23,10 +29,13 @@ DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorApp (from `../../node_modules/@capacitor/app`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorGeolocation (from `../../node_modules/@capacitor/geolocation`)"
   - "CapacitorHaptics (from `../../node_modules/@capacitor/haptics`)"
   - "CapacitorKeyboard (from `../../node_modules/@capacitor/keyboard`)"
+  - "CapacitorLocalNotifications (from `../../node_modules/@capacitor/local-notifications`)"
   - "CapacitorNetwork (from `../../node_modules/@capacitor/network`)"
   - "CapacitorPreferences (from `../../node_modules/@capacitor/preferences`)"
+  - "CapacitorPushNotifications (from `../../node_modules/@capacitor/push-notifications`)"
   - "CapacitorSplashScreen (from `../../node_modules/@capacitor/splash-screen`)"
   - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
   - "CapacitorToast (from `../../node_modules/@capacitor/toast`)"
@@ -38,14 +47,20 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/app"
   CapacitorCordova:
     :path: "../../node_modules/@capacitor/ios"
+  CapacitorGeolocation:
+    :path: "../../node_modules/@capacitor/geolocation"
   CapacitorHaptics:
     :path: "../../node_modules/@capacitor/haptics"
   CapacitorKeyboard:
     :path: "../../node_modules/@capacitor/keyboard"
+  CapacitorLocalNotifications:
+    :path: "../../node_modules/@capacitor/local-notifications"
   CapacitorNetwork:
     :path: "../../node_modules/@capacitor/network"
   CapacitorPreferences:
     :path: "../../node_modules/@capacitor/preferences"
+  CapacitorPushNotifications:
+    :path: "../../node_modules/@capacitor/push-notifications"
   CapacitorSplashScreen:
     :path: "../../node_modules/@capacitor/splash-screen"
   CapacitorStatusBar:
@@ -57,14 +72,17 @@ SPEC CHECKSUMS:
   Capacitor: c95400d761e376be9da6be5a05f226c0e865cebf
   CapacitorApp: a19ccb4f5f32d2534be5c6f524d5a9b614a1e8a7
   CapacitorCordova: 8d93e14982f440181be7304aa9559ca631d77fff
+  CapacitorGeolocation: ef657a46a125be74010f4ce57caae173c23204d2
   CapacitorHaptics: 40f83026feeee9cfe36e89e9c98a3baaaf20c450
   CapacitorKeyboard: e8cd50fd5cbdd023a5947a5c0f5cca6e5aa5a253
+  CapacitorLocalNotifications: 801867e687c42dd2b33c1e22e08f48e6738d2f72
   CapacitorNetwork: 093efa3664b692a971bdd01be70523291cd6a87f
   CapacitorPreferences: 5848e0691b36b4bb4acc98e481ab56d451578d30
+  CapacitorPushNotifications: 35abece14371c57172e8321c9ccc8b6fa35fabfe
   CapacitorSplashScreen: ef140a8b1ea7244e0c245ce2dd4ce5251e7ab86a
   CapacitorStatusBar: 149cde8f1328ec3aa6cbdd872a55137ae3f98b16
   CapacitorToast: a104ca7baee91e7178c541e1f421ef2377714748
 
-PODFILE CHECKSUM: 6995f7cb0f147b66d86267d629b28b111390e6d6
+PODFILE CHECKSUM: 94f00657bdb56e73f904a5e245ad992dfc3fdd74
 
 COCOAPODS: 1.16.2

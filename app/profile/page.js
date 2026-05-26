@@ -9,6 +9,7 @@ import { Star, Flame, BookOpen, Sparkles, ArrowLeft, MapPin, LogOut, ChevronRigh
 import XpLevelInfoModal from '../../components/XpLevelInfoModal';
 import AdminHelpFAB from '../../components/AdminHelpFAB';
 import { isInMiddleEast, isInIndonesia, getUserTimezone } from '../../lib/geo-detect';
+import { sendTestNotification, getPendingPrayerNotifsCount } from '../../lib/local-prayer-notifications';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -240,6 +241,40 @@ export default function ProfilePage() {
             <ProfileRow label="Gabung sejak" value={memberSinceText} />
             <ProfileRow label="Lokasi" value={userProfile?.location?.city || 'Madinah'} icon={MapPin} />
             <ProfileRow label="Zona Waktu" value={detectedTz || '-'} icon={Globe} />
+          </div>
+        </div>
+
+        {/* Notification Test (debug section) */}
+        <div className="px-5 mb-4">
+          <div className="rounded-2xl p-4" style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.08)' }}>
+            <p className="text-[10px] tracking-widest uppercase font-bold mb-2" style={{ color: '#c9a961' }}>🔔 Notifikasi Sholat</p>
+            <p className="text-[11px] mb-3" style={{ color: '#8b6b3d' }}>
+              Tes apakah sistem notifikasi sholat berjalan dengan baik. Tap tombol di bawah untuk dapat notif percobaan dalam 5 detik.
+            </p>
+            <button
+              onClick={async () => {
+                const ok = await sendTestNotification();
+                if (ok) {
+                  alert('Test notif ke-schedule! Tunggu 5 detik & background app dengan swipe up.');
+                } else {
+                  alert('Test notif gagal — kemungkinan permission belum granted atau bukan native app. Cek console log Xcode.');
+                }
+              }}
+              className="w-full py-3 rounded-2xl font-semibold flex items-center justify-center gap-2"
+              style={{ background: 'linear-gradient(135deg, #0a4d3c, #1a6b56)', color: 'white' }}
+            >
+              🔔 Kirim Test Notif (5 detik)
+            </button>
+            <button
+              onClick={async () => {
+                const count = await getPendingPrayerNotifsCount();
+                alert(`Ada ${count} notifikasi sholat ke-schedule.`);
+              }}
+              className="w-full py-2 mt-2 rounded-xl text-xs font-medium"
+              style={{ background: 'rgba(10,77,60,0.08)', color: '#0a4d3c' }}
+            >
+              Cek Jumlah Notif Tersimpan
+            </button>
           </div>
         </div>
 
