@@ -12,6 +12,7 @@ import XpLevelInfoModal from '@/components/XpLevelInfoModal';
 import CoinInfoModal from '@/components/CoinInfoModal';
 import StreakInfoModal from '@/components/StreakInfoModal';
 import LivesInfoModal from '@/components/LivesInfoModal';
+import MatchArenaScreen from '@/components/MatchArenaScreen';
 import { checkLivesRefresh } from '@/lib/lives-system';
 
 export default function TulisNoonApp() {
@@ -309,7 +310,7 @@ export default function TulisNoonApp() {
                 setScreen('game');
               }} onOpenChallenge={(scenario) => { setSelectedChallenge(scenario || getTodayChallenge()); setScreen('challenge-levels'); }} onOpenGuru={() => setScreen('guru')} achievements={achievements} />}
               {tab === 'belajar' && <BelajarTab onSelectPath={(p) => { setSelectedPath(p); setScreen('lessons'); }} onOpenGuru={() => setScreen('guru')} progress={progress} />}
-              {tab === 'sosial' && <SosialTab achievements={achievements} userName={userName} />}
+              {tab === 'sosial' && <SosialTab achievements={achievements} userName={userName} currentUserId={user?.uid} onOpenMatch={() => setScreen('match')} />}
               {tab === 'profil' && <ProfilTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} progress={progress} onOpenPremium={() => setScreen('premium')} />}
             </div>
             <BottomNav active={tab} onChange={setTab} router={router} />
@@ -410,6 +411,37 @@ export default function TulisNoonApp() {
             } else {
               window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
             }
+          }}
+        />}
+
+        {/* Match Arena — kompetitif race lawan bot (sosial game) */}
+        {screen === 'match' && <MatchArenaScreen
+          lives={authProfile?.lives ?? 10}
+          userName={userName}
+          onNoLives={() => setShowLivesModal(true)}
+          onBack={() => { setTab('sosial'); setScreen('main'); }}
+          onHome={() => { setTab('home'); setScreen('main'); }}
+          onComplete={({ earned, coinEarned, result, userScore, botScore, difficulty }) => {
+            // Award XP + koin
+            awardXp(earned);
+            if (coinEarned > 0) {
+              const curCoins = authProfile?.coins || 0;
+              updateUserProfile({ coins: curCoins + coinEarned }).catch((err) =>
+                console.error('Coin reward failed:', err)
+              );
+            }
+            // Deduct nyawa kalau kalah (tie = aman)
+            deductLifeIfLost(result !== 'lose' ? true : false);
+            // Catat achievement
+            const resultLabel = result === 'win' ? 'MENANG' : result === 'lose' ? 'kalah' : 'seri';
+            setAchievements((a) => [{
+              id: Date.now(),
+              type: 'match',
+              text: `Match Arena (${difficulty}) — ${resultLabel} ${userScore} vs ${botScore} (+${earned} XP)`,
+              emoji: result === 'win' ? '🏆' : '⚔️',
+              time: 'baru saja',
+              user: userName || 'Anda',
+            }, ...a]);
           }}
         />}
 
@@ -1373,7 +1405,29 @@ function BelajarTab({ onSelectPath, onOpenGuru, progress }) {
 }
 
 // ============ SOSIAL TAB ============
-function SosialTab({ achievements, userName }) {
+function SosialTab({ achievements, userName, currentUserId, onOpenMatch }) {
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(true);
+
+  // Fetch real leaderboard dari Firestore: top 10 users by XP
+  useEffect(() => {
+    async function fetchLeaderboard() {
+      try {
+        const { firestore } = await import('@/lib/firebase');
+        const { collection, query, orderBy, limit, getDocs } = await import('firebase/firestore');
+        const q = query(collection(firestore, 'users'), orderBy('xp', 'desc'), limit(10));
+        const snap = await getDocs(q);
+        const users = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        setLeaderboard(users);
+      } catch (e) {
+        console.error('Leaderboard fetch error:', e);
+      } finally {
+        setLeaderboardLoading(false);
+      }
+    }
+    fetchLeaderboard();
+  }, []);
+
   return (
     <div className="px-5 py-6">
       <div className="flex items-center justify-between mb-1">
@@ -1383,34 +1437,71 @@ function SosialTab({ achievements, userName }) {
         </div>
       </div>
 
-      <div className="my-4 p-3 rounded-xl text-xs flex items-start gap-2" style={{ background: 'rgba(201,169,97,0.1)', border: '1px dashed #c9a961' }}>
-        <Sparkles size={14} style={{ color: '#c9a961' }} className="mt-0.5 flex-shrink-0" />
-        <p style={{ color: '#7a3d2a' }}>
-          <strong>Preview fitur sosial.</strong> Like, komentar, dan pertemanan akan aktif di versi penuh.
+      {/* Match Arena CTA — entry point ke game competitive */}
+      <button
+        onClick={onOpenMatch}
+        className="w-full text-left rounded-3xl p-5 my-4 relative overflow-hidden transition-transform active:scale-[0.98]"
+        style={{ background: 'linear-gradient(135deg, #a05536, #c46a3f)' }}
+      >
+        <div className="absolute -right-6 -top-4 text-7xl opacity-15">⚔️</div>
+        <p className="text-[10px] tracking-[0.3em] uppercase text-white opacity-80 mb-1 font-bold">Match Arena</p>
+        <h3 className="text-lg text-white mb-1 leading-tight" style={{ fontFamily: 'Fraunces, serif', fontWeight: 700 }}>
+          Adu skor lawan robot
+        </h3>
+        <p className="text-xs text-white opacity-90 mb-3 leading-relaxed">
+          Race 5 ronde × 8 detik. Pilih level robot — menang dapat XP & koin.
         </p>
-      </div>
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-white" style={{ color: '#a05536' }}>
+          ⚔️ Mulai Match <ArrowRight size={12} />
+        </span>
+      </button>
 
-      {/* Leaderboard preview */}
+      {/* Leaderboard real dari Firestore */}
       <div className="rounded-2xl p-4 mb-5" style={{ background: 'white', border: '1px solid rgba(10,77,60,0.08)' }}>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Trophy size={16} style={{ color: '#c9a961' }} />
-            <p className="text-sm font-semibold" style={{ color: '#0a4d3c' }}>Papan Peringkat Mingguan</p>
+            <p className="text-sm font-semibold" style={{ color: '#0a4d3c' }}>Papan Peringkat</p>
           </div>
-          <Lock size={12} style={{ color: '#8b6b3d' }} />
+          <span className="text-[10px] uppercase tracking-widest" style={{ color: '#8b6b3d' }}>Top 10 · XP</span>
         </div>
-        <div className="space-y-2 opacity-60">
-          {[{n:'Ahmad', xp:340}, {n:'Siti', xp:285}, {n:userName || 'Anda', xp:45}].map((u,i) => (
-            <div key={i} className="flex items-center gap-3">
-              <span className="text-xs font-bold w-4" style={{ color: i === 0 ? '#c9a961' : '#8b6b3d' }}>{i+1}</span>
-              <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold" style={{ background: 'rgba(10,77,60,0.1)', color: '#0a4d3c' }}>
-                {u.n.charAt(0)}
-              </div>
-              <span className="text-sm flex-1" style={{ color: '#1a1a1a' }}>{u.n}</span>
-              <span className="text-xs font-semibold" style={{ color: '#c9a961' }}>{u.xp} XP</span>
-            </div>
-          ))}
-        </div>
+        {leaderboardLoading ? (
+          <div className="py-4 text-center">
+            <div className="w-6 h-6 rounded-full mx-auto animate-spin" style={{ border: '2px solid rgba(10,77,60,0.15)', borderTopColor: '#c9a961' }} />
+            <p className="text-xs mt-2" style={{ color: '#8b6b3d' }}>Memuat ranking...</p>
+          </div>
+        ) : leaderboard.length === 0 ? (
+          <p className="text-xs text-center py-4" style={{ color: '#8b6b3d' }}>Belum ada user di peringkat.</p>
+        ) : (
+          <div className="space-y-2">
+            {leaderboard.map((u, i) => {
+              const isMe = u.id === currentUserId;
+              const medalColor = i === 0 ? '#c9a961' : i === 1 ? '#a8a8a8' : i === 2 ? '#cd7f32' : '#8b6b3d';
+              const medalEmoji = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : null;
+              return (
+                <div
+                  key={u.id}
+                  className="flex items-center gap-3 p-2 rounded-xl"
+                  style={{ background: isMe ? 'rgba(10,77,60,0.06)' : 'transparent', border: isMe ? '1.5px solid rgba(10,77,60,0.2)' : 'none' }}
+                >
+                  <span className="text-xs font-bold w-6 text-center" style={{ color: medalColor }}>
+                    {medalEmoji || `#${i + 1}`}
+                  </span>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0" style={{ background: 'rgba(10,77,60,0.1)', color: '#0a4d3c' }}>
+                    {(u.displayName || 'U').charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate" style={{ color: '#1a1a1a' }}>
+                      {u.displayName || 'Anonim'}
+                      {isMe && <span className="ml-1 text-[10px] font-bold" style={{ color: '#0a4d3c' }}>· KAMU</span>}
+                    </p>
+                  </div>
+                  <span className="text-xs font-bold" style={{ color: '#c9a961' }}>{(u.xp || 0).toLocaleString('id-ID')} XP</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Feed */}
