@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, ArrowRight, Volume2, Mic, Check, X, Sparkles, Lock, MapPin, Briefcase, GraduationCap, Trophy, Flame, Star, Home, BookOpen, Users, User, Heart, Share2, Send, Play, Image as ImageIcon, MessageCircle, Calendar, Target, Zap, ChevronRight, Bot, Video, Clock, Award, UserCheck, Coffee, Music, Film, Gamepad2, Heart as HeartIcon, Mountain, Facebook, Instagram, Twitter, Link2, Copy } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Volume2, Mic, Check, X, Sparkles, Lock, MapPin, Briefcase, GraduationCap, Trophy, Flame, Star, Home, BookOpen, Users, User, Heart, Share2, Send, Play, Image as ImageIcon, MessageCircle, Calendar, Target, Zap, ChevronRight, Bot, Video, Clock, Award, UserCheck, Coffee, Music, Film, Gamepad2, Heart as HeartIcon, Mountain, Facebook, Instagram, Twitter, Link2, Copy, Coins } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { CHALLENGE_SCENARIOS, getTodayChallenge, getXpForLevel } from '@/data/challenge-levels';
 import { ROLEPLAY_SCENARIOS } from '@/data/roleplay-scenarios';
@@ -23,6 +23,7 @@ import TanyaCepatScreen, { TANYA_CEPAT_FREE_LIMIT, TANYA_CEPAT_BUNDLE_COST, TANY
 import TanyaCepatFAB from '@/components/TanyaCepatFAB';
 import LessonDetailScreen from '@/components/LessonDetailScreen';
 import { LEARNING_UMRAH } from '@/data/learning-umrah';
+import { getPricing as getLearningPricing, isModuleFree as isModuleFreeFn, isModuleUnlocked as isModuleUnlockedFn, unlockedModulesKey } from '@/lib/learning-pricing';
 import { shouldShowTanyaCepat } from '@/lib/geo-detect';
 import { setupNativeBackButton, hideSplashScreen, setStatusBarStyle, isNative } from '@/lib/native-helpers';
 import { PERKENALAN_MATERI_COST, PERKENALAN_BUNDLE_COST } from '@/data/perkenalan-diri-materi';
@@ -424,27 +425,66 @@ export default function TulisNoonApp() {
           </>
         )}
 
-        {screen === 'lessons' && <LessonsScreen path={selectedPath} onBack={() => setScreen('main')} onSelectLesson={(l) => {
-          // Special case: Perkenalan Diri (id=2 lama) punya screen sendiri dgn materi koin-gated
-          if (l.id === 2 && selectedPath?.id === 'umrah-old') { setScreen('perkenalan-diri'); return; }
-          // Modul baru dari LEARNING_UMRAH (dll) — pakai LessonDetailScreen
-          if (l.pathId) {
+        {screen === 'lessons' && <LessonsScreen
+          path={selectedPath}
+          userProfile={authProfile}
+          onBack={() => setScreen('main')}
+          onSelectLesson={(l) => {
+            if (l.id === 2 && selectedPath?.id === 'umrah-old') { setScreen('perkenalan-diri'); return; }
+            if (l.pathId) {
+              setSelectedLesson(l);
+              setScreen('lesson-detail');
+              return;
+            }
             setSelectedLesson(l);
-            setScreen('lesson-detail');
-            return;
-          }
-          setSelectedLesson(l);
-          setScreen('lesson');
-        }} progress={progress[selectedPath?.id] || 0} />}
+            setScreen('lesson');
+          }}
+          onUnlockModule={async (module) => {
+            const pricing = getLearningPricing(module.pathId);
+            const cost = pricing.modulePriceCoins;
+            const cur = authProfile?.coins || 0;
+            if (cur < cost) {
+              setAchievements(a => [{ id: Date.now(), type: 'info', text: `Koin kamu kurang ${cost - cur} untuk buka modul ${module.title}`, emoji: '⚠️', time: 'baru saja', user: userName || 'Anda' }, ...a]);
+              return;
+            }
+            if (!confirm(`Buka modul "${module.title}" dengan ${cost} koin?`)) return;
+            const key = unlockedModulesKey(module.pathId);
+            const arr = authProfile?.[key] || [];
+            if (arr.includes(module.id)) return;
+            try {
+              await updateUserProfile({ coins: cur - cost, [key]: [...arr, module.id] });
+              setAchievements(a => [{ id: Date.now(), type: 'unlock', text: `🔓 Buka modul ${module.title} (-${cost} koin)`, emoji: module.emoji, time: 'baru saja', user: userName || 'Anda' }, ...a]);
+            } catch (err) { console.error('Unlock module failed:', err); }
+          }}
+          progress={progress[selectedPath?.id] || 0}
+        />}
         {screen === 'lesson-detail' && selectedLesson && (
           <LessonDetailScreen
             module={selectedLesson}
+            userProfile={authProfile}
             onBack={() => setScreen('lessons')}
             onHome={() => { setTab('home'); setScreen('main'); }}
             onComplete={(earned) => {
               awardXp(earned);
               setProgress(p => ({ ...p, [selectedLesson.pathId]: Math.max((p[selectedLesson.pathId] || 0), selectedLesson.order) }));
               setAchievements(a => [{ id: Date.now(), type:'lesson', text:`Selesai modul: ${selectedLesson.title} (+${earned} XP)`, emoji: selectedLesson.emoji, time:'baru saja', user: userName || 'Anda' }, ...a]);
+            }}
+            onUnlockConversation={async (moduleId, convIdx) => {
+              const pricing = getLearningPricing(selectedLesson.pathId);
+              const cost = pricing.conversationPriceCoins;
+              const cur = authProfile?.coins || 0;
+              if (cur < cost) return false;
+              const all = authProfile?.unlockedConversations || {};
+              const arr = all[moduleId] || [];
+              if (arr.includes(convIdx)) return true;
+              try {
+                await updateUserProfile({
+                  coins: cur - cost,
+                  unlockedConversations: { ...all, [moduleId]: [...arr, convIdx] },
+                });
+                setAchievements(a => [{ id: Date.now(), type: 'unlock', text: `🔓 Buka percakapan #${convIdx+1} di ${selectedLesson.title} (-${cost} koin)`, emoji: '💬', time: 'baru saja', user: userName || 'Anda' }, ...a]);
+                return true;
+              } catch (err) { console.error('Unlock conversation failed:', err); return false; }
             }}
           />
         )}
@@ -2040,7 +2080,7 @@ function BottomNav({ active, onChange, router }) {
 }
 
 // ============ LESSONS LIST ============
-function LessonsScreen({ path, onBack, onSelectLesson, progress }) {
+function LessonsScreen({ path, onBack, onSelectLesson, progress, userProfile, onUnlockModule }) {
   // Pilih data lessons sesuai path
   let lessons;
   if (path?.id === 'umrah') {
@@ -2092,22 +2132,80 @@ function LessonsScreen({ path, onBack, onSelectLesson, progress }) {
         </div>
       </div>
 
+      {/* Info pricing untuk path */}
+      {(() => {
+        const p = getLearningPricing(path?.id);
+        if (p && !p.isFullyFree) {
+          return (
+            <div className="rounded-2xl p-3 mb-3" style={{ background: 'rgba(201,169,97,0.12)', border: '1px dashed #c9a961' }}>
+              <p className="text-[10px] uppercase tracking-widest font-bold mb-1" style={{ color: '#c9a961' }}>💰 Tier Modul</p>
+              <p className="text-[11px] leading-snug" style={{ color: '#8b6b3d' }}>
+                <strong>{p.freeModulesCount} modul awal GRATIS</strong> · sisanya {p.modulePriceCoins} koin/modul (one-time unlock).
+                Dalam modul: {p.perModuleFreeConvs} percakapan pertama gratis, sisanya {p.conversationPriceCoins} koin/percakapan.
+              </p>
+            </div>
+          );
+        }
+        if (p && p.isFullyFree) {
+          return (
+            <div className="rounded-2xl p-3 mb-3" style={{ background: 'rgba(10,77,60,0.08)', border: '1px solid rgba(10,77,60,0.2)' }}>
+              <p className="text-xs leading-snug" style={{ color: '#0a4d3c' }}>
+                🎓 <strong>Semua modul gratis</strong> — khusus buat pelajar/siswa/mahasiswa.
+              </p>
+            </div>
+          );
+        }
+        return null;
+      })()}
+
       <div className="space-y-2">
         {lessons.map((l, idx) => {
           const isCompleted = idx < progress;
-          // Semua lesson dibuka — user bebas pilih mana yang mau dipelajari dulu.
-          // (Sebelumnya: progressive lock idx > progress + 1)
-          const isLocked = false;
+          // Pakai pricing system kalau lesson punya pathId (modul learning path baru)
+          const isFree = l.pathId ? isModuleFreeFn(l) : true;
+          const isUnlocked = l.pathId ? isModuleUnlockedFn(l, userProfile) : true;
+          const isLocked = !isUnlocked;
+          const pricing = getLearningPricing(l.pathId);
           return (
-            <button key={l.id} onClick={() => !isLocked && onSelectLesson(l)} className="w-full text-left p-4 rounded-xl flex items-center gap-3 active:scale-[0.98] transition-transform disabled:opacity-50" disabled={isLocked} style={{ background: 'white', border: '1px solid rgba(10,77,60,0.08)' }}>
+            <button
+              key={l.id}
+              onClick={() => {
+                if (isLocked && onUnlockModule) { onUnlockModule(l); return; }
+                onSelectLesson(l);
+              }}
+              className="w-full text-left p-4 rounded-xl flex items-center gap-3 active:scale-[0.98] transition-transform"
+              style={{
+                background: 'white',
+                border: isLocked ? '1.5px dashed rgba(201,169,97,0.45)' : '1px solid rgba(10,77,60,0.08)',
+                opacity: isLocked ? 0.92 : 1,
+              }}
+            >
               <div className="w-11 h-11 rounded-xl flex items-center justify-center text-2xl flex-shrink-0" style={{ background: isCompleted ? '#0a4d3c' : '#f3ebd9' }}>
                 {isCompleted ? <Check size={20} color="white" /> : (isLocked ? <Lock size={16} style={{color:'#8b6b3d'}}/> : l.emoji)}
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-sm" style={{ color: '#1a1a1a' }}>{l.title}</h3>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <h3 className="font-semibold text-sm" style={{ color: '#1a1a1a' }}>{l.title}</h3>
+                  {l.pathId && isFree && (
+                    <span className="text-[8px] font-bold px-1 py-0.5 rounded" style={{ background: 'rgba(10,77,60,0.1)', color: '#0a4d3c' }}>FREE</span>
+                  )}
+                  {l.pathId && !isFree && isUnlocked && (
+                    <span className="text-[8px] font-bold px-1 py-0.5 rounded" style={{ background: 'rgba(10,77,60,0.1)', color: '#0a4d3c' }}>✓ DIBUKA</span>
+                  )}
+                  {l.isStub && (
+                    <span className="text-[8px] font-bold px-1 py-0.5 rounded" style={{ background: 'rgba(201,169,97,0.18)', color: '#8b6b3d' }}>🚧 SEDANG DIBANGUN</span>
+                  )}
+                </div>
                 <p className="text-xs truncate" style={{ color: '#666' }}>{l.desc}</p>
               </div>
-              <span className="text-base" style={{ fontFamily: 'Amiri, serif', color: '#0a4d3c', opacity: 0.5 }}>{l.arabic}</span>
+              {isLocked && pricing && !pricing.isFullyFree ? (
+                <div className="flex items-center gap-1 px-2 py-1 rounded-full" style={{ background: 'rgba(201,169,97,0.18)' }}>
+                  <Coins size={10} style={{ color: '#c9a961' }} />
+                  <span className="text-[10px] font-bold" style={{ color: '#8b6b3d' }}>{pricing.modulePriceCoins}</span>
+                </div>
+              ) : (
+                <span className="text-base" style={{ fontFamily: 'Amiri, serif', color: '#0a4d3c', opacity: 0.5 }}>{l.arabic}</span>
+              )}
             </button>
           );
         })}

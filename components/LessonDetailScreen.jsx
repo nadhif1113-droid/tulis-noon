@@ -5,11 +5,14 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { ArrowLeft, ArrowRight, Home, Volume2, Sparkles, BookOpen, MessageCircle, ChevronRight, Star } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Home, Volume2, Sparkles, BookOpen, MessageCircle, ChevronRight, Star, Lock, Coins, X } from 'lucide-react';
+import { isConversationFree, isConversationUnlocked, getPricing } from '@/lib/learning-pricing';
 
-export default function LessonDetailScreen({ module, onBack, onHome, onComplete }) {
+export default function LessonDetailScreen({ module, userProfile, onBack, onHome, onComplete, onUnlockConversation }) {
   const [view, setView] = useState('overview'); // overview | vocab | conversation
   const [convIdx, setConvIdx] = useState(0);
+  const [unlockTargetConv, setUnlockTargetConv] = useState(null);
+  const pricing = getPricing(module?.pathId);
 
   const speakArabic = (text) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
@@ -47,20 +50,48 @@ export default function LessonDetailScreen({ module, onBack, onHome, onComplete 
   }
 
   return (
-    <OverviewView
-      module={module}
-      onBack={onBack}
-      onHome={onHome}
-      onOpenVocab={() => setView('vocab')}
-      onOpenConv={(idx) => { setConvIdx(idx); setView('conversation'); }}
-    />
+    <>
+      <OverviewView
+        module={module}
+        userProfile={userProfile}
+        pricing={pricing}
+        onBack={onBack}
+        onHome={onHome}
+        onOpenVocab={() => setView('vocab')}
+        onOpenConv={(idx) => {
+          if (!isConversationUnlocked(module, idx, userProfile)) {
+            setUnlockTargetConv(idx);
+            return;
+          }
+          setConvIdx(idx);
+          setView('conversation');
+        }}
+      />
+      {unlockTargetConv !== null && (
+        <UnlockConvModal
+          module={module}
+          convIdx={unlockTargetConv}
+          pricing={pricing}
+          coins={userProfile?.coins || 0}
+          onClose={() => setUnlockTargetConv(null)}
+          onUnlock={async () => {
+            const ok = await onUnlockConversation?.(module.id, unlockTargetConv);
+            if (ok !== false) {
+              setConvIdx(unlockTargetConv);
+              setUnlockTargetConv(null);
+              setView('conversation');
+            }
+          }}
+        />
+      )}
+    </>
   );
 }
 
 // ============================================================================
 // OVERVIEW — landing modul
 // ============================================================================
-function OverviewView({ module, onBack, onHome, onOpenVocab, onOpenConv }) {
+function OverviewView({ module, userProfile, pricing, onBack, onHome, onOpenVocab, onOpenConv }) {
   return (
     <div className="flex-1 flex flex-col px-5 py-6 pb-24">
       <div className="flex items-center gap-2 mb-4">
@@ -123,25 +154,49 @@ function OverviewView({ module, onBack, onHome, onOpenVocab, onOpenConv }) {
       {/* Conversations list */}
       <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#8b6b3d' }}>
         Percakapan ({module.conversations.length})
+        {!pricing.isFullyFree && <span className="ml-1 normal-case tracking-normal" style={{ color: '#c9a961' }}>· {pricing.perModuleFreeConvs} pertama GRATIS</span>}
       </p>
       <div className="space-y-2">
-        {module.conversations.map((conv, idx) => (
-          <button
-            key={conv.id}
-            onClick={() => onOpenConv(idx)}
-            className="w-full p-3.5 rounded-2xl flex items-center gap-3 active:scale-[0.98] transition-transform"
-            style={{ background: 'white', border: '1px solid rgba(10,77,60,0.08)' }}
-          >
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-xs" style={{ background: `${module.color}15`, color: module.color }}>
-              {idx + 1}
-            </div>
-            <div className="flex-1 text-left min-w-0">
-              <p className="text-sm font-semibold leading-tight" style={{ color: '#1a1a1a' }}>{conv.title}</p>
-              <p className="text-[10px] truncate" style={{ color: '#8b6b3d' }}>{conv.situation}</p>
-            </div>
-            <ChevronRight size={16} style={{ color: '#c9a961' }} />
-          </button>
-        ))}
+        {module.conversations.map((conv, idx) => {
+          const free = isConversationFree(module, idx);
+          const unlocked = isConversationUnlocked(module, idx, userProfile);
+          return (
+            <button
+              key={conv.id}
+              onClick={() => onOpenConv(idx)}
+              className="w-full p-3.5 rounded-2xl flex items-center gap-3 active:scale-[0.98] transition-transform"
+              style={{
+                background: 'white',
+                border: unlocked ? '1px solid rgba(10,77,60,0.08)' : '1.5px dashed rgba(201,169,97,0.45)',
+                opacity: unlocked ? 1 : 0.92,
+              }}
+            >
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-xs" style={{ background: `${module.color}15`, color: module.color }}>
+                {idx + 1}
+              </div>
+              <div className="flex-1 text-left min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-sm font-semibold leading-tight" style={{ color: '#1a1a1a' }}>{conv.title}</p>
+                  {free && (
+                    <span className="text-[8px] font-bold px-1 py-0.5 rounded" style={{ background: 'rgba(10,77,60,0.1)', color: '#0a4d3c' }}>FREE</span>
+                  )}
+                  {!free && unlocked && (
+                    <span className="text-[8px] font-bold px-1 py-0.5 rounded" style={{ background: 'rgba(10,77,60,0.1)', color: '#0a4d3c' }}>✓ DIBUKA</span>
+                  )}
+                </div>
+                <p className="text-[10px] truncate" style={{ color: '#8b6b3d' }}>{conv.situation}</p>
+              </div>
+              {unlocked ? (
+                <ChevronRight size={16} style={{ color: '#c9a961' }} />
+              ) : (
+                <div className="flex items-center gap-1 px-2 py-1 rounded-full" style={{ background: 'rgba(201,169,97,0.18)' }}>
+                  <Lock size={10} style={{ color: '#8b6b3d' }} />
+                  <span className="text-[10px] font-bold" style={{ color: '#8b6b3d' }}>{pricing.conversationPriceCoins}</span>
+                </div>
+              )}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -262,6 +317,71 @@ function ConversationView({ module, convIdx, onSpeak, onBack, onNext, onPrev }) 
         >
           {isLast ? <>Selesai <Sparkles size={16} /></> : <>Lanjut <ArrowRight size={16} /></>}
         </button>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// UNLOCK CONVERSATION MODAL — bayar koin untuk buka percakapan ke-6+
+// ============================================================================
+function UnlockConvModal({ module, convIdx, pricing, coins, onClose, onUnlock }) {
+  const conv = module.conversations[convIdx];
+  const canAfford = coins >= pricing.conversationPriceCoins;
+  return (
+    <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ background: 'rgba(10,30,25,0.85)' }} onClick={onClose}>
+      <div
+        className="w-full max-w-md max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl shadow-2xl"
+        style={{ background: 'linear-gradient(180deg, #faf6ee 0%, #f3ebd9 100%)' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between px-6 pt-6 pb-2">
+          <div className="flex-1">
+            <p className="text-[10px] tracking-[0.3em] uppercase font-bold mb-1" style={{ color: '#c9a961' }}>🔒 Percakapan #{convIdx + 1}</p>
+            <h2 className="text-xl leading-tight" style={{ fontFamily: 'Fraunces, serif', fontWeight: 700, color: '#0a4d3c' }}>
+              {conv.title}
+            </h2>
+          </div>
+          <button onClick={onClose} className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(10,77,60,0.08)' }}>
+            <X size={16} style={{ color: '#0a4d3c' }} />
+          </button>
+        </div>
+
+        <div className="px-6 pb-6">
+          <div className="rounded-3xl p-5 mb-4 text-center" style={{ background: module.bgGradient }}>
+            <div className="text-5xl mb-2">{module.emoji}</div>
+            <p className="text-sm text-white font-semibold leading-tight" style={{ fontFamily: 'Fraunces, serif' }}>
+              {conv.situation}
+            </p>
+          </div>
+
+          <p className="text-sm leading-relaxed mb-3" style={{ color: '#3d2817' }}>
+            Buka percakapan ini buat akses <strong>{conv.dialog.length} dialog</strong> dengan dialek Saudi yang siap dipake langsung di lapangan.
+          </p>
+
+          <div className="rounded-2xl p-3 mb-3 flex items-center justify-between" style={{ background: 'rgba(201,169,97,0.12)' }}>
+            <div className="flex items-center gap-2">
+              <Coins size={16} style={{ color: '#c9a961' }} />
+              <span className="text-xs font-bold" style={{ color: '#8b6b3d' }}>Saldo koin</span>
+            </div>
+            <span className="text-base font-bold" style={{ color: '#0a4d3c' }}>{coins}</span>
+          </div>
+
+          <button
+            onClick={onUnlock}
+            disabled={!canAfford}
+            className="w-full py-4 rounded-2xl text-white font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+            style={{ background: `linear-gradient(135deg, ${module.color}, ${module.color}cc)`, boxShadow: `0 10px 24px -8px ${module.color}66` }}
+          >
+            <Coins size={16} /> Buka Percakapan · {pricing.conversationPriceCoins} koin
+          </button>
+
+          {!canAfford && (
+            <p className="text-[11px] text-center mt-2" style={{ color: '#a05536' }}>
+              Koin kamu kurang {pricing.conversationPriceCoins - coins} lagi. Top-up atau selesaikan game untuk earn lebih.
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
