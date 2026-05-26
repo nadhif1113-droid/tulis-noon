@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth-context';
 import { CHALLENGE_SCENARIOS, getTodayChallenge, getXpForLevel } from '@/data/challenge-levels';
 import { ROLEPLAY_SCENARIOS } from '@/data/roleplay-scenarios';
 import RoleplayScreen from '@/components/RoleplayScreen';
+import TulisArabScreen from '@/components/TulisArabScreen';
 
 export default function TulisNoonApp() {
   const router = useRouter();
@@ -228,10 +229,14 @@ export default function TulisNoonApp() {
           <>
             <div className="flex-1 pb-20">
               {tab === 'home' && <HomeTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} onOpenLesson={() => { setSelectedPath({id:'umrah', title:'Wisatawan & Jamaah Umrah'}); setScreen('lessons'); }} onOpenGame={(g) => {
-                // Special routing: AI Roleplay -> screen baru dengan list scenario.
+                // Special routing untuk game yang punya screen sendiri.
                 // Game lain (image-quiz, video-quiz, story) tetap ke GameScreen placeholder.
                 if (g.id === 'chat-roleplay') {
                   setScreen('roleplay-list');
+                  return;
+                }
+                if (g.id === 'tulis-arab') {
+                  setScreen('tulis-arab');
                   return;
                 }
                 setSelectedGame(g);
@@ -330,6 +335,23 @@ export default function TulisNoonApp() {
             } else {
               window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
             }
+          }}
+        />}
+
+        {/* Tulis Arab — game baca-tulis Arab dari nol */}
+        {screen === 'tulis-arab' && <TulisArabScreen
+          onBack={() => setScreen('main')}
+          onHome={() => { setTab('home'); setScreen('main'); }}
+          onComplete={({ earned, score, totalQuestions }) => {
+            awardXp(earned);
+            setAchievements((a) => [{
+              id: Date.now(),
+              type: 'tulis-arab',
+              text: `Tulis Arab — selesai level (${score}/${totalQuestions}, +${earned} XP)`,
+              emoji: '✍️',
+              time: 'baru saja',
+              user: userName || 'Anda',
+            }, ...a]);
           }}
         />}
 
@@ -969,7 +991,7 @@ function HomeTab({ userName, userProfile, xp, streak, onOpenLesson, onOpenGame, 
             },
           },
           {
-            id: 'chat-roleplay', t: 'AI Roleplay', d: 'Ngobrol',
+            id: 'chat-roleplay', t: 'Latihan Ngobrol', d: 'Ngobrol',
             icon: Bot, color: '#8b6b3d', bg: 'rgba(139,107,61,0.15)',
             interests: ['religion', 'business', 'family', 'travel'],
             personalizedDesc: {
@@ -977,6 +999,17 @@ function HomeTab({ userName, userProfile, xp, streak, onOpenLesson, onOpenGame, 
               business: 'Ngobrol kerja',
               family: 'Ngobrol keluarga',
               travel: 'Ngobrol jamaah',
+            },
+          },
+          {
+            id: 'tulis-arab', t: 'Tulis Arab', d: 'Baca-Tulis',
+            icon: BookOpen, color: '#0a4d3c', bg: 'rgba(10,77,60,0.1)',
+            interests: ['religion', 'family', 'history', 'tech'],
+            personalizedDesc: {
+              religion: 'Baca Quran lancar',
+              family: 'Bisa nulis nama',
+              history: 'Huruf hijaiyah',
+              tech: 'Belajar dari nol',
             },
           },
           {
@@ -3613,9 +3646,9 @@ function RoleplayListScreen({ onBack, onHome, onSelectScenario }) {
           <Home size={17} style={{ color: '#0a4d3c' }} />
         </button>
         <div className="flex-1">
-          <p className="text-xs tracking-widest uppercase" style={{ color: '#8b6b3d' }}>AI Roleplay</p>
+          <p className="text-xs tracking-widest uppercase" style={{ color: '#8b6b3d' }}>Latihan Ngobrol</p>
           <h2 className="text-xl font-semibold" style={{ color: '#0a4d3c', fontFamily: 'Fraunces, serif' }}>
-            Ngobrol Bahasa Arab
+            Ngobrol sama orang Saudi
           </h2>
         </div>
       </div>
@@ -3623,12 +3656,12 @@ function RoleplayListScreen({ onBack, onHome, onSelectScenario }) {
       {/* Hero card */}
       <div className="rounded-3xl p-5 mb-4 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #0a4d3c, #1a6b56)' }}>
         <div className="absolute -right-6 -top-4 text-7xl opacity-15">🎙️</div>
-        <p className="text-[10px] tracking-[0.3em] uppercase text-white opacity-80 mb-1">Killer Feature</p>
+        <p className="text-[10px] tracking-[0.3em] uppercase text-white opacity-80 mb-1">Sebelum berangkat</p>
         <h3 className="text-xl text-white mb-2 leading-tight" style={{ fontFamily: 'Fraunces, serif', fontWeight: 700 }}>
-          Latihan ngobrol nyata
+          Latihan ngomong dulu yuk
         </h3>
         <p className="text-sm text-white opacity-95 leading-relaxed mb-3">
-          AI bermain peran sebagai orang Saudi — pedagang, polisi, barista. Kamu praktik Hijazi sebelum beneran ngobrol di lapangan.
+          AI akan jadi pedagang, polisi, atau barista Saudi. Kamu latihan ngobrol sama mereka — biar pas sampai Tanah Suci udah pede ngomong bahasa Arab.
         </p>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1 px-2.5 py-1 rounded-full" style={{ background: 'rgba(201,169,97,0.3)' }}>
@@ -3675,12 +3708,12 @@ function RoleplayListScreen({ onBack, onHome, onSelectScenario }) {
 
       {/* Info card: how it works */}
       <div className="rounded-2xl p-3 mt-2" style={{ background: 'rgba(201,169,97,0.1)', border: '1px dashed #c9a961' }}>
-        <p className="text-[10px] tracking-widest uppercase font-bold mb-2" style={{ color: '#c9a961' }}>Cara kerja</p>
+        <p className="text-[10px] tracking-widest uppercase font-bold mb-2" style={{ color: '#c9a961' }}>Cara mainnya gampang</p>
         <ul className="text-xs space-y-1.5" style={{ color: '#8b6b3d' }}>
-          <li>• Pilih skenario → klik Mulai → AI mulai chat in character</li>
-          <li>• Balas dalam Arab (atau Indonesia, AI akan paham)</li>
-          <li>• Nyangkut? Pencet 💡 untuk hint kalimat</li>
-          <li>• Setelah selesai → AI kasih grade (Mumtaaz/Jayyid/Maqbul) + vocab feedback</li>
+          <li>• Pilih situasi → tap Mulai → AI langsung ngajak ngobrol</li>
+          <li>• Balas pakai bahasa Indonesia atau Arab — sama-sama paham</li>
+          <li>• Bingung mau jawab apa? Tap lampu 💡 buat dikasih contoh kalimat</li>
+          <li>• Selesai ngobrol → dapet nilai + vocab baru yang kamu kuasai</li>
         </ul>
       </div>
     </div>
