@@ -114,22 +114,22 @@ export default function TulisNoonApp() {
     }
   }, [authProfile, user]);
 
-  // Routing logic: user baru → welcome onboarding, user lama → main app
+  // Routing logic: HANYA jalan saat screen masih null (initial load).
+  // BUG SEBELUMNYA: useEffect ini dependency-nya [authLoading, authProfile],
+  // jadi setiap kali authProfile berubah (mis. setelah awardXp/saveChallengeProgress),
+  // useEffect ini ngebanting screen ke 'main' — user kelempar ke home pas selesai challenge.
+  // FIX: tambah guard `screen !== null` supaya routing decision cuma sekali.
   useEffect(() => {
-    // Tunggu auth selesai loading dulu
     if (authLoading) return;
-    // Auth selesai tapi belum ada profile (akun baru sedang dibuat di Firestore)
     if (!authProfile) return;
+    if (screen !== null) return; // Sudah pernah di-route, jangan override lagi
 
-    // Cek flag onboardingCompleted di Firestore.
-    // Kalau true → user udah selesai isi profil → langsung main.
-    // Kalau false/undefined → user baru → tampilkan welcome onboarding.
     if (authProfile.onboardingCompleted) {
       setScreen('main');
     } else {
       setScreen('welcome');
     }
-  }, [authLoading, authProfile]);
+  }, [authLoading, authProfile, screen]);
 
   // Helper: tambah XP ke state lokal + persist ke Firestore.
   // Dipakai oleh callback completion dari Lesson, Game, dan Challenge.
@@ -248,6 +248,7 @@ export default function TulisNoonApp() {
           scenario={selectedChallenge || getTodayChallenge()}
           challengeProgress={authProfile?.challengeProgress?.[(selectedChallenge || getTodayChallenge())?.id] || {}}
           onBack={() => setScreen('main')}
+          onHome={() => { setTab('home'); setScreen('main'); }}
           onSelectLevel={(lvl) => {
             setSelectedLevel(lvl);
             setScreen('challenge');
@@ -1935,7 +1936,7 @@ function StoryGame({ onBack, onComplete }) {
 // - DEFAULT (white) → belum dimainkan
 // - LOCKED (grey + 🔒) → Coming Soon, konten belum di-seed
 // ============================================================================
-function ChallengeLevelsScreen({ scenario, challengeProgress = {}, onBack, onSelectLevel }) {
+function ChallengeLevelsScreen({ scenario, challengeProgress = {}, onBack, onHome, onSelectLevel }) {
   const levels = scenario.levels || [];
   const seededCount = levels.filter((l) => !l.comingSoon && l.questions?.length > 0).length;
   const goldCount = Object.values(challengeProgress).filter((p) => p.perfectAchieved).length;
@@ -1950,9 +1951,14 @@ function ChallengeLevelsScreen({ scenario, challengeProgress = {}, onBack, onSel
 
   return (
     <div className="flex-1 flex flex-col px-5 py-6">
-      <div className="flex items-center gap-3 mb-4">
-        <button onClick={onBack} className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(10,77,60,0.08)' }}>
+      <div className="flex items-center gap-2 mb-4">
+        {/* Back button (kembali ke screen sebelumnya, biasanya main) */}
+        <button onClick={onBack} className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(10,77,60,0.08)' }} aria-label="Kembali">
           <ArrowLeft size={18} style={{ color: '#0a4d3c' }} />
+        </button>
+        {/* Home button eksplisit — buat user yang mau langsung ke beranda */}
+        <button onClick={onHome || onBack} className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(10,77,60,0.08)' }} aria-label="Beranda">
+          <Home size={17} style={{ color: '#0a4d3c' }} />
         </button>
         <div className="flex-1">
           <p className="text-xs tracking-widest uppercase" style={{ color: '#8b6b3d' }}>Pilih Level</p>
