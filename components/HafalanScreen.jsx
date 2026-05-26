@@ -581,10 +581,11 @@ function Stage2ListenFull({ surat, chunk, onComplete }) {
 // ============================================================================
 function Stage3ReciteEach({ surat, chunk, onComplete }) {
   const [ayatIdx, setAyatIdx] = useState(0);
-  const [attempts, setAttempts] = useState(0);
-  const [recognized, setRecognized] = useState(null); // { transcript, similarity, isMatch }
+  const [recognized, setRecognized] = useState(null);
   const [isListening, setIsListening] = useState(false);
+  const [interimText, setInterimText] = useState(''); // live transcript display
   const recognitionRef = useRef(null);
+  const transcriptRef = useRef(''); // accumulate full transcript
 
   const supported = isSpeechRecognitionSupported();
   const currentAyat = chunk.ayat[ayatIdx];
@@ -594,23 +595,45 @@ function Stage3ReciteEach({ surat, chunk, onComplete }) {
     if (!supported || typeof window === 'undefined') return;
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     const rec = new SR();
+    // continuous=true — user kontrol kapan stop, gak auto-cut pas ada pause
+    rec.continuous = true;
+    rec.interimResults = true; // live preview
     rec.lang = 'ar-SA';
-    rec.continuous = false;
-    rec.interimResults = false;
     rec.maxAlternatives = 1;
+
     rec.onresult = (event) => {
-      const transcript = event.results[0]?.[0]?.transcript || '';
-      const result = compareArabicSpeech(transcript, currentAyat.ar);
-      setRecognized({ transcript, ...result });
-      setIsListening(false);
+      let finalChunk = '';
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const res = event.results[i];
+        if (res.isFinal) {
+          finalChunk += res[0].transcript + ' ';
+        } else {
+          interim += res[0].transcript;
+        }
+      }
+      if (finalChunk) {
+        transcriptRef.current += finalChunk;
+      }
+      // Live preview text
+      setInterimText((transcriptRef.current + interim).trim());
     };
+
     rec.onerror = (e) => {
-      console.error('Speech recognition error:', e);
+      console.warn('Speech recognition error:', e?.error);
       setIsListening(false);
     };
+
     rec.onend = () => {
       setIsListening(false);
+      // Compare hasil accumulated transcript
+      const fullTranscript = transcriptRef.current.trim();
+      if (fullTranscript) {
+        const result = compareArabicSpeech(fullTranscript, currentAyat.ar);
+        setRecognized({ transcript: fullTranscript, ...result });
+      }
     };
+
     recognitionRef.current = rec;
     return () => {
       try { rec.stop(); } catch {}
@@ -618,21 +641,31 @@ function Stage3ReciteEach({ surat, chunk, onComplete }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ayatIdx, supported]);
 
-  const startListening = () => {
+  const toggleListening = () => {
     if (!recognitionRef.current) return;
-    setRecognized(null);
-    setIsListening(true);
-    try {
-      recognitionRef.current.start();
-    } catch (e) {
-      setIsListening(false);
+    if (isListening) {
+      // STOP — trigger onend which evaluates result
+      try { recognitionRef.current.stop(); } catch {}
+    } else {
+      // START — reset state, start fresh
+      setRecognized(null);
+      setInterimText('');
+      transcriptRef.current = '';
+      setIsListening(true);
+      try {
+        recognitionRef.current.start();
+      } catch (e) {
+        console.warn('Start recognition failed:', e?.message);
+        setIsListening(false);
+      }
     }
   };
 
   const advanceAyat = () => {
     setAyatIdx(ayatIdx + 1);
-    setAttempts(0);
     setRecognized(null);
+    setInterimText('');
+    transcriptRef.current = '';
   };
 
   const skipAyat = () => {
@@ -682,19 +715,36 @@ function Stage3ReciteEach({ surat, chunk, onComplete }) {
         </div>
       )}
 
-      {/* Mic button */}
+      {/* Mic button — toggle on/off, user kontrol kapan selesai */}
       {supported && (
         <button
-          onClick={startListening}
-          disabled={isListening}
-          className="w-full py-6 rounded-2xl flex flex-col items-center justify-center gap-2 mb-3 transition-transform active:scale-[0.98]"
+          onClick={toggleListening}
+          className="w-full py-6 rounded-2xl flex flex-col items-center justify-center gap-2 mb-2 transition-transform active:scale-[0.98]"
           style={{ background: isListening ? 'linear-gradient(135deg, #c64545, #e76b6b)' : 'linear-gradient(135deg, #0a4d3c, #1a6b56)', color: 'white' }}
         >
           {isListening ? <MicOff size={32} className="animate-pulse" /> : <Mic size={32} />}
           <span className="font-bold text-base">
-            {isListening ? 'Sedang mendengar... bacakan ayatnya' : 'Tap & Bacakan'}
+            {isListening ? 'Tap untuk Berhenti & Cek' : 'Tap untuk Mulai Bacakan'}
           </span>
+          {isListening && (
+            <>
+              <span className="text-xs opacity-90 italic">
+                🔴 Sedang merekam... bacakan dengan tenang
+              </span>
+              <MicLevelBars isActive={isListening} />
+            </>
+          )}
         </button>
+      )}
+
+      {/* Live transcript display saat masih listening */}
+      {isListening && interimText && (
+        <div className="rounded-2xl p-3 mb-3" style={{ background: 'rgba(10,77,60,0.05)', border: '1px dashed rgba(10,77,60,0.2)' }}>
+          <p className="text-[10px] uppercase tracking-widest font-bold mb-1" style={{ color: '#8b6b3d' }}>Live (sambil baca):</p>
+          <p className="text-sm" style={{ fontFamily: 'Amiri, serif', color: '#0a4d3c', direction: 'rtl', textAlign: 'right' }}>
+            {interimText}
+          </p>
+        </div>
       )}
 
       {/* Result feedback */}
@@ -753,7 +803,9 @@ function Stage4ReciteFullVisible({ surat, chunk, onComplete }) {
   const [recognized, setRecognized] = useState(null);
   const [isListening, setIsListening] = useState(false);
   const [hasTried, setHasTried] = useState(false);
+  const [interimText, setInterimText] = useState('');
   const recognitionRef = useRef(null);
+  const transcriptRef = useRef('');
   const supported = isSpeechRecognitionSupported();
 
   const fullText = chunk.ayat.map((a) => a.ar).join(' ');
@@ -764,33 +816,50 @@ function Stage4ReciteFullVisible({ surat, chunk, onComplete }) {
     const rec = new SR();
     rec.lang = 'ar-SA';
     rec.continuous = true;
-    rec.interimResults = false;
+    rec.interimResults = true;
     rec.onresult = (event) => {
-      let transcript = '';
-      for (let i = 0; i < event.results.length; i++) {
-        transcript += event.results[i][0].transcript + ' ';
+      let finalChunk = '';
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const res = event.results[i];
+        if (res.isFinal) finalChunk += res[0].transcript + ' ';
+        else interim += res[0].transcript;
       }
-      const result = compareArabicSpeech(transcript, fullText);
-      setRecognized({ transcript: transcript.trim(), ...result });
-      setIsListening(false);
-      setHasTried(true);
+      if (finalChunk) transcriptRef.current += finalChunk;
+      setInterimText((transcriptRef.current + interim).trim());
     };
-    rec.onerror = () => setIsListening(false);
-    rec.onend = () => setIsListening(false);
+    rec.onerror = (e) => {
+      console.warn('Recognition error:', e?.error);
+      setIsListening(false);
+    };
+    rec.onend = () => {
+      setIsListening(false);
+      const fullTranscript = transcriptRef.current.trim();
+      if (fullTranscript) {
+        const result = compareArabicSpeech(fullTranscript, fullText);
+        setRecognized({ transcript: fullTranscript, ...result });
+        setHasTried(true);
+      }
+    };
     recognitionRef.current = rec;
     return () => { try { rec.stop(); } catch {} };
   }, [supported, fullText]);
 
-  const startListening = () => {
+  const toggleListening = () => {
     if (!recognitionRef.current) return;
-    setRecognized(null);
-    setIsListening(true);
-    try { recognitionRef.current.start(); } catch {}
-  };
-
-  const stopListening = () => {
-    if (!recognitionRef.current) return;
-    try { recognitionRef.current.stop(); } catch {}
+    if (isListening) {
+      try { recognitionRef.current.stop(); } catch {}
+    } else {
+      setRecognized(null);
+      setInterimText('');
+      transcriptRef.current = '';
+      setIsListening(true);
+      try {
+        recognitionRef.current.start();
+      } catch (e) {
+        setIsListening(false);
+      }
+    }
   };
 
   return (
@@ -819,12 +888,31 @@ function Stage4ReciteFullVisible({ surat, chunk, onComplete }) {
 
       {supported && (
         <button
-          onClick={isListening ? stopListening : startListening}
-          className="w-full py-5 rounded-2xl flex items-center justify-center gap-2 mb-3 transition-transform active:scale-[0.98]"
+          onClick={toggleListening}
+          className="w-full py-5 rounded-2xl flex flex-col items-center justify-center gap-2 mb-2 transition-transform active:scale-[0.98]"
           style={{ background: isListening ? 'linear-gradient(135deg, #c64545, #e76b6b)' : 'linear-gradient(135deg, #0a4d3c, #1a6b56)', color: 'white' }}
         >
-          {isListening ? <><MicOff size={22} className="animate-pulse" /> <span className="font-bold">Tekan untuk stop</span></> : <><Mic size={22} /> <span className="font-bold">Tap & Bacakan Semua</span></>}
+          {isListening ? <MicOff size={22} className="animate-pulse" /> : <Mic size={22} />}
+          <span className="font-bold text-base">
+            {isListening ? 'Tap untuk Berhenti & Cek' : 'Tap untuk Mulai Bacakan'}
+          </span>
+          {isListening && (
+            <>
+              <span className="text-xs opacity-90 italic">🔴 Bacakan dengan tenang — gak ada batas waktu</span>
+              <MicLevelBars isActive={isListening} />
+            </>
+          )}
         </button>
+      )}
+
+      {/* Live transcript preview */}
+      {isListening && interimText && (
+        <div className="rounded-2xl p-3 mb-3" style={{ background: 'rgba(10,77,60,0.05)', border: '1px dashed rgba(10,77,60,0.2)' }}>
+          <p className="text-[10px] uppercase tracking-widest font-bold mb-1" style={{ color: '#8b6b3d' }}>Live:</p>
+          <p className="text-sm" style={{ fontFamily: 'Amiri, serif', color: '#0a4d3c', direction: 'rtl', textAlign: 'right' }}>
+            {interimText}
+          </p>
+        </div>
       )}
 
       {recognized && (
@@ -835,9 +923,14 @@ function Stage4ReciteFullVisible({ surat, chunk, onComplete }) {
             border: `1.5px solid ${recognized.isMatch ? '#0a4d3c' : '#c9a961'}`,
           }}
         >
-          <p className="text-sm font-bold" style={{ color: recognized.isMatch ? '#0a4d3c' : '#8b6b3d' }}>
+          <p className="text-sm font-bold mb-1" style={{ color: recognized.isMatch ? '#0a4d3c' : '#8b6b3d' }}>
             {recognized.isMatch ? '✓ Bacaanmu sudah baik!' : `${Math.round(recognized.similarity * 100)}% mirip — bisa lebih baik`}
           </p>
+          {recognized.transcript && (
+            <p className="text-xs mt-1" style={{ color: '#3d2817', fontFamily: 'Amiri, serif', direction: 'rtl' }}>
+              "{recognized.transcript}"
+            </p>
+          )}
         </div>
       )}
 
@@ -860,7 +953,9 @@ function Stage5ReciteMemory({ surat, chunk, onComplete }) {
   const [recognized, setRecognized] = useState(null);
   const [isListening, setIsListening] = useState(false);
   const [hasTried, setHasTried] = useState(false);
+  const [interimText, setInterimText] = useState('');
   const recognitionRef = useRef(null);
+  const transcriptRef = useRef('');
   const supported = isSpeechRecognitionSupported();
 
   const fullText = chunk.ayat.map((a) => a.ar).join(' ');
@@ -871,33 +966,50 @@ function Stage5ReciteMemory({ surat, chunk, onComplete }) {
     const rec = new SR();
     rec.lang = 'ar-SA';
     rec.continuous = true;
-    rec.interimResults = false;
+    rec.interimResults = true;
     rec.onresult = (event) => {
-      let transcript = '';
-      for (let i = 0; i < event.results.length; i++) {
-        transcript += event.results[i][0].transcript + ' ';
+      let finalChunk = '';
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const res = event.results[i];
+        if (res.isFinal) finalChunk += res[0].transcript + ' ';
+        else interim += res[0].transcript;
       }
-      const result = compareArabicSpeech(transcript, fullText);
-      setRecognized({ transcript: transcript.trim(), ...result });
-      setIsListening(false);
-      setHasTried(true);
+      if (finalChunk) transcriptRef.current += finalChunk;
+      setInterimText((transcriptRef.current + interim).trim());
     };
-    rec.onerror = () => setIsListening(false);
-    rec.onend = () => setIsListening(false);
+    rec.onerror = (e) => {
+      console.warn('Recognition error:', e?.error);
+      setIsListening(false);
+    };
+    rec.onend = () => {
+      setIsListening(false);
+      const fullTranscript = transcriptRef.current.trim();
+      if (fullTranscript) {
+        const result = compareArabicSpeech(fullTranscript, fullText);
+        setRecognized({ transcript: fullTranscript, ...result });
+        setHasTried(true);
+      }
+    };
     recognitionRef.current = rec;
     return () => { try { rec.stop(); } catch {} };
   }, [supported, fullText]);
 
-  const startListening = () => {
+  const toggleListening = () => {
     if (!recognitionRef.current) return;
-    setRecognized(null);
-    setIsListening(true);
-    try { recognitionRef.current.start(); } catch {}
-  };
-
-  const stopListening = () => {
-    if (!recognitionRef.current) return;
-    try { recognitionRef.current.stop(); } catch {}
+    if (isListening) {
+      try { recognitionRef.current.stop(); } catch {}
+    } else {
+      setRecognized(null);
+      setInterimText('');
+      transcriptRef.current = '';
+      setIsListening(true);
+      try {
+        recognitionRef.current.start();
+      } catch (e) {
+        setIsListening(false);
+      }
+    }
   };
 
   const passed = recognized?.isMatch;
@@ -961,15 +1073,26 @@ function Stage5ReciteMemory({ surat, chunk, onComplete }) {
 
       {supported && (
         <button
-          onClick={isListening ? stopListening : startListening}
-          className="w-full py-6 rounded-2xl flex flex-col items-center justify-center gap-2 mb-3"
+          onClick={toggleListening}
+          className="w-full py-6 rounded-2xl flex flex-col items-center justify-center gap-2 mb-2 transition-transform active:scale-[0.98]"
           style={{ background: isListening ? 'linear-gradient(135deg, #c64545, #e76b6b)' : 'linear-gradient(135deg, #c9a961, #d4b876)', color: 'white' }}
         >
           {isListening ? <MicOff size={32} className="animate-pulse" /> : <Mic size={32} />}
           <span className="font-bold text-base">
-            {isListening ? 'Sedang mendengar... bacakan dari hafalan' : 'Tap & Bacakan dari Hafalan'}
+            {isListening ? 'Tap untuk Berhenti & Cek' : 'Tap untuk Bacakan dari Hafalan'}
           </span>
+          {isListening && <MicLevelBars isActive={isListening} />}
         </button>
+      )}
+
+      {/* Live transcript preview */}
+      {isListening && interimText && (
+        <div className="rounded-2xl p-3 mb-3" style={{ background: 'rgba(10,77,60,0.05)', border: '1px dashed rgba(10,77,60,0.2)' }}>
+          <p className="text-[10px] uppercase tracking-widest font-bold mb-1" style={{ color: '#8b6b3d' }}>Live:</p>
+          <p className="text-sm" style={{ fontFamily: 'Amiri, serif', color: '#0a4d3c', direction: 'rtl', textAlign: 'right' }}>
+            {interimText}
+          </p>
+        </div>
       )}
 
       {recognized && !recognized.isMatch && (
@@ -992,6 +1115,110 @@ function Stage5ReciteMemory({ surat, chunk, onComplete }) {
           Tandai Selesai (Tanpa Voice Check)
         </button>
       )}
+    </div>
+  );
+}
+
+// ============================================================================
+// MIC LEVEL BARS — visualisasi real-time audio levels dari mic.
+// Pakai Web Audio API AnalyserNode buat ambil frequency data tiap frame.
+// User langsung lihat apakah mic-nya nangkep suara atau tidak.
+// ============================================================================
+function MicLevelBars({ isActive, barCount = 5 }) {
+  const [levels, setLevels] = useState(new Array(barCount).fill(0));
+  const audioContextRef = useRef(null);
+  const streamRef = useRef(null);
+  const animationRef = useRef(null);
+
+  useEffect(() => {
+    if (!isActive) {
+      setLevels(new Array(barCount).fill(0));
+      return;
+    }
+    if (typeof window === 'undefined' || !navigator.mediaDevices?.getUserMedia) return;
+
+    let cancelled = false;
+
+    async function setup() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        if (cancelled) {
+          stream.getTracks().forEach((t) => t.stop());
+          return;
+        }
+        streamRef.current = stream;
+
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const audioContext = new AudioCtx();
+        const source = audioContext.createMediaStreamSource(stream);
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 64; // small size buat fewer bars + responsive
+        analyser.smoothingTimeConstant = 0.6;
+        source.connect(analyser);
+        audioContextRef.current = audioContext;
+
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+        function tick() {
+          if (cancelled) return;
+          analyser.getByteFrequencyData(dataArray);
+          // Distribute frequency bins ke `barCount` bars
+          const newLevels = [];
+          const binsPerBar = Math.floor(dataArray.length / barCount);
+          for (let i = 0; i < barCount; i++) {
+            const start = i * binsPerBar;
+            const end = start + binsPerBar;
+            let sum = 0;
+            for (let j = start; j < end; j++) sum += dataArray[j];
+            const avg = sum / binsPerBar;
+            newLevels.push(avg / 255); // normalize 0-1
+          }
+          setLevels(newLevels);
+          animationRef.current = requestAnimationFrame(tick);
+        }
+        tick();
+      } catch (e) {
+        // Mic permission denied atau mic dipakai SpeechRecognition exclusively
+        console.warn('MicLevelBars not available:', e?.message);
+      }
+    }
+
+    setup();
+
+    return () => {
+      cancelled = true;
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
+      }
+      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+        audioContextRef.current.close().catch(() => {});
+        audioContextRef.current = null;
+      }
+    };
+  }, [isActive, barCount]);
+
+  if (!isActive) return null;
+
+  return (
+    <div className="flex items-end justify-center gap-1.5 mt-1" style={{ height: '24px' }}>
+      {levels.map((level, i) => {
+        // Map level (0-1) ke height (4-24px), kasih minimum biar gak hilang
+        const height = Math.max(4, Math.round(4 + level * 22));
+        return (
+          <div
+            key={i}
+            style={{
+              width: '5px',
+              height: `${height}px`,
+              background: 'rgba(255,255,255,0.95)',
+              borderRadius: '3px',
+              transition: 'height 80ms ease-out',
+            }}
+          />
+        );
+      })}
     </div>
   );
 }
