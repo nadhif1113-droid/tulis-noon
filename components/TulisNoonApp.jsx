@@ -30,6 +30,7 @@ import { getPricing as getLearningPricing, isModuleFree as isModuleFreeFn, isMod
 import { shouldShowTanyaCepat } from '@/lib/geo-detect';
 import { setupNativeBackButton, hideSplashScreen, setStatusBarStyle, isNative, setupPushNotifications, addPushNotificationListener } from '@/lib/native-helpers';
 import { schedulePrayerNotifications } from '@/lib/local-prayer-notifications';
+import { detectLocation } from '@/lib/location-detector';
 import { PERKENALAN_MATERI_COST, PERKENALAN_BUNDLE_COST } from '@/data/perkenalan-diri-materi';
 import { PREMIUM_UNLOCK_COST } from '@/lib/hafalan-tier';
 import { checkLivesRefresh } from '@/lib/lives-system';
@@ -151,6 +152,24 @@ export default function TulisNoonApp() {
             console.log('Push token saved to Firestore');
           }
         }
+        // Deteksi lokasi user (GPS native / timezone fallback) untuk:
+        // 1. Akurasi waktu sholat (lat/lon untuk Aladhan API)
+        // 2. Targeted promo (regional pricing, content yang relevan)
+        // 3. Currency display
+        try {
+          const lastDetected = authProfile?.location?.detectedAt;
+          const stale = !lastDetected || (Date.now() - new Date(lastDetected).getTime() > 1000 * 60 * 60 * 24 * 7); // 7 days
+          if (stale && user?.uid) {
+            const detected = await detectLocation({ requestPermission: true });
+            if (detected) {
+              await updateUserProfile({ location: detected });
+              console.log('Location updated:', detected.country, '(', detected.promoTier, ')');
+            }
+          }
+        } catch (e) {
+          console.error('Location detect error:', e);
+        }
+
         // Schedule local prayer notifications 7 hari ke depan
         // (re-schedule otomatis tiap kali app dibuka biar selalu fresh)
         if (authProfile?.prayerReminder?.enabled !== false) {
