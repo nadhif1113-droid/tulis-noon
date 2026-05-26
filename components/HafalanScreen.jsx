@@ -37,8 +37,13 @@ export default function HafalanScreen({ hafalanProgress = {}, onBack, onHome, on
         chunkIdx={selectedChunkIdx}
         totalChunks={chunks.length}
         onComplete={() => {
-          if (onChunkComplete) onChunkComplete(selectedSurat.id, selectedChunkIdx);
-          // Kalau ada chunk berikutnya, auto-arah ke chunks view biar user pilih
+          if (onChunkComplete) {
+            // Pass chunk metadata (isFullSurat, isFinalRecap) buat reward dinamis
+            onChunkComplete(selectedSurat.id, selectedChunkIdx, {
+              isFullSurat: chunk.isFullSurat,
+              isFinalRecap: chunk.isFinalRecap,
+            });
+          }
           setView('chunks');
         }}
         onBack={() => setView('chunks')}
@@ -191,12 +196,34 @@ function ChunksView({ surat, progress = [], onBack, onHome, onSelectChunk }) {
       </div>
 
       <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#8b6b3d' }}>
-        Pilih Bagian ({chunks.length} chunk)
+        Pilih Bagian ({chunks.length} sesi)
       </p>
       <div className="space-y-3">
         {chunks.map((chunk, idx) => {
           const isCompleted = progress.includes(idx);
           const isLocked = idx > 0 && !progress.includes(idx - 1);
+          // Visual styling khusus untuk Recap Final (lebih emas, "ujian akhir")
+          const isRecap = chunk.isFinalRecap;
+          const isFullSurat = chunk.isFullSurat;
+          const chunkLabel = isRecap
+            ? '🏆 Recap Final — Hafalan Penuh'
+            : isFullSurat
+            ? `Surat Lengkap · ${chunk.ayat.length} ayat`
+            : `Sesi ${idx + 1} · Ayat ${chunk.startAyat}–${chunk.endAyat}`;
+          const chunkDetail = isRecap
+            ? `Bacakan SELURUH ${chunk.ayat.length} ayat dari hafalan — ujian penutup`
+            : isFullSurat
+            ? `${chunk.ayat.length} ayat full · 5 tahap metode hafalan`
+            : `${chunk.ayat.length} ayat · 5 tahap metode hafalan`;
+          const chunkEmoji = isCompleted ? '⭐' : isLocked ? '🔒' : isRecap ? '🏆' : isFullSurat ? '📚' : '📖';
+          const chunkGradient = isCompleted
+            ? 'linear-gradient(135deg, #c9a961, #d4b876)'
+            : isLocked
+            ? 'rgba(139,107,61,0.15)'
+            : isRecap
+            ? 'linear-gradient(135deg, #c9a961, #a87f47)'
+            : 'linear-gradient(135deg, #0a4d3c, #1a6b56)';
+
           return (
             <button
               key={idx}
@@ -205,22 +232,40 @@ function ChunksView({ surat, progress = [], onBack, onHome, onSelectChunk }) {
               className="w-full p-4 rounded-2xl text-left flex items-center gap-3 transition-transform active:scale-[0.98] disabled:active:scale-100"
               style={{
                 background: 'white',
-                border: isCompleted ? '1.5px solid #c9a961' : isLocked ? '1.5px dashed rgba(139,107,61,0.3)' : '1.5px solid rgba(10,77,60,0.12)',
+                border: isCompleted
+                  ? '1.5px solid #c9a961'
+                  : isLocked
+                  ? '1.5px dashed rgba(139,107,61,0.3)'
+                  : isRecap
+                  ? '2px solid #c9a961'
+                  : '1.5px solid rgba(10,77,60,0.12)',
                 opacity: isLocked ? 0.6 : 1,
               }}
             >
               <div
                 className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
-                style={{ background: isCompleted ? 'linear-gradient(135deg, #c9a961, #d4b876)' : isLocked ? 'rgba(139,107,61,0.15)' : 'linear-gradient(135deg, #0a4d3c, #1a6b56)' }}
+                style={{ background: chunkGradient }}
               >
-                {isCompleted ? '⭐' : isLocked ? '🔒' : '📖'}
+                {chunkEmoji}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-base leading-tight" style={{ color: '#0a4d3c' }}>
-                  Chunk {idx + 1} · Ayat {chunk.startAyat}–{chunk.endAyat}
-                </p>
+                <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
+                  <p className="font-semibold text-base leading-tight" style={{ color: isRecap ? '#c9a961' : '#0a4d3c' }}>
+                    {chunkLabel}
+                  </p>
+                  {isFullSurat && !isRecap && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'rgba(10,77,60,0.1)', color: '#0a4d3c' }}>
+                      PENUH
+                    </span>
+                  )}
+                  {isRecap && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'rgba(201,169,97,0.25)', color: '#8b6b3d' }}>
+                      UJIAN
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs leading-snug" style={{ color: '#666' }}>
-                  {chunk.ayat.length} ayat · 5 tahap metode hafalan
+                  {chunkDetail}
                 </p>
                 {isCompleted && (
                   <p className="text-[11px] mt-1 font-bold" style={{ color: '#c9a961' }}>
@@ -229,7 +274,7 @@ function ChunksView({ surat, progress = [], onBack, onHome, onSelectChunk }) {
                 )}
                 {isLocked && (
                   <p className="text-[11px] mt-1 font-bold" style={{ color: '#8b6b3d' }}>
-                    Selesaikan chunk sebelumnya dulu
+                    Selesaikan sesi sebelumnya dulu
                   </p>
                 )}
               </div>
@@ -272,12 +317,16 @@ function MemorizeFlow({ surat, chunk, chunkIdx, totalChunks, onComplete, onBack 
     <div className="flex-1 flex flex-col">
       {/* Sticky header */}
       <div className="px-5 pt-5 pb-3" style={{ background: 'linear-gradient(180deg, #faf6ee 0%, rgba(250,246,238,0.95) 100%)' }}>
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-2">
           <button onClick={onBack} className="text-xs font-semibold flex items-center gap-1" style={{ color: '#8b6b3d' }}>
             <ArrowLeft size={14} /> Keluar
           </button>
-          <p className="text-xs tracking-widest uppercase font-bold" style={{ color: '#0a4d3c' }}>
-            Chunk {chunkIdx + 1}/{totalChunks} · {surat.name}
+          <p className="text-xs tracking-widest uppercase font-bold text-center flex-1 mx-2" style={{ color: chunk.isFinalRecap ? '#c9a961' : '#0a4d3c' }}>
+            {chunk.isFinalRecap
+              ? `🏆 Recap · ${surat.name}`
+              : chunk.isFullSurat
+              ? `📚 ${surat.name} (Penuh)`
+              : `Sesi ${chunkIdx + 1}/${totalChunks} · ${surat.name}`}
           </p>
           <span className="text-[10px] font-semibold" style={{ color: '#8b6b3d' }}>
             Tahap {stageId}/{totalStages}

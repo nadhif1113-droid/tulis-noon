@@ -459,31 +459,41 @@ export default function TulisNoonApp() {
           hafalanProgress={authProfile?.hafalanProgress || {}}
           onBack={() => setScreen('main')}
           onHome={() => { setTab('home'); setScreen('main'); }}
-          onChunkComplete={(suratId, chunkIdx) => {
-            // Hafalan progress sekarang track CHUNKS yang selesai (array of indices)
-            // Bukan ayat individual lagi.
+          onChunkComplete={(suratId, chunkIdx, chunkMeta = {}) => {
+            // Track chunks yang selesai (array of indices)
             const current = authProfile?.hafalanProgress || {};
             const existing = current[suratId] || [];
             if (existing.includes(chunkIdx)) return; // udah selesai, skip
             const newChunks = [...existing, chunkIdx].sort((a, b) => a - b);
             const newProgress = { ...current, [suratId]: newChunks };
 
-            // Reward XP + koin per chunk selesai
-            const REWARD_XP = 75;
-            const REWARD_COIN = 2;
+            // Reward dinamis:
+            //  - Recap Final: 2x reward (lebih sulit, ujian penutup)
+            //  - Full Surat (≤8 ayat): 1.5x reward
+            //  - Regular chunk: 1x reward
+            const baseXp = 75;
+            const baseCoin = 2;
+            const multiplier = chunkMeta.isFinalRecap ? 2.0 : chunkMeta.isFullSurat ? 1.5 : 1.0;
+            const rewardXp = Math.round(baseXp * multiplier);
+            const rewardCoin = Math.round(baseCoin * multiplier);
             const curCoins = authProfile?.coins || 0;
+            const label = chunkMeta.isFinalRecap
+              ? '🏆 Recap Final dihafal!'
+              : chunkMeta.isFullSurat
+              ? '📚 Surat lengkap dihafal!'
+              : `🌟 Sesi ${chunkIdx + 1} dihafal`;
 
             updateUserProfile({
               hafalanProgress: newProgress,
-              coins: curCoins + REWARD_COIN,
+              coins: curCoins + rewardCoin,
             })
               .then(() => {
-                awardXp(REWARD_XP);
+                awardXp(rewardXp);
                 setAchievements((a) => [{
                   id: Date.now(),
                   type: 'hafalan-chunk',
-                  text: `Hafal chunk ${chunkIdx + 1} surat ini — +${REWARD_XP} XP, +${REWARD_COIN} 🪙`,
-                  emoji: '🌟',
+                  text: `${label} — +${rewardXp} XP, +${rewardCoin} 🪙`,
+                  emoji: chunkMeta.isFinalRecap ? '🏆' : chunkMeta.isFullSurat ? '📚' : '🌟',
                   time: 'baru saja',
                   user: userName || 'Anda',
                 }, ...a]);
