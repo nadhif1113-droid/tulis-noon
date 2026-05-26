@@ -17,6 +17,8 @@ import HafalanScreen from '@/components/HafalanScreen';
 import TebakGambarScreen from '@/components/TebakGambarScreen';
 import CeritaScreen from '@/components/CeritaScreen';
 import UnlockHafalanModal from '@/components/UnlockHafalanModal';
+import PerkenalanDiriScreen from '@/components/PerkenalanDiriScreen';
+import { PERKENALAN_MATERI_COST, PERKENALAN_BUNDLE_COST } from '@/data/perkenalan-diri-materi';
 import { PREMIUM_UNLOCK_COST } from '@/lib/hafalan-tier';
 import { checkLivesRefresh } from '@/lib/lives-system';
 import { calculateStreakUpdate, getStreakMilestoneReward } from '@/lib/streak-system';
@@ -341,7 +343,7 @@ export default function TulisNoonApp() {
         {screen === 'main' && (
           <>
             <div className="flex-1 pb-20">
-              {tab === 'home' && <HomeTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} coins={authProfile?.coins || 0} lives={authProfile?.lives ?? 10} maxLives={authProfile?.maxLives ?? 10} hafalanProgress={authProfile?.hafalanProgress || {}} onOpenHafalan={() => setScreen('hafalan')} onShowXpInfo={() => setShowXpModal(true)} onShowCoinInfo={() => setShowCoinModal(true)} onShowStreakInfo={() => setShowStreakModal(true)} onShowLivesInfo={() => setShowLivesModal(true)} onOpenLesson={() => { setSelectedPath({id:'umrah', title:'Wisatawan & Jamaah Umrah'}); setScreen('lessons'); }} onOpenGame={(g) => {
+              {tab === 'home' && <HomeTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} coins={authProfile?.coins || 0} lives={authProfile?.lives ?? 10} maxLives={authProfile?.maxLives ?? 10} hafalanProgress={authProfile?.hafalanProgress || {}} perkenalanCompleted={authProfile?.completedPerkenalanMateri || []} onOpenHafalan={() => setScreen('hafalan')} onShowXpInfo={() => setShowXpModal(true)} onShowCoinInfo={() => setShowCoinModal(true)} onShowStreakInfo={() => setShowStreakModal(true)} onShowLivesInfo={() => setShowLivesModal(true)} onOpenLesson={() => setScreen('perkenalan-diri')} onOpenGame={(g) => {
                 // Special routing untuk game yang punya screen sendiri.
                 // Game lain (image-quiz, video-quiz, story) tetap ke GameScreen placeholder.
                 if (g.id === 'chat-roleplay') {
@@ -371,7 +373,60 @@ export default function TulisNoonApp() {
           </>
         )}
 
-        {screen === 'lessons' && <LessonsScreen path={selectedPath} onBack={() => setScreen('main')} onSelectLesson={(l) => { setSelectedLesson(l); setScreen('lesson'); }} progress={progress[selectedPath?.id] || 0} />}
+        {screen === 'lessons' && <LessonsScreen path={selectedPath} onBack={() => setScreen('main')} onSelectLesson={(l) => {
+          // Special case: Perkenalan Diri (id=2) punya screen sendiri dgn materi koin-gated
+          if (l.id === 2) { setScreen('perkenalan-diri'); return; }
+          setSelectedLesson(l);
+          setScreen('lesson');
+        }} progress={progress[selectedPath?.id] || 0} />}
+        {screen === 'perkenalan-diri' && (
+          <PerkenalanDiriScreen
+            userProfile={authProfile}
+            onBack={() => setScreen('lessons')}
+            onHome={() => { setTab('home'); setScreen('main'); }}
+            onComplete={async ({ earned, materiId }) => {
+              awardXp(earned);
+              // Track completed materi
+              const completed = authProfile?.completedPerkenalanMateri || [];
+              if (!completed.includes(materiId)) {
+                try { await updateUserProfile({ completedPerkenalanMateri: [...completed, materiId] }); } catch {}
+              }
+              setAchievements((a) => [{ id: Date.now(), type: 'lesson', text: `Perkenalan Diri: ${materiId} (+${earned} XP)`, emoji: '👋', time: 'baru saja', user: userName || 'Anda' }, ...a]);
+            }}
+            onSpendCoinsUnlockMateri={async (materiId) => {
+              const cur = authProfile?.coins || 0;
+              if (cur < PERKENALAN_MATERI_COST) return false;
+              const arr = authProfile?.unlockedPerkenalanMateri || [];
+              if (arr.includes(materiId)) return true;
+              try {
+                await updateUserProfile({
+                  coins: cur - PERKENALAN_MATERI_COST,
+                  unlockedPerkenalanMateri: [...arr, materiId],
+                });
+                setAchievements((a) => [{ id: Date.now(), type: 'unlock', text: `🔓 Buka materi ${materiId} (-${PERKENALAN_MATERI_COST} koin)`, emoji: '🔓', time: 'baru saja', user: userName || 'Anda' }, ...a]);
+                return true;
+              } catch (err) {
+                console.error('Unlock materi failed:', err);
+                return false;
+              }
+            }}
+            onSpendCoinsUnlockBundle={async () => {
+              const cur = authProfile?.coins || 0;
+              if (cur < PERKENALAN_BUNDLE_COST) return false;
+              try {
+                await updateUserProfile({
+                  coins: cur - PERKENALAN_BUNDLE_COST,
+                  perkenalanBundleUnlocked: true,
+                });
+                setAchievements((a) => [{ id: Date.now(), type: 'unlock', text: `⭐ Bundle Perkenalan Diri unlocked! (-${PERKENALAN_BUNDLE_COST} koin)`, emoji: '🌟', time: 'baru saja', user: userName || 'Anda' }, ...a]);
+                return true;
+              } catch (err) {
+                console.error('Unlock bundle failed:', err);
+                return false;
+              }
+            }}
+          />
+        )}
         {screen === 'lesson' && <LessonScreen lesson={selectedLesson} onBack={() => setScreen('lessons')} onComplete={(earned) => {
           setProgress(p => ({...p, [selectedPath.id]: (p[selectedPath.id] || 0) + 1}));
           awardXp(earned);
@@ -1163,7 +1218,7 @@ function WelcomeScreen({ onComplete, initialName = '' }) {
 }
 
 // ============ HOME TAB ============
-function HomeTab({ userName, userProfile, xp, streak, coins, lives, maxLives, hafalanProgress, onOpenHafalan, onShowXpInfo, onShowCoinInfo, onShowStreakInfo, onShowLivesInfo, onOpenLesson, onOpenGame, onOpenChallenge, onOpenGuru, achievements }) {
+function HomeTab({ userName, userProfile, xp, streak, coins, lives, maxLives, hafalanProgress, perkenalanCompleted, onOpenHafalan, onShowXpInfo, onShowCoinInfo, onShowStreakInfo, onShowLivesInfo, onOpenLesson, onOpenGame, onOpenChallenge, onOpenGuru, achievements }) {
   // Personalized greeting based on interests
   const personalizedNote = userProfile?.interests?.includes('religion')
     ? 'Mari belajar bahasa Al-Quran hari ini'
@@ -1326,17 +1381,29 @@ function HomeTab({ userName, userProfile, xp, streak, coins, lives, maxLives, ha
 
       {/* Continue Learning */}
       <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#8b6b3d' }}>Lanjut Belajar</p>
-      <button onClick={onOpenLesson} className="w-full p-4 rounded-2xl flex items-center gap-3 mb-3 active:scale-[0.98] transition-transform" style={{ background: 'white', border: '1px solid rgba(10,77,60,0.08)' }}>
-        <div className="w-12 h-12 rounded-xl flex items-center justify-center text-xl" style={{ background: 'rgba(10,77,60,0.1)' }}>🤝</div>
-        <div className="flex-1 text-left">
-          <p className="font-semibold text-sm" style={{ color: '#1a1a1a' }}>Perkenalan Diri</p>
-          <p className="text-xs" style={{ color: '#666' }}>Wisatawan & Umrah · 2/8</p>
-          <div className="mt-2 h-1 rounded-full overflow-hidden" style={{ background: 'rgba(10,77,60,0.1)' }}>
-            <div className="h-full" style={{ width: '25%', background: '#0a4d3c' }} />
-          </div>
-        </div>
-        <ChevronRight size={18} style={{ color: '#8b6b3d' }} />
-      </button>
+      {(() => {
+        const TOTAL_PERKENALAN = 12;
+        const doneCount = (perkenalanCompleted || []).length;
+        const pct = Math.round((doneCount / TOTAL_PERKENALAN) * 100);
+        return (
+          <button onClick={onOpenLesson} className="w-full p-4 rounded-2xl flex items-center gap-3 mb-3 active:scale-[0.98] transition-transform" style={{ background: 'white', border: '1px solid rgba(10,77,60,0.08)' }}>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center text-xl" style={{ background: 'rgba(10,77,60,0.1)' }}>👋</div>
+            <div className="flex-1 text-left">
+              <div className="flex items-center gap-2 mb-0.5">
+                <p className="font-semibold text-sm" style={{ color: '#1a1a1a' }}>Perkenalan Diri</p>
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'rgba(201,169,97,0.18)', color: '#8b6b3d' }}>
+                  4 FREE
+                </span>
+              </div>
+              <p className="text-xs" style={{ color: '#666' }}>Kenalan pakai bahasa Arab · {doneCount}/{TOTAL_PERKENALAN}</p>
+              <div className="mt-2 h-1 rounded-full overflow-hidden" style={{ background: 'rgba(10,77,60,0.1)' }}>
+                <div className="h-full" style={{ width: `${pct}%`, background: '#0a4d3c' }} />
+              </div>
+            </div>
+            <ChevronRight size={18} style={{ color: '#8b6b3d' }} />
+          </button>
+        );
+      })()}
 
       {/* Hafalan Quran — fitur menghafal surat (BUKAN game, no lives cost) */}
       {(() => {
