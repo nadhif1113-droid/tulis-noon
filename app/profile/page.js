@@ -1,13 +1,16 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../../lib/auth-context';
+import { getXpProgress, TIERS, XP_SOURCES } from '../../lib/xp-system';
+import { Star, Flame, BookOpen, Sparkles, ArrowLeft, MapPin, LogOut, ChevronRight, Trophy, Target, Award, MessageCircle, HelpCircle, X, Lock, Check } from 'lucide-react';
 
 export default function ProfilePage() {
   const router = useRouter();
   const { user, userProfile, loading, signOut } = useAuth();
+  const [showLevelInfo, setShowLevelInfo] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -22,146 +25,382 @@ export default function ProfilePage() {
     }
   }
 
+  // Loading state — match home theme
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FAF7F2' }}>
+      <div
+        className="flex items-center justify-center min-h-screen"
+        style={{ background: 'linear-gradient(180deg, #faf6ee 0%, #f3ebd9 100%)', fontFamily: "'DM Sans', system-ui, sans-serif" }}
+      >
+        <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=DM+Sans:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet" />
         <div className="text-center">
-          <div className="text-4xl mb-3">🕌</div>
-          <p className="text-gray-600">Memuat profil...</p>
+          <div className="w-14 h-14 rounded-2xl mx-auto mb-3 flex items-center justify-center animate-pulse" style={{ background: 'linear-gradient(135deg, #0a4d3c, #1a6b56)', transform: 'rotate(-6deg)' }}>
+            <span className="text-2xl" style={{ fontFamily: 'Amiri, serif', color: '#f3ebd9', transform: 'rotate(6deg)', display: 'inline-block' }}>ن</span>
+          </div>
+          <p className="text-sm" style={{ color: '#8b6b3d' }}>Memuat profilmu...</p>
         </div>
       </div>
     );
   }
 
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
+
+  const xp = userProfile?.xp || 0;
+  const streak = userProfile?.streak || 0;
+  const progress = getXpProgress(xp);
+  const { currentLevel, tier, nextTier, xpInLevel, xpNeeded, xpRemaining, percent } = progress;
+  const displayName = userProfile?.displayName || user.email?.split('@')[0] || 'User';
+  const photoURL = userProfile?.photoURL;
+
+  // Count gold (perfect-scored levels) di Challenge
+  const goldCount = (() => {
+    if (!userProfile?.challengeProgress) return 0;
+    let count = 0;
+    for (const scenario of Object.values(userProfile.challengeProgress)) {
+      for (const lvl of Object.values(scenario)) {
+        if (lvl?.perfectAchieved) count++;
+      }
+    }
+    return count;
+  })();
+
+  // Member since formatting
+  const memberSinceText = (() => {
+    if (!userProfile?.createdAt) return 'Baru saja gabung';
+    try {
+      // Firestore timestamp atau ISO string
+      const date = userProfile.createdAt.toDate ? userProfile.createdAt.toDate() : new Date(userProfile.createdAt);
+      return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
+    } catch {
+      return 'Baru saja gabung';
+    }
+  })();
 
   return (
-    <div className="min-h-screen pb-24" style={{ backgroundColor: '#FAF7F2' }}>
+    <div className="min-h-screen w-full" style={{ background: 'linear-gradient(180deg, #faf6ee 0%, #f3ebd9 100%)', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+      <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=DM+Sans:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet" />
 
-      <div className="px-6 pt-12 pb-8" style={{ background: 'linear-gradient(135deg, #1B5E3F 0%, #2D7A56 100%)' }}>
-        <div className="flex flex-col items-center text-center">
+      {/* Background pattern halus — match home */}
+      <div className="fixed inset-0 pointer-events-none opacity-[0.03]" style={{
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cpath d='M40 0L80 40L40 80L0 40Z' fill='none' stroke='%230a4d3c' stroke-width='1'/%3E%3C/svg%3E")`,
+      }} />
 
-          {userProfile && userProfile.photoURL ? (
-            <img
-              src={userProfile.photoURL}
-              alt={userProfile.displayName}
-              className="w-24 h-24 rounded-full border-4 border-white shadow-lg mb-4"
-            />
-          ) : (
-            <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center text-4xl shadow-lg mb-4">
-              {userProfile && userProfile.displayName ? userProfile.displayName.charAt(0).toUpperCase() : 'U'}
+      <div className="relative max-w-md mx-auto min-h-screen pb-24">
+        {/* Top bar */}
+        <div className="px-5 pt-6 pb-3 flex items-center gap-3">
+          <Link href="/" className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(10,77,60,0.08)' }}>
+            <ArrowLeft size={18} style={{ color: '#0a4d3c' }} />
+          </Link>
+          <div className="flex-1">
+            <p className="text-xs tracking-widest uppercase" style={{ color: '#8b6b3d' }}>Akun</p>
+            <h1 className="text-xl font-semibold" style={{ color: '#0a4d3c', fontFamily: 'Fraunces, serif' }}>
+              Profil & Progress
+            </h1>
+          </div>
+        </div>
+
+        {/* Hero — avatar + name + tier badge */}
+        <div className="px-5 mb-4">
+          <div className="rounded-3xl p-5 relative overflow-hidden" style={{ background: tier.bgGradient }}>
+            <div className="absolute -right-4 -top-4 text-7xl opacity-15">{tier.emoji}</div>
+            <div className="flex items-center gap-4 mb-4">
+              {photoURL ? (
+                <img src={photoURL} alt={displayName} className="w-16 h-16 rounded-2xl border-2 border-white/40 shadow-lg" />
+              ) : (
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold border-2 border-white/40 shadow-lg" style={{ background: 'rgba(255,255,255,0.18)', color: '#faf6ee', fontFamily: 'Fraunces, serif' }}>
+                  {displayName.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <h2 className="text-xl font-bold text-white leading-tight" style={{ fontFamily: 'Fraunces, serif' }}>
+                  {displayName}
+                </h2>
+                <p className="text-xs text-white/85 truncate">{user.email}</p>
+              </div>
             </div>
-          )}
 
-          <h1 className="text-2xl font-bold text-white mb-1">
-            {userProfile && userProfile.displayName ? userProfile.displayName : 'User'}
-          </h1>
-          <p className="text-white opacity-90 text-sm">
-            {user.email}
+            {/* Tier badge + Level */}
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.2)' }}>
+                <span className="text-base">{tier.emoji}</span>
+                <span className="text-xs font-bold text-white">{tier.label}</span>
+                <span className="text-[10px] text-white/85 uppercase tracking-widest">{tier.subtitle}</span>
+              </div>
+              <div className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: 'rgba(201,169,97,0.3)', color: '#fff' }}>
+                Level {currentLevel}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* XP Progress card */}
+        <div className="px-5 mb-4">
+          <div className="rounded-2xl p-4" style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.08)' }}>
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <p className="text-[10px] tracking-widest uppercase font-bold mb-1" style={{ color: '#c9a961' }}>Total XP</p>
+                <p className="text-3xl font-bold leading-none" style={{ fontFamily: 'Fraunces, serif', color: '#0a4d3c' }}>{xp.toLocaleString('id-ID')}</p>
+              </div>
+              <button
+                onClick={() => setShowLevelInfo(true)}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-semibold"
+                style={{ background: 'rgba(10,77,60,0.06)', color: '#0a4d3c' }}
+              >
+                <HelpCircle size={12} />
+                Apa itu Level?
+              </button>
+            </div>
+
+            {/* Progress bar */}
+            <div className="mb-2">
+              <div className="flex items-baseline justify-between mb-1.5">
+                <span className="text-xs font-semibold" style={{ color: tier.color }}>
+                  {xpInLevel.toLocaleString('id-ID')} / {xpNeeded.toLocaleString('id-ID')} XP
+                </span>
+                <span className="text-xs" style={{ color: '#8b6b3d' }}>
+                  Lv {currentLevel} → Lv {currentLevel + 1}
+                </span>
+              </div>
+              <div className="h-2.5 rounded-full overflow-hidden" style={{ background: 'rgba(10,77,60,0.1)' }}>
+                <div
+                  className="h-full transition-all duration-700 rounded-full"
+                  style={{ width: `${percent}%`, background: tier.bgGradient }}
+                />
+              </div>
+              <p className="text-[11px] mt-2" style={{ color: '#8b6b3d' }}>
+                {xpRemaining.toLocaleString('id-ID')} XP lagi untuk naik ke <strong style={{ color: nextTier.color }}>{nextTier.label} Level {currentLevel + 1}</strong> {nextTier.id !== tier.id && `(${nextTier.emoji})`}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats grid 2x2 */}
+        <div className="px-5 mb-4">
+          <div className="grid grid-cols-2 gap-3">
+            <StatCard icon={Star} label="Total XP" value={xp.toLocaleString('id-ID')} color="#c9a961" filled />
+            <StatCard icon={Flame} label="Streak Hari" value={streak} color="#a05536" />
+            <StatCard icon={Trophy} label="Gold ⭐" value={goldCount} color="#c9a961" />
+            <StatCard icon={Sparkles} label="Level" value={currentLevel} color={tier.color} />
+          </div>
+        </div>
+
+        {/* Interest tags */}
+        {userProfile?.interests?.length > 0 && (
+          <div className="px-5 mb-4">
+            <div className="rounded-2xl p-4" style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.08)' }}>
+              <p className="text-[10px] tracking-widest uppercase font-bold mb-2.5" style={{ color: '#c9a961' }}>Minatmu</p>
+              <div className="flex flex-wrap gap-1.5">
+                {userProfile.interests.map((id) => (
+                  <span key={id} className="px-3 py-1 rounded-full text-xs font-medium" style={{ background: 'rgba(10,77,60,0.06)', color: '#0a4d3c' }}>
+                    {INTEREST_LABELS[id] || id}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Arabic level + dailyTime + accent — kalau ada */}
+        {(userProfile?.arabicLevel || userProfile?.accent || userProfile?.dailyTime) && (
+          <div className="px-5 mb-4">
+            <div className="rounded-2xl p-4 space-y-2" style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.08)' }}>
+              <p className="text-[10px] tracking-widest uppercase font-bold mb-1" style={{ color: '#c9a961' }}>Preferensi Belajar</p>
+              {userProfile.arabicLevel && userProfile.arabicLevel !== 'unknown' && (
+                <ProfileRow label="Level Arab awal" value={ARABIC_LEVEL_LABELS[userProfile.arabicLevel] || userProfile.arabicLevel} />
+              )}
+              {userProfile.accent && (
+                <ProfileRow label="Aksen favorit" value={ACCENT_LABELS[userProfile.accent] || userProfile.accent} />
+              )}
+              {userProfile.dailyTime && (
+                <ProfileRow label="Komitmen harian" value={DAILY_TIME_LABELS[userProfile.dailyTime] || userProfile.dailyTime} />
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Account info */}
+        <div className="px-5 mb-4">
+          <div className="rounded-2xl p-4 space-y-2" style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.08)' }}>
+            <p className="text-[10px] tracking-widest uppercase font-bold mb-1" style={{ color: '#c9a961' }}>Info Akun</p>
+            <ProfileRow label="Email" value={user.email} />
+            <ProfileRow label="Verifikasi" value={user.emailVerified ? '✓ Terverifikasi' : '⚠ Belum diverifikasi'} valueColor={user.emailVerified ? '#0a4d3c' : '#a05536'} />
+            <ProfileRow label="Gabung sejak" value={memberSinceText} />
+            <ProfileRow label="Lokasi" value={userProfile?.location?.city || 'Madinah'} icon={MapPin} />
+          </div>
+        </div>
+
+        {/* Sign out */}
+        <div className="px-5 pb-6">
+          <button
+            onClick={handleSignOut}
+            className="w-full py-3.5 rounded-2xl font-semibold flex items-center justify-center gap-2"
+            style={{ background: 'white', border: '1.5px solid rgba(160,85,54,0.25)', color: '#a05536' }}
+          >
+            <LogOut size={16} /> Keluar dari Akun
+          </button>
+          <p className="text-center text-[11px] mt-4" style={{ color: '#8b6b3d' }}>
+            Tulis Noon · v1.0 — bismillah
           </p>
         </div>
       </div>
 
-      <div className="px-6 -mt-6">
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
-          <div className="grid grid-cols-3 gap-4">
-            <div className="text-center">
-              <div className="text-2xl mb-1">XP</div>
-              <div className="text-2xl font-bold" style={{ color: '#1B5E3F' }}>
-                {userProfile && userProfile.xp ? userProfile.xp : 0}
-              </div>
-              <div className="text-xs text-gray-600">XP</div>
-            </div>
-            <div className="text-center border-l border-r border-gray-200">
-              <div className="text-2xl mb-1">LV</div>
-              <div className="text-2xl font-bold" style={{ color: '#1B5E3F' }}>
-                {userProfile && userProfile.level ? userProfile.level : 1}
-              </div>
-              <div className="text-xs text-gray-600">Level</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl mb-1">ST</div>
-              <div className="text-2xl font-bold" style={{ color: '#1B5E3F' }}>
-                {userProfile && userProfile.streak ? userProfile.streak : 0}
-              </div>
-              <div className="text-xs text-gray-600">Streak</div>
-            </div>
-          </div>
-        </div>
+      {/* Modal: Level info & cara naik level */}
+      {showLevelInfo && (
+        <LevelInfoModal onClose={() => setShowLevelInfo(false)} currentTier={tier} currentLevel={currentLevel} />
+      )}
+    </div>
+  );
+}
 
-        <div className="bg-white rounded-2xl shadow-md p-6 mb-4">
-          <h3 className="font-bold mb-4" style={{ color: '#1B5E3F' }}>
-            Pengingat Sholat
-          </h3>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-700">
-                Notifikasi 5x sehari
-              </p>
-              <p className="text-xs text-gray-500 mt-1">
-                Dengan hadis dan doa pilihan
-              </p>
-            </div>
-            <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">
-              Aktif
-            </div>
-          </div>
-        </div>
+// ============================================================================
+// Sub-components
+// ============================================================================
 
-        <div className="bg-white rounded-2xl shadow-md p-6 mb-4">
-          <h3 className="font-bold mb-4" style={{ color: '#1B5E3F' }}>
-            Lokasi
-          </h3>
-          <div>
-            <p className="text-sm text-gray-700">
-              {userProfile && userProfile.location && userProfile.location.city ? userProfile.location.city : 'Madinah'}
-            </p>
-            <p className="text-xs text-gray-500 mt-1">
-              Untuk jadwal sholat akurat
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-md p-6 mb-4">
-          <h3 className="font-bold mb-4" style={{ color: '#1B5E3F' }}>
-            Tentang Akun
-          </h3>
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-600">User ID</span>
-              <span className="text-gray-800 font-mono text-xs">
-                {user.uid.substring(0, 12)}...
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Email</span>
-              <span className="text-gray-800">{user.email}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Verifikasi Email</span>
-              <span className={user.emailVerified ? 'text-green-600' : 'text-orange-500'}>
-                {user.emailVerified ? 'Terverifikasi' : 'Belum'}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <button
-          onClick={handleSignOut}
-          className="w-full bg-white border-2 border-red-200 text-red-600 py-3 rounded-2xl font-semibold hover:bg-red-50 transition mb-4"
-        >
-          Keluar dari Akun
-        </button>
-
-        <div className="text-center mt-6">
-          <Link href="/" className="text-sm text-gray-500 hover:text-gray-700">
-            Kembali ke beranda
-          </Link>
-        </div>
-
+function StatCard({ icon: Icon, label, value, color, filled = false }) {
+  return (
+    <div className="rounded-2xl p-3.5 flex items-center gap-3" style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.08)' }}>
+      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${color}15` }}>
+        <Icon size={18} style={{ color }} fill={filled ? color : 'none'} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-lg font-bold leading-tight" style={{ color: '#0a4d3c', fontFamily: 'Fraunces, serif' }}>{value}</p>
+        <p className="text-[10px] uppercase tracking-widest" style={{ color: '#8b6b3d' }}>{label}</p>
       </div>
     </div>
   );
 }
+
+function ProfileRow({ label, value, valueColor = '#3d2817', icon: Icon }) {
+  return (
+    <div className="flex items-center justify-between py-1.5">
+      <span className="text-xs flex items-center gap-1.5" style={{ color: '#8b6b3d' }}>
+        {Icon && <Icon size={12} />}
+        {label}
+      </span>
+      <span className="text-xs font-semibold text-right truncate ml-2" style={{ color: valueColor, maxWidth: '60%' }}>{value}</span>
+    </div>
+  );
+}
+
+function LevelInfoModal({ onClose, currentTier, currentLevel }) {
+  return (
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ background: 'rgba(10,30,25,0.75)' }} onClick={onClose}>
+      <div
+        className="w-full max-w-md max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl shadow-2xl"
+        style={{ background: 'linear-gradient(180deg, #faf6ee 0%, #f3ebd9 100%)' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between px-6 pt-6 pb-3 sticky top-0 z-10" style={{ background: 'linear-gradient(180deg, #faf6ee 0%, rgba(250,246,238,0.95) 100%)' }}>
+          <div className="flex-1">
+            <p className="text-[10px] tracking-[0.25em] uppercase font-bold mb-1" style={{ color: '#c9a961' }}>Sistem Level</p>
+            <h2 className="text-xl leading-tight" style={{ fontFamily: 'Fraunces, serif', fontWeight: 700, color: '#0a4d3c' }}>
+              Tingkat & cara naik
+            </h2>
+          </div>
+          <button onClick={onClose} className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(10,77,60,0.08)' }}>
+            <X size={16} style={{ color: '#0a4d3c' }} />
+          </button>
+        </div>
+
+        <div className="px-6 pb-6">
+          {/* Intro */}
+          <p className="text-sm mb-4 leading-relaxed" style={{ color: '#3d2817' }}>
+            Level kamu naik otomatis seiring XP yang kamu kumpulin dari belajar. Tiap level masuk ke salah satu dari <strong>5 tingkat</strong>:
+          </p>
+
+          {/* Tier ladder */}
+          <div className="space-y-2 mb-5">
+            {TIERS.map((t) => {
+              const isCurrent = currentTier.id === t.id;
+              const isPast = currentLevel > t.maxLevel;
+              return (
+                <div
+                  key={t.id}
+                  className="rounded-2xl p-3 flex items-center gap-3 relative"
+                  style={{
+                    background: isCurrent ? 'white' : 'rgba(255,255,255,0.6)',
+                    border: isCurrent ? `2px solid ${t.color}` : '1.5px solid rgba(10,77,60,0.08)',
+                    opacity: isPast ? 0.7 : 1,
+                  }}
+                >
+                  <div
+                    className="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+                    style={{ background: t.bgGradient }}
+                  >
+                    {t.emoji}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <p className="font-bold text-sm leading-tight" style={{ color: t.color, fontFamily: 'Fraunces, serif' }}>{t.label}</p>
+                      <span className="text-[10px] uppercase tracking-widest" style={{ color: '#8b6b3d' }}>{t.subtitle}</span>
+                    </div>
+                    <p className="text-[11px] leading-snug" style={{ color: '#3d2817' }}>{t.description}</p>
+                    <p className="text-[10px] mt-1 font-semibold" style={{ color: '#8b6b3d' }}>
+                      Level {t.minLevel}{t.maxLevel < 999 ? `–${t.maxLevel}` : '+'}
+                    </p>
+                  </div>
+                  {isCurrent && (
+                    <div className="absolute -top-2 -right-2 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest" style={{ background: t.color, color: 'white' }}>
+                      Kamu disini
+                    </div>
+                  )}
+                  {isPast && <Check size={16} style={{ color: '#0a4d3c' }} className="flex-shrink-0" />}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* How to earn XP */}
+          <p className="text-[10px] tracking-widest uppercase font-bold mb-2" style={{ color: '#c9a961' }}>Cara dapet XP</p>
+          <div className="rounded-2xl p-3 space-y-2" style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.08)' }}>
+            {XP_SOURCES.map((src, idx) => (
+              <div key={idx} className="flex items-center justify-between py-1">
+                <span className="text-xs" style={{ color: '#3d2817' }}>{src.label}</span>
+                <span className="text-xs font-bold" style={{ color: '#c9a961' }}>{src.xp}</span>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-[11px] mt-4 italic text-center" style={{ color: '#8b6b3d' }}>
+            "Tuntutlah ilmu meski jauh ke negeri Cina" — HR. Baihaqi
+          </p>
+
+          <button onClick={onClose} className="w-full mt-5 py-3.5 rounded-2xl font-semibold" style={{ background: '#0a4d3c', color: 'white' }}>
+            Paham, mulai ngumpulin XP
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// Display labels
+// ============================================================================
+const INTEREST_LABELS = {
+  religion: '🕌 Agama', travel: '✈️ Travel', food: '🍽️ Kuliner', movies: '🎬 Film',
+  music: '🎵 Musik', sports: '⚽ Olahraga', business: '💼 Bisnis', history: '📜 Sejarah',
+  tech: '💻 Teknologi', family: '👨‍👩‍👧 Keluarga',
+};
+
+const ARABIC_LEVEL_LABELS = {
+  pemula: '🌱 Pemula (mulai nol)',
+  bisaBaca: '📖 Bisa baca, belum paham arti',
+  menengah: '💬 Paham percakapan dasar',
+  lancar: '🎯 Lancar ngobrol sehari-hari',
+};
+
+const ACCENT_LABELS = {
+  saudi: '🇸🇦 Saudi / Khaliji',
+  fusha: '📖 Fusha (Standard)',
+  masri: '🇪🇬 Mesir',
+  shami: '🇸🇾 Syam',
+};
+
+const DAILY_TIME_LABELS = {
+  '5min': '☕ 5 menit/hari',
+  '15min': '🚶 15 menit/hari',
+  '30min': '🏃 30 menit/hari',
+  '60min': '🚀 1 jam/hari',
+};
