@@ -29,26 +29,32 @@ export default function RoleplayScreen({ scenario, userId, onBack, onComplete, o
   const userTurns = messages.filter((m) => m.role === 'user').length;
   const turnsLeft = Math.max(0, scenario.maxTurns - userTurns);
 
-  // Start scenario — fetch greeting pertama dari AI
+  // Start scenario — kirim salam sbg opening user message (Anthropic API butuh
+  // minimal 1 user message di array). Salam ini natural + culturally appropriate
+  // untuk jamaah Indonesia, sekaligus edukatif (ngingetin selalu mulai dgn salam).
   const startScenario = async () => {
     setStage('chatting');
     setLoading(true);
     setError(null);
     try {
-      // Kirim empty messages — AI akan output greeting pertama berdasarkan system prompt
+      const openingMessage = { role: 'user', content: 'السلام عليكم' };
       const res = await fetch('/api/roleplay', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           scenarioId: scenario.id,
-          messages: [],
+          messages: [openingMessage],
           userId,
           action: 'chat',
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Gagal mulai scenario');
-      setMessages([{ role: 'assistant', content: data.reply }]);
+      // Tampilkan salam user + AI greeting sebagai pesan pertama
+      setMessages([
+        openingMessage,
+        { role: 'assistant', content: data.reply },
+      ]);
       if (data.endScenario) setEndDetected(true);
     } catch (e) {
       setError(e.message);
