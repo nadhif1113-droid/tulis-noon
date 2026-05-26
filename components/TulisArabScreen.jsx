@@ -278,22 +278,32 @@ function PlayView({ phase, level, onBack, onComplete }) {
     if (current) setChoices(buildLetterChoices(current));
   }, [itemIdx, current?.arabic]);
 
+  // Lanjut ke soal berikut — dipisah biar bisa di-trigger via TTS onend callback.
+  const proceedToNext = () => {
+    setSelected(null);
+    setFeedback(null);
+    if (itemIdx === items.length - 1) {
+      setStage('done');
+    } else {
+      setItemIdx((i) => i + 1);
+    }
+  };
+
   const handleTap = (letter) => {
     if (selected !== null) return; // udah jawab
     setSelected(letter);
     const correct = letter === current.arabic;
     setFeedback(correct ? 'correct' : 'wrong');
-    if (correct) setScore((s) => s + 1);
 
-    setTimeout(() => {
-      setSelected(null);
-      setFeedback(null);
-      if (itemIdx === items.length - 1) {
-        setStage('done');
-      } else {
-        setItemIdx((i) => i + 1);
-      }
-    }, 1100);
+    if (correct) {
+      setScore((s) => s + 1);
+      // Putar suara huruf yang user pilih sbg reinforcement audio.
+      // Setelah audio selesai (atau timeout fallback), lanjut ke soal berikutnya.
+      speakArabic(current.arabic, proceedToNext);
+    } else {
+      // Salah — kasih waktu 1.5s buat user baca feedback "yang benar: ...", lalu lanjut
+      setTimeout(proceedToNext, 1500);
+    }
   };
 
   // Pas masuk stage 'done', panggil onComplete dengan xp earned
@@ -304,15 +314,37 @@ function PlayView({ phase, level, onBack, onComplete }) {
     }
   }, [stage]);
 
-  // Audio TTS — pakai Web Speech API kalau support (works on iOS Safari for Arabic)
-  const speakArabic = (text) => {
-    if (typeof window === 'undefined') return;
+  // Audio TTS — pakai Web Speech API kalau support (works on iOS Safari for Arabic).
+  // Kasih callback `onEnd` supaya bisa chain action setelah audio selesai
+  // (mis. lanjut ke soal berikut setelah putar suara huruf benar).
+  const speakArabic = (text, onEnd) => {
+    if (typeof window === 'undefined') {
+      if (onEnd) setTimeout(onEnd, 800);
+      return;
+    }
     const synth = window.speechSynthesis;
-    if (!synth) return;
+    if (!synth) {
+      // Browser ga support TTS — fallback delay supaya flow tetep lanjut
+      if (onEnd) setTimeout(onEnd, 800);
+      return;
+    }
     synth.cancel();
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = 'ar-SA';
-    utter.rate = 0.75;
+    utter.rate = 0.7;
+    // Safety net: kalau onend ga ke-trigger (TTS error/no voice installed),
+    // tetep panggil onEnd setelah max 2.5 detik biar flow ga stuck.
+    let fired = false;
+    const safeOnEnd = () => {
+      if (fired) return;
+      fired = true;
+      if (onEnd) onEnd();
+    };
+    if (onEnd) {
+      utter.onend = safeOnEnd;
+      utter.onerror = safeOnEnd;
+      setTimeout(safeOnEnd, 2500);
+    }
     synth.speak(utter);
   };
 
