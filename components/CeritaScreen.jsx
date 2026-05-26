@@ -96,40 +96,67 @@ function ListView({ lives, onBack, onHome, onSelect }) {
         </p>
       </div>
 
-      <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#8b6b3d' }}>Pilih Cerita</p>
-      <div className="space-y-3">
-        {CERITA_STORIES.map((story) => (
-          <button
-            key={story.id}
-            onClick={() => onSelect(story)}
-            className="w-full p-4 rounded-2xl text-left flex items-start gap-3 transition-transform active:scale-[0.98]"
-            style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.1)' }}
-          >
-            <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0"
-              style={{ background: story.bgGradient }}
-            >
-              {story.emoji}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-0.5">
-                <p className="font-semibold text-base leading-tight" style={{ color: story.color }}>{story.title}</p>
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: `${story.color}15`, color: story.color }}>
-                  {story.difficulty}
-                </span>
+      {/* Grouped by difficulty level */}
+      {(() => {
+        const levels = [
+          { key: 'Mudah', label: 'Level Mudah', emoji: '🌱', desc: 'Cerita pendek, vocab basic — buat pemula' },
+          { key: 'Sedang', label: 'Level Sedang', emoji: '🌿', desc: 'Dialog & situasi nyata di perjalanan' },
+          { key: 'Lanjut', label: 'Level Lanjut', emoji: '🌳', desc: 'Sejarah Islam & sahabat — vocab lebih kaya' },
+        ];
+        return levels.map((lvl) => {
+          const stories = CERITA_STORIES.filter((s) => s.difficulty === lvl.key);
+          if (stories.length === 0) return null;
+          return (
+            <div key={lvl.key} className="mb-5">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{lvl.emoji}</span>
+                  <p className="text-sm font-bold" style={{ color: '#0a4d3c', fontFamily: 'Fraunces, serif' }}>
+                    {lvl.label}
+                  </p>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(10,77,60,0.1)', color: '#0a4d3c' }}>
+                    {stories.length} cerita
+                  </span>
+                </div>
               </div>
-              <p className="text-xs leading-snug mb-1" style={{ color: '#8b6b3d', fontStyle: 'italic' }}>{story.subtitle}</p>
-              <p className="text-[11px] leading-snug mb-1.5" style={{ color: '#666' }}>{story.description}</p>
-              <div className="flex items-center gap-3 text-[10px]">
-                <span style={{ color: '#c9a961' }}>⭐ +{story.xpReward} XP</span>
-                <span style={{ color: '#8b6b3d' }}>⏱ {story.estimatedMinutes} menit</span>
-                <span style={{ color: '#8b6b3d' }}>{story.pages.length} halaman</span>
+              <p className="text-[11px] mb-3" style={{ color: '#8b6b3d', fontStyle: 'italic' }}>{lvl.desc}</p>
+              <div className="space-y-3">
+                {stories.map((story) => (
+                  <button
+                    key={story.id}
+                    onClick={() => onSelect(story)}
+                    className="w-full p-4 rounded-2xl text-left flex items-start gap-3 transition-transform active:scale-[0.98]"
+                    style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.1)' }}
+                  >
+                    <div
+                      className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0"
+                      style={{ background: story.bgGradient }}
+                    >
+                      {story.emoji}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <p className="font-semibold text-base leading-tight" style={{ color: story.color }}>{story.title}</p>
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: `${story.color}15`, color: story.color }}>
+                          {story.difficulty}
+                        </span>
+                      </div>
+                      <p className="text-xs leading-snug mb-1" style={{ color: '#8b6b3d', fontStyle: 'italic' }}>{story.subtitle}</p>
+                      <p className="text-[11px] leading-snug mb-1.5" style={{ color: '#666' }}>{story.description}</p>
+                      <div className="flex items-center gap-3 text-[10px]">
+                        <span style={{ color: '#c9a961' }}>⭐ +{story.xpReward} XP</span>
+                        <span style={{ color: '#8b6b3d' }}>⏱ {story.estimatedMinutes} menit</span>
+                        <span style={{ color: '#8b6b3d' }}>{story.pages.length} halaman</span>
+                      </div>
+                    </div>
+                    <ChevronRight size={18} style={{ color: '#c9a961' }} className="flex-shrink-0 self-center" />
+                  </button>
+                ))}
               </div>
             </div>
-            <ChevronRight size={18} style={{ color: '#c9a961' }} className="flex-shrink-0 self-center" />
-          </button>
-        ))}
-      </div>
+          );
+        });
+      })()}
 
       <div className="rounded-2xl p-3 mt-4" style={{ background: 'rgba(201,169,97,0.1)', border: '1px dashed #c9a961' }}>
         <p className="text-[10px] tracking-widest uppercase font-bold mb-1" style={{ color: '#c9a961' }}>Akan datang</p>
