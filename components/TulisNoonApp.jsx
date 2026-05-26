@@ -10,6 +10,7 @@ import RoleplayScreen from '@/components/RoleplayScreen';
 import TulisArabScreen from '@/components/TulisArabScreen';
 import XpLevelInfoModal from '@/components/XpLevelInfoModal';
 import CoinInfoModal from '@/components/CoinInfoModal';
+import TopUpKoinModal from '@/components/TopUpKoinModal';
 import StreakInfoModal from '@/components/StreakInfoModal';
 import LivesInfoModal from '@/components/LivesInfoModal';
 import MatchArenaScreen from '@/components/MatchArenaScreen';
@@ -18,6 +19,7 @@ import TebakGambarScreen from '@/components/TebakGambarScreen';
 import CeritaScreen from '@/components/CeritaScreen';
 import UnlockHafalanModal from '@/components/UnlockHafalanModal';
 import PerkenalanDiriScreen from '@/components/PerkenalanDiriScreen';
+import TanyaCepatScreen, { TANYA_CEPAT_FREE_LIMIT, TANYA_CEPAT_BUNDLE_COST, TANYA_CEPAT_BUNDLE_QUOTA } from '@/components/TanyaCepatScreen';
 import { PERKENALAN_MATERI_COST, PERKENALAN_BUNDLE_COST } from '@/data/perkenalan-diri-materi';
 import { PREMIUM_UNLOCK_COST } from '@/lib/hafalan-tier';
 import { checkLivesRefresh } from '@/lib/lives-system';
@@ -73,6 +75,7 @@ export default function TulisNoonApp() {
   const [showXpModal, setShowXpModal] = useState(false);
   // Coin info modal — trigger dari coin pill di home (atau dari profile).
   const [showCoinModal, setShowCoinModal] = useState(false);
+  const [showTopUpModal, setShowTopUpModal] = useState(false);
   // Streak info modal — trigger dari flame pill di home.
   const [showStreakModal, setShowStreakModal] = useState(false);
   // Lives info modal — trigger dari heart pill di home.
@@ -343,7 +346,7 @@ export default function TulisNoonApp() {
         {screen === 'main' && (
           <>
             <div className="flex-1 pb-20">
-              {tab === 'home' && <HomeTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} coins={authProfile?.coins || 0} lives={authProfile?.lives ?? 10} maxLives={authProfile?.maxLives ?? 10} hafalanProgress={authProfile?.hafalanProgress || {}} perkenalanCompleted={authProfile?.completedPerkenalanMateri || []} onOpenHafalan={() => setScreen('hafalan')} onShowXpInfo={() => setShowXpModal(true)} onShowCoinInfo={() => setShowCoinModal(true)} onShowStreakInfo={() => setShowStreakModal(true)} onShowLivesInfo={() => setShowLivesModal(true)} onOpenLesson={() => setScreen('perkenalan-diri')} onOpenGame={(g) => {
+              {tab === 'home' && <HomeTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} coins={authProfile?.coins || 0} lives={authProfile?.lives ?? 10} maxLives={authProfile?.maxLives ?? 10} hafalanProgress={authProfile?.hafalanProgress || {}} perkenalanCompleted={authProfile?.completedPerkenalanMateri || []} tanyaCepatFreeUsed={authProfile?.tanyaCepatFreeUsed || 0} tanyaCepatBundleQuota={authProfile?.tanyaCepatBundleQuota || 0} onOpenTanyaCepat={() => setScreen('tanya-cepat')} onOpenHafalan={() => setScreen('hafalan')} onShowXpInfo={() => setShowXpModal(true)} onShowCoinInfo={() => setShowCoinModal(true)} onShowStreakInfo={() => setShowStreakModal(true)} onShowLivesInfo={() => setShowLivesModal(true)} onOpenLesson={() => setScreen('perkenalan-diri')} onOpenGame={(g) => {
                 // Special routing untuk game yang punya screen sendiri.
                 // Game lain (image-quiz, video-quiz, story) tetap ke GameScreen placeholder.
                 if (g.id === 'chat-roleplay') {
@@ -379,6 +382,39 @@ export default function TulisNoonApp() {
           setSelectedLesson(l);
           setScreen('lesson');
         }} progress={progress[selectedPath?.id] || 0} />}
+        {screen === 'tanya-cepat' && (
+          <TanyaCepatScreen
+            userProfile={authProfile}
+            userId={user?.uid || 'anon'}
+            onBack={() => setScreen('main')}
+            onHome={() => { setTab('home'); setScreen('main'); }}
+            onConsumeQuota={async () => {
+              const freeUsed = authProfile?.tanyaCepatFreeUsed || 0;
+              const bundleQuota = authProfile?.tanyaCepatBundleQuota || 0;
+              // Pakai free dulu, baru bundle
+              if (freeUsed < TANYA_CEPAT_FREE_LIMIT) {
+                try { await updateUserProfile({ tanyaCepatFreeUsed: freeUsed + 1 }); return true; } catch { return false; }
+              }
+              if (bundleQuota > 0) {
+                try { await updateUserProfile({ tanyaCepatBundleQuota: bundleQuota - 1 }); return true; } catch { return false; }
+              }
+              return false;
+            }}
+            onBuyBundle={async () => {
+              const cur = authProfile?.coins || 0;
+              if (cur < TANYA_CEPAT_BUNDLE_COST) return false;
+              const curBundle = authProfile?.tanyaCepatBundleQuota || 0;
+              try {
+                await updateUserProfile({
+                  coins: cur - TANYA_CEPAT_BUNDLE_COST,
+                  tanyaCepatBundleQuota: curBundle + TANYA_CEPAT_BUNDLE_QUOTA,
+                });
+                setAchievements((a) => [{ id: Date.now(), type: 'unlock', text: `⚡ +${TANYA_CEPAT_BUNDLE_QUOTA} percakapan Tanya Cepat (-${TANYA_CEPAT_BUNDLE_COST} koin)`, emoji: '💬', time: 'baru saja', user: userName || 'Anda' }, ...a]);
+                return true;
+              } catch (err) { console.error('Buy Tanya Cepat bundle failed:', err); return false; }
+            }}
+          />
+        )}
         {screen === 'perkenalan-diri' && (
           <PerkenalanDiriScreen
             userProfile={authProfile}
@@ -720,9 +756,22 @@ export default function TulisNoonApp() {
             coins={authProfile?.coins || 0}
             onClose={() => setShowCoinModal(false)}
             onTopUp={() => {
-              // Placeholder: top-up flow akan diaktifkan di update berikutnya
-              // (butuh payment gateway integration: Midtrans, Xendit, atau Stripe).
-              alert('Sistem top-up koin akan diaktifkan di update berikutnya. Saat ini bisa dapet koin gratis dari aktivitas belajar.');
+              setShowCoinModal(false);
+              setShowTopUpModal(true);
+            }}
+          />
+        )}
+
+        {/* Top-up koin via Midtrans Snap — QRIS, VA Bank, GoPay, Apple Pay, Google Pay, dll */}
+        {showTopUpModal && (
+          <TopUpKoinModal
+            user={user}
+            userProfile={authProfile}
+            onClose={() => setShowTopUpModal(false)}
+            onSuccess={() => {
+              // Trigger profile reload — koin akan masuk via Firestore listener kalau ada,
+              // atau show success message
+              setAchievements((a) => [{ id: Date.now(), type: 'topup', text: `💰 Top-up koin berhasil! Cek saldo Anda.`, emoji: '🎉', time: 'baru saja', user: userName || 'Anda' }, ...a]);
             }}
           />
         )}
@@ -1218,7 +1267,7 @@ function WelcomeScreen({ onComplete, initialName = '' }) {
 }
 
 // ============ HOME TAB ============
-function HomeTab({ userName, userProfile, xp, streak, coins, lives, maxLives, hafalanProgress, perkenalanCompleted, onOpenHafalan, onShowXpInfo, onShowCoinInfo, onShowStreakInfo, onShowLivesInfo, onOpenLesson, onOpenGame, onOpenChallenge, onOpenGuru, achievements }) {
+function HomeTab({ userName, userProfile, xp, streak, coins, lives, maxLives, hafalanProgress, perkenalanCompleted, tanyaCepatFreeUsed, tanyaCepatBundleQuota, onOpenTanyaCepat, onOpenHafalan, onShowXpInfo, onShowCoinInfo, onShowStreakInfo, onShowLivesInfo, onOpenLesson, onOpenGame, onOpenChallenge, onOpenGuru, achievements }) {
   // Personalized greeting based on interests
   const personalizedNote = userProfile?.interests?.includes('religion')
     ? 'Mari belajar bahasa Al-Quran hari ini'
@@ -1330,6 +1379,61 @@ function HomeTab({ userName, userProfile, xp, streak, coins, lives, maxLives, ha
           </span>
         )}
       </div>
+
+      {/* ⚡ TANYA CEPAT — mencolok, hero feature untuk jamaah TKI/umrah/haji */}
+      {(() => {
+        const freeRem = Math.max(0, 5 - (tanyaCepatFreeUsed || 0));
+        const bundleRem = tanyaCepatBundleQuota || 0;
+        const totalRem = freeRem + bundleRem;
+        return (
+          <button
+            onClick={onOpenTanyaCepat}
+            className="w-full text-left rounded-3xl p-5 mb-4 relative overflow-hidden active:scale-[0.98] transition-transform"
+            style={{
+              background: 'linear-gradient(135deg, #c9a961 0%, #d4b876 45%, #c9a961 100%)',
+              boxShadow: '0 12px 32px -8px rgba(201,169,97,0.5), 0 0 0 2px rgba(255,255,255,0.6) inset',
+              animation: 'pulse-glow 3s ease-in-out infinite',
+            }}
+          >
+            <div className="absolute -right-4 -top-4 text-8xl opacity-15">⚡</div>
+            <div className="absolute -left-2 -bottom-2 text-6xl opacity-10">💬</div>
+            <div className="relative">
+              <div className="flex items-center gap-2 mb-1.5">
+                <div className="px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.95)' }}>
+                  <p className="text-[9px] tracking-widest uppercase font-bold" style={{ color: '#8b6b3d' }}>⚡ BARU</p>
+                </div>
+                <p className="text-[10px] tracking-widest uppercase text-white opacity-90 font-bold">Untuk Jamaah TKI / Umrah / Haji</p>
+              </div>
+              <h3 className="text-2xl text-white mb-1.5 leading-tight" style={{ fontFamily: 'Fraunces, serif', fontWeight: 700, textShadow: '0 2px 4px rgba(0,0,0,0.15)' }}>
+                Tanya Cepat Bahasa Arab
+              </h3>
+              <p className="text-sm text-white opacity-95 mb-3 leading-snug">
+                Ngomong Indonesia → AI jawab Arab <strong>Hijazi</strong> dengan suara native. Buat tanya arah, harga, sholat, dll.
+              </p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.95)' }}>
+                    <Mic size={14} style={{ color: '#8b6b3d' }} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-white opacity-90 font-bold">SISA QUOTA</p>
+                    <p className="text-xs text-white font-bold">{totalRem} percakapan {freeRem > 0 && '(' + freeRem + ' free)'}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 text-white font-bold text-sm">
+                  Mulai <ArrowRight size={16} />
+                </div>
+              </div>
+            </div>
+          </button>
+        );
+      })()}
+      <style jsx>{`
+        @keyframes pulse-glow {
+          0%, 100% { box-shadow: 0 12px 32px -8px rgba(201,169,97,0.5), 0 0 0 2px rgba(255,255,255,0.6) inset; }
+          50% { box-shadow: 0 16px 40px -8px rgba(201,169,97,0.7), 0 0 0 2px rgba(255,255,255,0.8) inset; }
+        }
+      `}</style>
 
       {/* Daily Challenge Card — rotasi berdasarkan tanggal */}
       {(() => {

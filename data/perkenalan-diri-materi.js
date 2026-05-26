@@ -3,6 +3,8 @@
 // Setiap materi: vocab Arab+latin+indo, dialog Q&A, quiz akhir 3-4 pertanyaan.
 // Premium gating: per-materi 5 koin atau bundle lifetime 150 koin.
 
+import { isPremiumUnlocked } from '@/lib/feature-flags';
+
 export const PERKENALAN_MATERI_FREE_COUNT = 4;
 export const PERKENALAN_MATERI_COST = 5; // koin per materi
 export const PERKENALAN_BUNDLE_COST = 150; // koin sekali bayar buka semua + future
@@ -432,7 +434,8 @@ export function isMateriFree(materi) {
  */
 export function isMateriUnlocked(materi, userProfile) {
   if (isMateriFree(materi)) return true;
-  if (userProfile?.perkenalanBundleUnlocked) return true;
+  // Launch phase: global flag — semua materi unlocked
+  if (isPremiumUnlocked(userProfile?.perkenalanBundleUnlocked)) return true;
   const unlockedArr = userProfile?.unlockedPerkenalanMateri || [];
   return unlockedArr.includes(materi.id);
 }
