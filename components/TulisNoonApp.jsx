@@ -46,6 +46,10 @@ export default function TulisNoonApp() {
   // Offline detection — tampilkan banner sopan kalau user kehilangan koneksi.
   // Penting krn app pakai Firestore (perlu internet buat sync XP/progress).
   const [isOffline, setIsOffline] = useState(false);
+  // Onboarding tour state — 4 slide overlay setelah user pertama masuk main app.
+  const [showTour, setShowTour] = useState(false);
+  // Arabic level survey modal — untuk user lama yang belum di-survey (pre-feature users).
+  const [showArabicSurvey, setShowArabicSurvey] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -63,6 +67,21 @@ export default function TulisNoonApp() {
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  // Trigger Arabic level survey modal + tour overlay untuk user yang baru masuk main.
+  // Survey didahulukan kalau belum ada arabicLevel, supaya rekomendasi langsung sesuai.
+  // Tour baru muncul setelah survey selesai (atau di-skip).
+  useEffect(() => {
+    if (screen !== 'main') return;
+    if (!authProfile) return;
+    const needSurvey = !authProfile.arabicLevel || authProfile.arabicLevel === 'unknown';
+    const needTour = !authProfile.tourCompleted;
+    if (needSurvey) {
+      setShowArabicSurvey(true);
+    } else if (needTour) {
+      setShowTour(true);
+    }
+  }, [screen, authProfile?.arabicLevel, authProfile?.tourCompleted, authProfile]);
 
   // Sync data dari Firebase auth (Firestore users collection) ke state lokal
   useEffect(() => {
@@ -192,6 +211,7 @@ export default function TulisNoonApp() {
             await updateUserProfile({
               displayName: profile.name,
               interests: profile.interests,
+              arabicLevel: profile.arabicLevel, // NEW: untuk rekomendasi start level
               learningStyle: profile.learningStyle,
               accent: profile.accent,
               dailyTime: profile.dailyTime,
@@ -250,8 +270,12 @@ export default function TulisNoonApp() {
             }).catch((err) => console.error('Save progress error:', err));
           }}
           onShare={(text) => {
+            // Catat achievement aja, JANGAN navigate — user yang kontrol exit via tombol "Udahan".
             setAchievements(a => [{ id: Date.now(), type:'challenge', text:text, emoji:'⚡', time:'baru saja', user: userName || 'Anda' }, ...a]);
-            setScreen('challenge-levels');
+          }}
+          onNextLevel={(nextLvl) => {
+            // Stay di screen 'challenge' tapi ganti levelNumber → ChallengeScreen reset state via useEffect.
+            setSelectedLevel(nextLvl);
           }}
         />}
         {screen === 'guru' && <GuruScreen onBack={() => setScreen('main')} onSelectGuru={(g) => { setSelectedGuru(g); setScreen('guru-detail'); }} />}
@@ -260,6 +284,52 @@ export default function TulisNoonApp() {
           setUserProfile(p => ({...p, ...motivData}));
           setScreen('main');
         }} />}
+
+        {/* Modal: Survey level Arab untuk user lama yang belum di-survey.
+            Setelah pilih level / skip, lanjut ke tour kalau belum pernah. */}
+        {showArabicSurvey && (
+          <ArabicLevelSurveyModal
+            onSelect={async (level) => {
+              await updateUserProfile({ arabicLevel: level });
+              setShowArabicSurvey(false);
+              if (!authProfile?.tourCompleted) {
+                // Kasih jeda 200ms biar transisi modal halus
+                setTimeout(() => setShowTour(true), 200);
+              }
+            }}
+            onSkip={async () => {
+              // Tandai 'pemula' sbg default supaya gak terus-terusan prompt
+              await updateUserProfile({ arabicLevel: 'pemula' });
+              setShowArabicSurvey(false);
+              if (!authProfile?.tourCompleted) {
+                setTimeout(() => setShowTour(true), 200);
+              }
+            }}
+          />
+        )}
+
+        {/* Tour 4-slide overlay — kenalan dengan tab Beranda/Belajar/Sosial/Profil */}
+        {showTour && (
+          <TourOverlay
+            onComplete={async () => {
+              // Selesai tour: kasih 50 XP welcome + badge "Pengembara Baru"
+              const bonusXp = 50;
+              const newXp = (xp || 0) + bonusXp;
+              setXp(newXp);
+              await updateUserProfile({ tourCompleted: true, xp: newXp });
+              setAchievements((a) => [
+                { id: Date.now(), type: 'badge', text: 'Pengembara Baru! +50 XP', emoji: '🧭', time: 'baru saja', user: userName || 'Anda' },
+                ...a,
+              ]);
+              setShowTour(false);
+            }}
+            onSkip={async () => {
+              // Skip tetap tandai selesai biar gak kembali prompt; tapi gak dapet bonus.
+              await updateUserProfile({ tourCompleted: true });
+              setShowTour(false);
+            }}
+          />
+        )}
       </div>
     </div>
   );
@@ -273,6 +343,7 @@ function WelcomeScreen({ onComplete, initialName = '' }) {
     // user masih bisa edit di step 1.
     name: initialName,
     interests: [],
+    arabicLevel: '', // 'pemula' | 'bisaBaca' | 'menengah' | 'lancar' — survey baru
     learningStyle: '',
     accent: '',
     dailyTime: '',
@@ -339,7 +410,7 @@ function WelcomeScreen({ onComplete, initialName = '' }) {
   if (step === 1) {
     return (
       <div className="flex-1 flex flex-col px-6 py-8">
-        <OnboardHeader stepNum={1} totalSteps={5} onBack={() => setStep(0)} />
+        <OnboardHeader stepNum={1} totalSteps={6} onBack={() => setStep(0)} />
         <div className="flex-1 flex flex-col justify-center">
           <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#8b6b3d' }}>Bismillah</p>
           <h2 className="text-3xl mb-3 leading-tight" style={{ fontFamily: 'Fraunces, serif', fontWeight: 600, color: '#0a4d3c' }}>
@@ -381,7 +452,7 @@ function WelcomeScreen({ onComplete, initialName = '' }) {
 
     return (
       <div className="flex-1 flex flex-col px-6 py-8">
-        <OnboardHeader stepNum={2} totalSteps={5} onBack={() => setStep(1)} />
+        <OnboardHeader stepNum={2} totalSteps={6} onBack={() => setStep(1)} />
         <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#8b6b3d' }}>Tentang dirimu</p>
         <h2 className="text-3xl mb-2 leading-tight" style={{ fontFamily: 'Fraunces, serif', fontWeight: 600, color: '#0a4d3c' }}>
           Apa yang kamu sukai?
@@ -428,7 +499,7 @@ function WelcomeScreen({ onComplete, initialName = '' }) {
 
     return (
       <div className="flex-1 flex flex-col px-6 py-8">
-        <OnboardHeader stepNum={3} totalSteps={5} onBack={() => setStep(2)} />
+        <OnboardHeader stepNum={3} totalSteps={6} onBack={() => setStep(2)} />
         <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#8b6b3d' }}>Gaya belajar</p>
         <h2 className="text-3xl mb-2 leading-tight" style={{ fontFamily: 'Fraunces, serif', fontWeight: 600, color: '#0a4d3c' }}>
           Bagaimana kamu suka belajar?
@@ -479,7 +550,7 @@ function WelcomeScreen({ onComplete, initialName = '' }) {
 
     return (
       <div className="flex-1 flex flex-col px-6 py-8">
-        <OnboardHeader stepNum={4} totalSteps={5} onBack={() => setStep(3)} />
+        <OnboardHeader stepNum={4} totalSteps={6} onBack={() => setStep(3)} />
         <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#8b6b3d' }}>Aksen favorit</p>
         <h2 className="text-3xl mb-2 leading-tight" style={{ fontFamily: 'Fraunces, serif', fontWeight: 600, color: '#0a4d3c' }}>
           Aksen Arab mana yang menarik?
@@ -528,7 +599,7 @@ function WelcomeScreen({ onComplete, initialName = '' }) {
 
     return (
       <div className="flex-1 flex flex-col px-6 py-8">
-        <OnboardHeader stepNum={5} totalSteps={5} onBack={() => setStep(4)} />
+        <OnboardHeader stepNum={5} totalSteps={6} onBack={() => setStep(4)} />
         <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#8b6b3d' }}>Komitmen waktu</p>
         <h2 className="text-3xl mb-2 leading-tight" style={{ fontFamily: 'Fraunces, serif', fontWeight: 600, color: '#0a4d3c' }}>
           Berapa waktu per hari?
@@ -568,7 +639,63 @@ function WelcomeScreen({ onComplete, initialName = '' }) {
     );
   }
 
-  // Step 6: Summary / Welcome
+  // Step 6: Arabic level survey — penting buat rekomendasi level start point
+  if (step === 6) {
+    const levels = [
+      { id: 'pemula', label: 'Belum pernah belajar', desc: 'Aku mulai dari nol', emoji: '🌱', recommendedLevel: 'Mubtadi (Level 1-5)' },
+      { id: 'bisaBaca', label: 'Bisa baca, belum paham arti', desc: 'Lulus iqro/baca Quran tapi belum ngerti makna', emoji: '📖', recommendedLevel: 'Daris (Level 6-20)' },
+      { id: 'menengah', label: 'Paham percakapan dasar', desc: 'Bisa salam, sapa, nawar di pasar', emoji: '💬', recommendedLevel: 'Mutawassith (Level 21-50)' },
+      { id: 'lancar', label: 'Lancar ngobrol sehari-hari', desc: 'Mau perdalam Hijazi & istilah ibadah', emoji: '🎯', recommendedLevel: 'Faaheem/Mahir (Level 51+)' },
+    ];
+
+    return (
+      <div className="flex-1 flex flex-col px-6 py-8">
+        <OnboardHeader stepNum={6} totalSteps={6} onBack={() => setStep(5)} />
+        <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#8b6b3d' }}>Level bahasa Arabmu</p>
+        <h2 className="text-3xl mb-2 leading-tight" style={{ fontFamily: 'Fraunces, serif', fontWeight: 600, color: '#0a4d3c' }}>
+          Sudah sejauh mana bahasa Arabmu?
+        </h2>
+        <p className="text-sm mb-6" style={{ color: '#666' }}>Jujur saja — kami akan kasih rekomendasi level yang pas, tidak terlalu mudah atau susah.</p>
+
+        <div className="space-y-3 flex-1">
+          {levels.map((lv) => {
+            const isSelected = data.arabicLevel === lv.id;
+            return (
+              <button
+                key={lv.id}
+                onClick={() => updateData('arabicLevel', lv.id)}
+                className="w-full p-4 rounded-2xl text-left flex items-start gap-3"
+                style={{
+                  background: isSelected ? 'rgba(10,77,60,0.08)' : 'white',
+                  border: `2px solid ${isSelected ? '#0a4d3c' : 'rgba(10,77,60,0.15)'}`,
+                }}
+              >
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0" style={{ background: isSelected ? '#0a4d3c' : 'rgba(10,77,60,0.08)' }}>
+                  {lv.emoji}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-base leading-tight" style={{ color: '#1a1a1a' }}>{lv.label}</p>
+                  <p className="text-xs mt-0.5" style={{ color: '#666' }}>{lv.desc}</p>
+                  {isSelected && (
+                    <p className="text-xs mt-2 font-semibold" style={{ color: '#0a4d3c' }}>
+                      ✨ Rekomendasi: {lv.recommendedLevel}
+                    </p>
+                  )}
+                </div>
+                {isSelected && <Check size={20} style={{ color: '#0a4d3c' }} className="flex-shrink-0" />}
+              </button>
+            );
+          })}
+        </div>
+
+        <button onClick={() => data.arabicLevel && setStep(7)} disabled={!data.arabicLevel} className="w-full py-4 rounded-2xl text-white font-medium flex items-center justify-center gap-2 disabled:opacity-40 mt-4" style={{ background: '#0a4d3c' }}>
+          Lanjut <ArrowRight size={18} />
+        </button>
+      </div>
+    );
+  }
+
+  // Step 7: Summary / Welcome
   return (
     <div className="flex-1 flex flex-col items-center justify-center text-center px-6 py-8">
       <div className="relative mb-6">
@@ -589,6 +716,12 @@ function WelcomeScreen({ onComplete, initialName = '' }) {
         <div className="flex items-center gap-3 p-3 rounded-xl text-sm" style={{ background: 'white' }}>
           <HeartIcon size={16} style={{ color: '#c9a961' }} />
           <span style={{ color: '#3d2817' }}>{data.interests.length} minat dipersonalisasi</span>
+        </div>
+        <div className="flex items-center gap-3 p-3 rounded-xl text-sm" style={{ background: 'white' }}>
+          <Target size={16} style={{ color: '#0a4d3c' }} />
+          <span style={{ color: '#3d2817' }}>
+            Level start: {data.arabicLevel === 'pemula' ? 'Mubtadi' : data.arabicLevel === 'bisaBaca' ? 'Daris' : data.arabicLevel === 'menengah' ? 'Mutawassith' : 'Faaheem/Mahir'}
+          </span>
         </div>
         <div className="flex items-center gap-3 p-3 rounded-xl text-sm" style={{ background: 'white' }}>
           <BookOpen size={16} style={{ color: '#0a4d3c' }} />
@@ -1940,7 +2073,7 @@ function ChallengeLevelsScreen({ scenario, challengeProgress = {}, onBack, onSel
   );
 }
 
-function ChallengeScreen({ onBack, onShare, onComplete, scenario, levelNumber, existingProgress }) {
+function ChallengeScreen({ onBack, onShare, onComplete, onNextLevel, scenario, levelNumber, existingProgress }) {
   // Fallback ke Pasar Madinah Level 1 kalau scenario/level ga di-pass (defensive)
   const activeScenario = scenario || CHALLENGE_SCENARIOS[0];
   const activeLevel = activeScenario.levels?.find((l) => l.level === levelNumber)
@@ -1948,12 +2081,27 @@ function ChallengeScreen({ onBack, onShare, onComplete, scenario, levelNumber, e
     || { level: 1, title: activeScenario.name, questions: [] };
   const questions = activeLevel.questions || [];
 
+  // Cek apakah ada level berikutnya yang playable (bukan comingSoon)
+  const nextLevel = activeScenario.levels?.find((l) => l.level === activeLevel.level + 1);
+  const hasNextLevel = !!nextLevel && !nextLevel.comingSoon;
+
   const [stage, setStage] = useState('intro'); // intro, playing, complete
   const [q, setQ] = useState(0);
   const [score, setScore] = useState(0);
   const [selected, setSelected] = useState(null);
   const [timeLeft, setTimeLeft] = useState(10);
   const [xpAwarded, setXpAwarded] = useState(false);
+
+  // Reset internal state kalau levelNumber berubah (user pencet "Lanjut ke Level X+1")
+  // Kalau ga ini, screen akan stuck di state lama meskipun props udah ganti.
+  useEffect(() => {
+    setStage('intro');
+    setQ(0);
+    setScore(0);
+    setSelected(null);
+    setTimeLeft(10);
+    setXpAwarded(false);
+  }, [levelNumber]);
 
   // Award XP + save progress otomatis sekali aja saat masuk stage 'complete'.
   // XP scaling: max = getXpForLevel(level), earned proporsional ke score.
@@ -2094,9 +2242,20 @@ function ChallengeScreen({ onBack, onShare, onComplete, scenario, levelNumber, e
         <p className="text-sm max-w-xs mb-1 mt-3" style={{ color: tier.accent, fontWeight: 600 }}>{tier.message}</p>
         <p className="text-xs max-w-xs mb-6" style={{ color: '#8b6b3d' }}>{tier.sub}</p>
 
-        {/* Buttons */}
+        {/* Buttons — urutan prioritas: Lanjut (kalau perfect+ada next) → Ulangi/Share → Udahan */}
         <div className="w-full max-w-xs space-y-2">
-          {/* Retry button - prominent kalau belum perfect */}
+          {/* PRIMARY: Lanjut ke Level berikutnya — muncul kalau perfect & ada next level playable */}
+          {isPerfect && hasNextLevel && (
+            <button
+              onClick={() => onNextLevel && onNextLevel(activeLevel.level + 1)}
+              className="w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2"
+              style={{ background: 'linear-gradient(135deg, #0a4d3c, #1a6b56)', color: 'white', boxShadow: '0 10px 24px -8px rgba(10,77,60,0.5)' }}
+            >
+              <ArrowRight size={18} /> Lanjut ke Level {activeLevel.level + 1}
+            </button>
+          )}
+
+          {/* PRIMARY (alt): Retry kalau belum perfect */}
           {!isPerfect && (
             <button
               onClick={() => {
@@ -2115,7 +2274,8 @@ function ChallengeScreen({ onBack, onShare, onComplete, scenario, levelNumber, e
             </button>
           )}
 
-          {/* WhatsApp share - kalau perfect aja, biar bangga */}
+          {/* SECONDARY: WhatsApp share kalau perfect.
+              NOTE: onShare ga lagi navigate — user yang kontrol kapan keluar. */}
           {isPerfect && (
             <button onClick={() => {
               const text = `Tantangan ${activeScenario.name} Level ${activeLevel.level} GOLD ⭐ — skor ${score}/${questions.length}`;
@@ -2127,9 +2287,37 @@ function ChallengeScreen({ onBack, onShare, onComplete, scenario, levelNumber, e
             </button>
           )}
 
+          {/* SECONDARY (alt): Ulangi level meskipun udah perfect — buat user yang mau coba lagi */}
+          {isPerfect && (
+            <button
+              onClick={() => {
+                setStage('intro');
+                setQ(0);
+                setScore(0);
+                setSelected(null);
+                setTimeLeft(10);
+                setXpAwarded(false);
+              }}
+              className="w-full py-2.5 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2"
+              style={{ background: 'rgba(201,169,97,0.18)', color: '#8b6b3d' }}
+            >
+              <Zap size={14} /> Main lagi level ini
+            </button>
+          )}
+
+          {/* TERTIARY: Udahan / kembali ke level select */}
           <button onClick={onBack} className="w-full py-3 rounded-2xl text-sm font-semibold" style={{ background: 'rgba(10,77,60,0.08)', color: '#0a4d3c' }}>
-            Kembali ke Pilih Level
+            Udahan · Kembali ke Pilih Level
           </button>
+
+          {/* Pesan kalau perfect tapi ga ada next level playable */}
+          {isPerfect && !hasNextLevel && (
+            <p className="text-xs mt-1 italic" style={{ color: '#8b6b3d' }}>
+              {nextLevel?.comingSoon
+                ? `🔒 Level ${activeLevel.level + 1} masih dipersiapkan — sabar ya!`
+                : '🏁 Selamat! Kamu sudah di level tertinggi yang tersedia.'}
+            </p>
+          )}
         </div>
 
         {/* Existing best score badge — kalau ada attempt sebelumnya */}
@@ -2884,4 +3072,203 @@ function PremiumScreen({ onBack, userProfile, onSubmit }) {
       </div>
     );
   }
+}
+
+// ============================================================================
+// ARABIC LEVEL SURVEY MODAL — untuk user lama yang belum di-survey.
+// Tampil sekali setelah masuk main app. Bisa skip (default 'pemula') atau pilih.
+// ============================================================================
+function ArabicLevelSurveyModal({ onSelect, onSkip }) {
+  const [selected, setSelected] = useState(null);
+  const levels = [
+    { id: 'pemula', label: 'Belum pernah belajar', desc: 'Aku mulai dari nol', emoji: '🌱', rec: 'Mubtadi (Level 1-5)' },
+    { id: 'bisaBaca', label: 'Bisa baca, belum paham arti', desc: 'Lulus iqro/baca Quran tapi belum ngerti makna', emoji: '📖', rec: 'Daris (Level 6-20)' },
+    { id: 'menengah', label: 'Paham percakapan dasar', desc: 'Bisa salam, sapa, nawar di pasar', emoji: '💬', rec: 'Mutawassith (Level 21-50)' },
+    { id: 'lancar', label: 'Lancar ngobrol sehari-hari', desc: 'Mau perdalam Hijazi & istilah ibadah', emoji: '🎯', rec: 'Faaheem/Mahir (Level 51+)' },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ background: 'rgba(10,30,25,0.75)' }}>
+      <div className="w-full max-w-md max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl shadow-2xl" style={{ background: 'linear-gradient(180deg, #faf6ee 0%, #f3ebd9 100%)' }}>
+        <div className="px-6 pt-6 pb-3 sticky top-0 z-10" style={{ background: 'linear-gradient(180deg, #faf6ee 0%, rgba(250,246,238,0.95) 100%)' }}>
+          <div className="flex items-start gap-3 mb-3">
+            <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0" style={{ background: 'linear-gradient(135deg, #c9a961, #d4b876)' }}>
+              📚
+            </div>
+            <div className="flex-1">
+              <p className="text-[10px] tracking-[0.25em] uppercase font-bold" style={{ color: '#c9a961' }}>Survey Sebentar</p>
+              <h2 className="text-xl leading-tight mt-0.5" style={{ fontFamily: 'Fraunces, serif', fontWeight: 700, color: '#0a4d3c' }}>
+                Level bahasa Arabmu?
+              </h2>
+            </div>
+          </div>
+          <p className="text-xs" style={{ color: '#666' }}>Biar kami kasih rekomendasi level yang pas — tidak terlalu gampang atau susah.</p>
+        </div>
+
+        <div className="px-6 pb-4 space-y-2.5">
+          {levels.map((lv) => {
+            const isSelected = selected === lv.id;
+            return (
+              <button
+                key={lv.id}
+                onClick={() => setSelected(lv.id)}
+                className="w-full p-3.5 rounded-2xl text-left flex items-start gap-3"
+                style={{
+                  background: isSelected ? 'rgba(10,77,60,0.08)' : 'white',
+                  border: `2px solid ${isSelected ? '#0a4d3c' : 'rgba(10,77,60,0.12)'}`,
+                }}
+              >
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0" style={{ background: isSelected ? '#0a4d3c' : 'rgba(10,77,60,0.08)' }}>
+                  {lv.emoji}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm leading-tight" style={{ color: '#1a1a1a' }}>{lv.label}</p>
+                  <p className="text-[11px] mt-0.5 leading-snug" style={{ color: '#666' }}>{lv.desc}</p>
+                  {isSelected && (
+                    <p className="text-[11px] mt-1.5 font-semibold" style={{ color: '#0a4d3c' }}>
+                      ✨ {lv.rec}
+                    </p>
+                  )}
+                </div>
+                {isSelected && <Check size={18} style={{ color: '#0a4d3c' }} className="flex-shrink-0 mt-0.5" />}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="px-6 pb-6 pt-2 space-y-2 sticky bottom-0" style={{ background: 'linear-gradient(0deg, #f3ebd9 60%, transparent 100%)' }}>
+          <button
+            onClick={() => selected && onSelect(selected)}
+            disabled={!selected}
+            className="w-full py-3.5 rounded-2xl font-semibold flex items-center justify-center gap-2 disabled:opacity-40"
+            style={{ background: '#0a4d3c', color: 'white' }}
+          >
+            Simpan & Lanjut <ArrowRight size={16} />
+          </button>
+          <button onClick={onSkip} className="w-full py-2.5 text-xs font-medium" style={{ color: '#8b6b3d' }}>
+            Lewati (mulai dari pemula)
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// TOUR OVERLAY — 4-slide kenalan dengan tab utama Beranda/Belajar/Sosial/Profil.
+// Muncul sekali setelah onboarding/login pertama. Reward: 50 XP + badge.
+// ============================================================================
+function TourOverlay({ onComplete, onSkip }) {
+  const [slide, setSlide] = useState(0);
+  const slides = [
+    {
+      icon: Home,
+      title: 'Beranda',
+      subtitle: 'Pusat aktivitas harianmu',
+      desc: 'Di sini kamu lihat Tantangan Hari Ini, game personal yang sesuai minatmu, dan rekomendasi pelajaran.',
+      color: '#0a4d3c',
+      bg: 'linear-gradient(135deg, #0a4d3c, #1a6b56)',
+    },
+    {
+      icon: BookOpen,
+      title: 'Belajar',
+      subtitle: 'Materi tersusun rapi',
+      desc: 'Jalur lengkap dari Mubtadi (pemula) sampai Mahir. Pilih sesuai tujuanmu — Umrah, Profesi, atau Beasiswa.',
+      color: '#0a4d3c',
+      bg: 'linear-gradient(135deg, #1a6b56, #2e8869)',
+    },
+    {
+      icon: Users,
+      title: 'Sosial',
+      subtitle: 'Belajar bareng komunitas',
+      desc: 'Lihat pencapaian temanmu, ikut tantangan grup, dan rasakan semangat berjamaah dalam belajar.',
+      color: '#c9a961',
+      bg: 'linear-gradient(135deg, #c9a961, #d4b876)',
+    },
+    {
+      icon: User,
+      title: 'Profil',
+      subtitle: 'Pantau progresmu',
+      desc: 'Lacak XP, streak harian, achievement, dan atur pengaturan akun. Semakin konsisten, semakin terlihat hasilnya.',
+      color: '#8b6b3d',
+      bg: 'linear-gradient(135deg, #8b6b3d, #a87f47)',
+    },
+  ];
+
+  const current = slides[slide];
+  const Icon = current.icon;
+  const isLast = slide === slides.length - 1;
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(10,30,25,0.85)' }}>
+      <div className="w-full max-w-md rounded-3xl shadow-2xl overflow-hidden" style={{ background: 'linear-gradient(180deg, #faf6ee 0%, #f3ebd9 100%)' }}>
+        {/* Header: progress dots + skip */}
+        <div className="flex items-center justify-between px-5 pt-5 pb-2">
+          <div className="flex gap-1.5">
+            {slides.map((_, i) => (
+              <div
+                key={i}
+                className="h-1.5 rounded-full transition-all"
+                style={{
+                  width: i === slide ? '24px' : '8px',
+                  background: i === slide ? '#0a4d3c' : 'rgba(10,77,60,0.2)',
+                }}
+              />
+            ))}
+          </div>
+          <button onClick={onSkip} className="text-xs font-medium px-2 py-1" style={{ color: '#8b6b3d' }}>
+            Lewati
+          </button>
+        </div>
+
+        {/* Slide content */}
+        <div className="px-7 py-6 text-center">
+          <div className="relative mx-auto mb-5" style={{ width: '88px', height: '88px' }}>
+            <div className="absolute inset-0 blur-2xl opacity-50" style={{ background: current.color, borderRadius: '50%' }} />
+            <div className="relative w-full h-full rounded-2xl flex items-center justify-center" style={{ background: current.bg }}>
+              <Icon size={40} color="white" strokeWidth={2.2} />
+            </div>
+          </div>
+          <p className="text-[10px] tracking-[0.3em] uppercase font-bold mb-1.5" style={{ color: current.color }}>Tab {slide + 1} / {slides.length}</p>
+          <h2 className="text-3xl leading-tight mb-1" style={{ fontFamily: 'Fraunces, serif', fontWeight: 700, color: '#0a4d3c' }}>
+            {current.title}
+          </h2>
+          <p className="text-sm font-semibold mb-3" style={{ color: current.color }}>
+            {current.subtitle}
+          </p>
+          <p className="text-sm leading-relaxed max-w-xs mx-auto" style={{ color: '#3d2817' }}>
+            {current.desc}
+          </p>
+        </div>
+
+        {/* Footer: navigation */}
+        <div className="px-5 pb-5 pt-2 flex items-center gap-3">
+          {slide > 0 && (
+            <button
+              onClick={() => setSlide((s) => s - 1)}
+              className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+              style={{ background: 'rgba(10,77,60,0.08)' }}
+            >
+              <ArrowLeft size={18} style={{ color: '#0a4d3c' }} />
+            </button>
+          )}
+          <button
+            onClick={() => (isLast ? onComplete() : setSlide((s) => s + 1))}
+            className="flex-1 py-3.5 rounded-2xl text-white font-semibold flex items-center justify-center gap-2"
+            style={{ background: '#0a4d3c' }}
+          >
+            {isLast ? (
+              <>
+                Selesai · +50 XP <Sparkles size={16} />
+              </>
+            ) : (
+              <>
+                Lanjut <ArrowRight size={16} />
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
