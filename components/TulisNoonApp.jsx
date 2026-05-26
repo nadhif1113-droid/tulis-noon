@@ -15,6 +15,7 @@ import LivesInfoModal from '@/components/LivesInfoModal';
 import MatchArenaScreen from '@/components/MatchArenaScreen';
 import HafalanScreen from '@/components/HafalanScreen';
 import TebakGambarScreen from '@/components/TebakGambarScreen';
+import CeritaScreen from '@/components/CeritaScreen';
 import UnlockHafalanModal from '@/components/UnlockHafalanModal';
 import { PREMIUM_UNLOCK_COST } from '@/lib/hafalan-tier';
 import { checkLivesRefresh } from '@/lib/lives-system';
@@ -355,6 +356,10 @@ export default function TulisNoonApp() {
                   setScreen('tebak-gambar');
                   return;
                 }
+                if (g.id === 'story') {
+                  setScreen('cerita');
+                  return;
+                }
                 setSelectedGame(g);
                 setScreen('game');
               }} onOpenChallenge={(scenario) => { setSelectedChallenge(scenario || getTodayChallenge()); setScreen('challenge-levels'); }} onOpenGuru={() => setScreen('guru')} achievements={achievements} />}
@@ -460,6 +465,26 @@ export default function TulisNoonApp() {
             } else {
               window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
             }
+          }}
+        />}
+
+        {/* Cerita Interaktif — narrative learning */}
+        {screen === 'cerita' && <CeritaScreen
+          lives={authProfile?.lives ?? 10}
+          onNoLives={() => setShowLivesModal(true)}
+          onBack={() => setScreen('main')}
+          onHome={() => { setTab('home'); setScreen('main'); }}
+          onComplete={({ earned, score, totalQuestions }) => {
+            awardXp(earned);
+            setAchievements((a) => [{
+              id: Date.now(),
+              type: 'cerita',
+              text: `Cerita Interaktif — quiz selesai (${score}/${totalQuestions}, +${earned} XP)`,
+              emoji: '📖',
+              time: 'baru saja',
+              user: userName || 'Anda',
+            }, ...a]);
+            deductLifeIfLost(score === totalQuestions);
           }}
         />}
 
