@@ -7,7 +7,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Send, Sparkles, Star, RefreshCw, Share2, X, Lightbulb, BookOpen, Trophy, Volume2 } from 'lucide-react';
 
-export default function RoleplayScreen({ scenario, userId, onBack, onComplete, onShare }) {
+export default function RoleplayScreen({ scenario, userId, lives = 10, onNoLives, onBack, onComplete, onShare }) {
   const [messages, setMessages] = useState([]); // [{role: 'user'|'assistant', content: '...'}]
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -267,13 +267,38 @@ export default function RoleplayScreen({ scenario, userId, onBack, onComplete, o
           </div>
         )}
 
+        {/* Lives indicator */}
+        <div className="mb-2 flex items-center justify-center gap-1.5 text-xs" style={{ color: '#8b6b3d' }}>
+          <span>❤️</span>
+          <span>{lives}/10 nyawa</span>
+          {lives <= 3 && lives > 0 && (
+            <span className="font-bold" style={{ color: '#a05536' }}>· hampir habis!</span>
+          )}
+        </div>
+
         <button
-          onClick={startScenario}
+          onClick={() => {
+            if (lives <= 0) {
+              if (onNoLives) onNoLives();
+              return;
+            }
+            startScenario();
+          }}
           disabled={loading}
           className="w-full py-4 rounded-2xl text-white font-bold flex items-center justify-center gap-2 disabled:opacity-50"
-          style={{ background: scenario.color, boxShadow: `0 10px 24px -8px ${scenario.color}80` }}
+          style={{
+            background: lives <= 0 ? '#8b6b3d' : scenario.color,
+            boxShadow: lives <= 0 ? 'none' : `0 10px 24px -8px ${scenario.color}80`,
+            opacity: lives <= 0 ? 0.7 : 1,
+          }}
         >
-          {loading ? 'Memulai...' : 'Mulai Ngobrol'} <Send size={16} />
+          {loading ? (
+            <>Memulai... <Send size={16} /></>
+          ) : lives <= 0 ? (
+            <>❤️ Nyawa habis — beli atau tunggu</>
+          ) : (
+            <>Mulai Ngobrol <Send size={16} /></>
+          )}
         </button>
       </div>
     );
@@ -364,19 +389,40 @@ export default function RoleplayScreen({ scenario, userId, onBack, onComplete, o
           </div>
         )}
 
+        {/* Lives indicator kalau grade rendah (-1 nyawa) */}
+        {(grade.grade === 'Maqbul' || grade.grade === 'Latih lagi') && (
+          <div className="flex items-center justify-center gap-1.5 mb-3 px-3 py-1.5 rounded-full text-xs" style={{ background: lives <= 0 ? 'rgba(160,85,54,0.15)' : 'rgba(198,69,69,0.12)' }}>
+            <span>❤️</span>
+            <span className="font-semibold" style={{ color: lives <= 0 ? '#a05536' : '#c64545' }}>
+              -1 Nyawa · sisa {lives}/10
+            </span>
+          </div>
+        )}
+
         {/* Buttons */}
         <div className="w-full max-w-xs space-y-2">
           <button
             onClick={() => {
+              if (lives <= 0) {
+                if (onNoLives) onNoLives();
+                return;
+              }
               setMessages([]);
               setGrade(null);
               setEndDetected(false);
               setStage('intro');
             }}
             className="w-full py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 text-white"
-            style={{ background: tier.gradient }}
+            style={{
+              background: lives <= 0 ? '#8b6b3d' : tier.gradient,
+              opacity: lives <= 0 ? 0.7 : 1,
+            }}
           >
-            <RefreshCw size={16} /> Coba Lagi
+            {lives <= 0 ? (
+              <>❤️ Nyawa habis — beli atau tunggu</>
+            ) : (
+              <><RefreshCw size={16} /> Coba Lagi</>
+            )}
           </button>
 
           {grade.score >= 70 && onShare && (

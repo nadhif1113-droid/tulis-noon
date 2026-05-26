@@ -11,11 +11,20 @@ import { TULIS_ARAB_PHASES, buildLetterChoices } from '@/data/tulis-arab-levels'
 // ============================================================================
 // MAIN ENTRY — manages internal flow (phases / levels / play / result)
 // ============================================================================
-export default function TulisArabScreen({ onBack, onHome, onComplete, onUpgrade }) {
+export default function TulisArabScreen({ lives = 10, onNoLives, onBack, onHome, onComplete, onUpgrade }) {
   const [view, setView] = useState('phases'); // phases | levels | play | result
   const [selectedPhase, setSelectedPhase] = useState(null);
   const [selectedLevel, setSelectedLevel] = useState(null);
   const [finalScore, setFinalScore] = useState(null);
+
+  // Gate: cek nyawa sebelum start gameplay. Return true kalau boleh main.
+  const canStartGame = () => {
+    if (lives <= 0) {
+      if (onNoLives) onNoLives();
+      return false;
+    }
+    return true;
+  };
 
   const goToLevels = (phase) => {
     setSelectedPhase(phase);
@@ -41,6 +50,8 @@ export default function TulisArabScreen({ onBack, onHome, onComplete, onUpgrade 
 
   const handleNextLevel = () => {
     if (nextLevel) {
+      // Gate dgn lives check sebelum next level
+      if (!canStartGame()) return;
       setSelectedLevel(nextLevel);
       setView('play');
     }
@@ -70,6 +81,8 @@ export default function TulisArabScreen({ onBack, onHome, onComplete, onUpgrade 
       <PlayView
         phase={selectedPhase}
         level={selectedLevel}
+        lives={lives}
+        onNoLives={onNoLives}
         onBack={() => setView('levels')}
         onComplete={onLevelComplete}
       />
@@ -83,7 +96,12 @@ export default function TulisArabScreen({ onBack, onHome, onComplete, onUpgrade 
         level={selectedLevel}
         result={finalScore}
         nextLevel={nextLevel}
-        onRetry={() => setView('play')}
+        lives={lives}
+        onRetry={() => {
+          // Gate retry — kalau nyawa habis, blok & buka modal
+          if (!canStartGame()) return;
+          setView('play');
+        }}
         onNextLevel={handleNextLevel}
         onBack={() => setView('levels')}
         onUpgrade={handleUpgrade}
@@ -255,7 +273,7 @@ function LevelsView({ phase, onBack, onHome, onSelectLevel }) {
 // ============================================================================
 // PLAY VIEW — gameplay tap-letter mode
 // ============================================================================
-function PlayView({ phase, level, onBack, onComplete }) {
+function PlayView({ phase, level, lives = 10, onNoLives, onBack, onComplete }) {
   const [stage, setStage] = useState('intro'); // intro | playing | done
   const [itemIdx, setItemIdx] = useState(0);
   const [score, setScore] = useState(0);
@@ -375,12 +393,38 @@ function PlayView({ phase, level, onBack, onComplete }) {
           </div>
         </div>
 
+        {/* Lives indicator + start button */}
+        <div className="mb-2 flex items-center justify-center gap-1.5 text-xs" style={{ color: '#8b6b3d' }}>
+          <span>❤️</span>
+          <span>{lives}/10 nyawa</span>
+          {lives <= 3 && lives > 0 && (
+            <span className="font-bold" style={{ color: '#a05536' }}>· hampir habis!</span>
+          )}
+        </div>
         <button
-          onClick={() => setStage('playing')}
+          onClick={() => {
+            if (lives <= 0) {
+              if (onNoLives) onNoLives();
+              return;
+            }
+            setStage('playing');
+          }}
           className="w-full py-4 rounded-2xl text-white font-bold flex items-center justify-center gap-2"
-          style={{ background: phase.color, boxShadow: `0 10px 24px -8px ${phase.color}80` }}
+          style={{
+            background: lives <= 0 ? '#8b6b3d' : phase.color,
+            boxShadow: lives <= 0 ? 'none' : `0 10px 24px -8px ${phase.color}80`,
+            opacity: lives <= 0 ? 0.7 : 1,
+          }}
         >
-          Mulai <ArrowRight size={18} />
+          {lives <= 0 ? (
+            <>
+              <span>❤️</span> Nyawa habis — beli atau tunggu
+            </>
+          ) : (
+            <>
+              Mulai <ArrowRight size={18} />
+            </>
+          )}
         </button>
       </div>
     );
@@ -476,12 +520,13 @@ function PlayView({ phase, level, onBack, onComplete }) {
 // ============================================================================
 // RESULT VIEW — score, XP, next-level / retry / upgrade-premium / back
 // ============================================================================
-function ResultView({ phase, level, result, nextLevel, onRetry, onNextLevel, onBack, onUpgrade }) {
+function ResultView({ phase, level, result, nextLevel, lives = 10, onRetry, onNextLevel, onBack, onUpgrade }) {
   const isPerfect = result.score === result.total;
   const isPartial = result.score > 0 && !isPerfect;
   const hasNextLevel = !!nextLevel;
   // Conversion trigger: user finished last free level (no next playable) → Premium upsell
   const isEndOfFree = !hasNextLevel && phase.isFree;
+  const noLives = lives <= 0;
 
   const tier = isPerfect
     ? { label: 'MUMTAAZ!', emoji: '🏆', color: '#c9a961', gradient: 'linear-gradient(135deg, #d4b876, #c9a961)', message: 'Kamu udah kuasai level ini!' }
@@ -514,7 +559,17 @@ function ResultView({ phase, level, result, nextLevel, onRetry, onNextLevel, onB
         <span className="text-sm font-bold" style={{ color: tier.color }}>+{result.xpEarned} XP</span>
       </div>
 
-      <p className="text-sm max-w-xs mb-4" style={{ color: '#3d2817' }}>{tier.message}</p>
+      <p className="text-sm max-w-xs mb-3" style={{ color: '#3d2817' }}>{tier.message}</p>
+
+      {/* Lives indicator — kasih tau kalau berkurang/habis */}
+      {!isPerfect && (
+        <div className="flex items-center gap-1.5 mb-3 px-3 py-1.5 rounded-full text-xs" style={{ background: noLives ? 'rgba(160,85,54,0.15)' : 'rgba(198,69,69,0.12)' }}>
+          <span>❤️</span>
+          <span className="font-semibold" style={{ color: noLives ? '#a05536' : '#c64545' }}>
+            -1 Nyawa · sisa {lives}/10
+          </span>
+        </div>
+      )}
 
       {/* INFO CARD — muncul kalau user di akhir Phase 1 & perfect (Phase 2 belum playable content-wise) */}
       {isEndOfFree && isPerfect && (
@@ -551,9 +606,18 @@ function ResultView({ phase, level, result, nextLevel, onRetry, onNextLevel, onB
           <button
             onClick={onRetry}
             className="w-full py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 text-white"
-            style={{ background: tier.gradient }}
+            style={{
+              background: noLives ? '#8b6b3d' : tier.gradient,
+              opacity: noLives ? 0.7 : 1,
+            }}
           >
-            <RefreshCw size={16} /> Ulangi untuk Mumtaaz
+            {noLives ? (
+              <>❤️ Nyawa habis — beli atau tunggu</>
+            ) : (
+              <>
+                <RefreshCw size={16} /> Ulangi untuk Mumtaaz
+              </>
+            )}
           </button>
         )}
 

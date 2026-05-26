@@ -170,6 +170,37 @@ export default function TulisNoonApp() {
     }
   }, [authLoading, authProfile, screen]);
 
+  // Helper: deduct 1 nyawa kalau user GAGAL (non-perfect) di game.
+  // Otomatis start refresh clock kalau ini life loss pertama dari max.
+  // Skor perfect = AMAN, no deduction.
+  const deductLifeIfLost = async (isPerfect) => {
+    if (isPerfect) return; // perfect → nyawa aman
+    const curLives = authProfile?.lives ?? 10;
+    if (curLives <= 0) return; // udah 0, ga bisa minus
+    const maxL = authProfile?.maxLives ?? 10;
+    const updates = { lives: curLives - 1 };
+    // Start refresh clock kalau ini life loss pertama dari max (clock matikan saat full)
+    if (curLives === maxL && !authProfile?.livesResetAt) {
+      updates.livesResetAt = new Date().toISOString();
+    }
+    try {
+      await updateUserProfile(updates);
+      console.log('💔 Nyawa berkurang:', { from: curLives, to: curLives - 1 });
+    } catch (err) {
+      console.error('Deduct life failed:', err);
+    }
+  };
+
+  // Helper: cek apakah user punya nyawa. Kalau ga, buka modal lives & return false.
+  const hasLivesOrShowModal = () => {
+    const curLives = authProfile?.lives ?? 10;
+    if (curLives <= 0) {
+      setShowLivesModal(true);
+      return false;
+    }
+    return true;
+  };
+
   // Helper: tambah XP ke state lokal + persist ke Firestore.
   // Dipakai oleh callback completion dari Lesson, Game, dan Challenge.
   const awardXp = (earned) => {
@@ -310,6 +341,8 @@ export default function TulisNoonApp() {
           scenario={selectedChallenge || getTodayChallenge()}
           levelNumber={selectedLevel}
           existingProgress={authProfile?.challengeProgress?.[(selectedChallenge || getTodayChallenge())?.id]?.[selectedLevel]}
+          lives={authProfile?.lives ?? 10}
+          onNoLives={() => setShowLivesModal(true)}
           onBack={() => setScreen('challenge-levels')}
           onComplete={({ earned, score, totalQuestions }) => {
             awardXp(earned);
@@ -321,6 +354,8 @@ export default function TulisNoonApp() {
               totalQuestions,
               xpEarned: earned,
             }).catch((err) => console.error('Save progress error:', err));
+            // Deduct nyawa kalau non-perfect
+            deductLifeIfLost(score === totalQuestions);
           }}
           onShare={(text) => {
             // Catat achievement aja, JANGAN navigate — user yang kontrol exit via tombol "Udahan".
@@ -340,6 +375,8 @@ export default function TulisNoonApp() {
         {screen === 'roleplay' && selectedRoleplay && <RoleplayScreen
           scenario={selectedRoleplay}
           userId={user?.uid || 'anonymous'}
+          lives={authProfile?.lives ?? 10}
+          onNoLives={() => setShowLivesModal(true)}
           onBack={() => setScreen('roleplay-list')}
           onComplete={({ earned, score, grade: gradeLabel }) => {
             // Award XP + catat achievement
@@ -352,6 +389,9 @@ export default function TulisNoonApp() {
               time: 'baru saja',
               user: userName || 'Anda',
             }, ...a]);
+            // Deduct nyawa kalau grade rendah (Maqbul atau Latih lagi = "kalah")
+            const isWin = gradeLabel === 'Mumtaaz' || gradeLabel === 'Jayyid';
+            deductLifeIfLost(isWin);
           }}
           onShare={(payload) => {
             // Share modal pakai pattern yg sama dengan challenge — catat achievement aja
@@ -375,6 +415,8 @@ export default function TulisNoonApp() {
 
         {/* Tulis Arab — game baca-tulis Arab dari nol */}
         {screen === 'tulis-arab' && <TulisArabScreen
+          lives={authProfile?.lives ?? 10}
+          onNoLives={() => setShowLivesModal(true)}
           onBack={() => setScreen('main')}
           onHome={() => { setTab('home'); setScreen('main'); }}
           onComplete={({ earned, score, totalQuestions }) => {
@@ -387,6 +429,8 @@ export default function TulisNoonApp() {
               time: 'baru saja',
               user: userName || 'Anda',
             }, ...a]);
+            // Deduct nyawa kalau non-perfect
+            deductLifeIfLost(score === totalQuestions);
           }}
           onUpgrade={() => setScreen('premium')}
         />}
@@ -2281,7 +2325,7 @@ function ChallengeLevelsScreen({ scenario, challengeProgress = {}, onBack, onHom
   );
 }
 
-function ChallengeScreen({ onBack, onShare, onComplete, onNextLevel, scenario, levelNumber, existingProgress }) {
+function ChallengeScreen({ onBack, onShare, onComplete, onNextLevel, scenario, levelNumber, existingProgress, lives = 10, onNoLives }) {
   // Fallback ke Pasar Madinah Level 1 kalau scenario/level ga di-pass (defensive)
   const activeScenario = scenario || CHALLENGE_SCENARIOS[0];
   const activeLevel = activeScenario.levels?.find((l) => l.level === levelNumber)
@@ -2389,8 +2433,30 @@ function ChallengeScreen({ onBack, onShare, onComplete, onNextLevel, scenario, l
           </div>
         </div>
 
-        <button onClick={() => setStage('playing')} className="w-full py-4 rounded-2xl text-white font-medium flex items-center justify-center gap-2" style={{ background: activeScenario.color }}>
-          Mulai Tantangan <Zap size={18} />
+        {/* Lives indicator + gated start */}
+        <div className="mb-2 flex items-center justify-center gap-1.5 text-xs" style={{ color: '#8b6b3d' }}>
+          <span>❤️</span>
+          <span>{lives}/10 nyawa</span>
+          {lives <= 3 && lives > 0 && (
+            <span className="font-bold" style={{ color: '#a05536' }}>· hampir habis!</span>
+          )}
+        </div>
+        <button
+          onClick={() => {
+            if (lives <= 0) {
+              if (onNoLives) onNoLives();
+              return;
+            }
+            setStage('playing');
+          }}
+          className="w-full py-4 rounded-2xl text-white font-medium flex items-center justify-center gap-2"
+          style={{ background: lives <= 0 ? '#8b6b3d' : activeScenario.color, opacity: lives <= 0 ? 0.7 : 1 }}
+        >
+          {lives <= 0 ? (
+            <>❤️ Nyawa habis — beli atau tunggu</>
+          ) : (
+            <>Mulai Tantangan <Zap size={18} /></>
+          )}
         </button>
       </div>
     );
@@ -2466,10 +2532,25 @@ function ChallengeScreen({ onBack, onShare, onComplete, onNextLevel, scenario, l
             </button>
           )}
 
+          {/* Lives indicator kalau non-perfect (-1 nyawa) */}
+          {!isPerfect && (
+            <div className="flex items-center justify-center gap-1.5 mb-1 px-3 py-1.5 rounded-full text-xs" style={{ background: lives <= 0 ? 'rgba(160,85,54,0.15)' : 'rgba(198,69,69,0.12)' }}>
+              <span>❤️</span>
+              <span className="font-semibold" style={{ color: lives <= 0 ? '#a05536' : '#c64545' }}>
+                -1 Nyawa · sisa {lives}/10
+              </span>
+            </div>
+          )}
+
           {/* PRIMARY (alt): Retry kalau belum perfect */}
           {!isPerfect && (
             <button
               onClick={() => {
+                // Gate retry: kalau nyawa habis, blok & buka modal
+                if (lives <= 0) {
+                  if (onNoLives) onNoLives();
+                  return;
+                }
                 // Reset state untuk replay level yang sama
                 setStage('intro');
                 setQ(0);
@@ -2479,9 +2560,18 @@ function ChallengeScreen({ onBack, onShare, onComplete, onNextLevel, scenario, l
                 setXpAwarded(false);
               }}
               className="w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2"
-              style={{ background: tier.gradient, color: 'white', boxShadow: `0 10px 24px -8px ${tier.accent}80` }}
+              style={{
+                background: lives <= 0 ? '#8b6b3d' : tier.gradient,
+                color: 'white',
+                boxShadow: lives <= 0 ? 'none' : `0 10px 24px -8px ${tier.accent}80`,
+                opacity: lives <= 0 ? 0.7 : 1,
+              }}
             >
-              <Zap size={18} /> Ulangi untuk GOLD ⭐
+              {lives <= 0 ? (
+                <>❤️ Nyawa habis — beli atau tunggu</>
+              ) : (
+                <><Zap size={18} /> Ulangi untuk GOLD ⭐</>
+              )}
             </button>
           )}
 
