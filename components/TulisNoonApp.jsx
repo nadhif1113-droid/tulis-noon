@@ -28,7 +28,7 @@ import { LEARNING_PELAJAR } from '@/data/learning-pelajar';
 import { LEARNING_PROFESIONAL } from '@/data/learning-profesional';
 import { getPricing as getLearningPricing, isModuleFree as isModuleFreeFn, isModuleUnlocked as isModuleUnlockedFn, unlockedModulesKey } from '@/lib/learning-pricing';
 import { shouldShowTanyaCepat } from '@/lib/geo-detect';
-import { setupNativeBackButton, hideSplashScreen, setStatusBarStyle, isNative } from '@/lib/native-helpers';
+import { setupNativeBackButton, hideSplashScreen, setStatusBarStyle, isNative, setupPushNotifications, addPushNotificationListener } from '@/lib/native-helpers';
 import { PERKENALAN_MATERI_COST, PERKENALAN_BUNDLE_COST } from '@/data/perkenalan-diri-materi';
 import { PREMIUM_UNLOCK_COST } from '@/lib/hafalan-tier';
 import { checkLivesRefresh } from '@/lib/lives-system';
@@ -128,14 +128,44 @@ export default function TulisNoonApp() {
   const navStateRef = useRef({ screen: null, tab: null });
   useEffect(() => { navStateRef.current = { screen, tab }; }, [screen, tab]);
 
-  // Native init: hide splash, set status bar, setup hardware back button
+  // Native init: hide splash, set status bar, setup hardware back button + push notifications
   useEffect(() => {
     let cleanup = null;
+    let pushListenerCleanup = null;
     (async () => {
       const native = await isNative();
       if (!native) return;
       setTimeout(() => hideSplashScreen(), 200);
       await setStatusBarStyle('dark');
+
+      // Setup native push notifications (iOS APNs / Android FCM)
+      // Request permission + register + save token ke Firestore
+      try {
+        const token = await setupPushNotifications();
+        if (token && user?.uid) {
+          // Save token to user profile fcmTokens array
+          const existing = authProfile?.fcmTokens || [];
+          if (!existing.includes(token)) {
+            await updateUserProfile({ fcmTokens: [...existing, token] });
+            console.log('Push token saved to Firestore');
+          }
+        }
+        // Listen incoming notifications saat app foreground
+        pushListenerCleanup = await addPushNotificationListener(({ title, body }) => {
+          // Tampilkan sebagai achievement feed
+          setAchievements((a) => [{
+            id: Date.now(),
+            type: 'notification',
+            text: `🔔 ${title}: ${body}`,
+            emoji: '🕌',
+            time: 'baru saja',
+            user: userName || 'Tulis Noon',
+          }, ...a]);
+        });
+      } catch (e) {
+        console.error('Push setup error:', e);
+      }
+
       cleanup = await setupNativeBackButton({
         onBack: () => {
           // React state-aware back: map current screen → previous screen state
@@ -160,8 +190,11 @@ export default function TulisNoonApp() {
         },
       });
     })();
-    return () => { if (cleanup) cleanup(); };
-  }, []);
+    return () => {
+      if (cleanup) cleanup();
+      if (pushListenerCleanup) pushListenerCleanup();
+    };
+  }, [user?.uid]);
 
   // Auto-refresh nyawa pas user buka app.
   // +3 nyawa tiap 24 jam (cap di maxLives). Cek sekali pas authProfile berubah.
