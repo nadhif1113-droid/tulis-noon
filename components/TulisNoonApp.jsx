@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ArrowRight, Volume2, Mic, Check, X, Sparkles, Lock, MapPin, Briefcase, GraduationCap, Trophy, Flame, Star, Home, BookOpen, Users, User, Heart, Share2, Send, Play, Image as ImageIcon, MessageCircle, Calendar, Target, Zap, ChevronRight, Bot, Video, Clock, Award, UserCheck, Coffee, Music, Film, Gamepad2, Heart as HeartIcon, Mountain } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Volume2, Mic, Check, X, Sparkles, Lock, MapPin, Briefcase, GraduationCap, Trophy, Flame, Star, Home, BookOpen, Users, User, Heart, Share2, Send, Play, Image as ImageIcon, MessageCircle, Calendar, Target, Zap, ChevronRight, Bot, Video, Clock, Award, UserCheck, Coffee, Music, Film, Gamepad2, Heart as HeartIcon, Mountain, Facebook, Instagram, Twitter, Link2, Copy } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { CHALLENGE_SCENARIOS, getTodayChallenge, getXpForLevel } from '@/data/challenge-levels';
 
@@ -2091,6 +2091,8 @@ function ChallengeScreen({ onBack, onShare, onComplete, onNextLevel, scenario, l
   const [selected, setSelected] = useState(null);
   const [timeLeft, setTimeLeft] = useState(10);
   const [xpAwarded, setXpAwarded] = useState(false);
+  // Modal share multi-platform (WA, FB, IG, Twitter, Telegram, copy link)
+  const [showShareModal, setShowShareModal] = useState(false);
 
   // Reset internal state kalau levelNumber berubah (user pencet "Lanjut ke Level X+1")
   // Kalau ga ini, screen akan stuck di state lama meskipun props udah ganti.
@@ -2101,6 +2103,7 @@ function ChallengeScreen({ onBack, onShare, onComplete, onNextLevel, scenario, l
     setSelected(null);
     setTimeLeft(10);
     setXpAwarded(false);
+    setShowShareModal(false);
   }, [levelNumber]);
 
   // Award XP + save progress otomatis sekali aja saat masuk stage 'complete'.
@@ -2274,16 +2277,19 @@ function ChallengeScreen({ onBack, onShare, onComplete, onNextLevel, scenario, l
             </button>
           )}
 
-          {/* SECONDARY: WhatsApp share kalau perfect.
-              NOTE: onShare ga lagi navigate — user yang kontrol kapan keluar. */}
+          {/* SECONDARY: Share multi-platform (WA, FB, IG, Twitter, Telegram, copy).
+              Trigger modal ShareModal — user pilih platform sendiri. */}
           {isPerfect && (
-            <button onClick={() => {
-              const text = `Tantangan ${activeScenario.name} Level ${activeLevel.level} GOLD ⭐ — skor ${score}/${questions.length}`;
-              onShare(text);
-              const waText = encodeURIComponent(`Saya baru dapat GOLD ⭐ di Tantangan ${activeScenario.name} ${activeScenario.emoji} Level ${activeLevel.level} di Tulis Noon! 🏆\nSkor: ${score}/${questions.length} · +${xp} XP\n\nYuk belajar bahasa Arab bareng: https://tulis-noon.vercel.app`);
-              window.open(`https://wa.me/?text=${waText}`, '_blank');
-            }} className="w-full py-3 rounded-2xl flex items-center justify-center gap-2 text-white font-medium" style={{ background: '#25D366' }}>
-              <Share2 size={16} /> Pamerin ke WhatsApp
+            <button
+              onClick={() => {
+                // Catat achievement ke feed sosial dulu (sebelum buka modal)
+                onShare(`Tantangan ${activeScenario.name} Level ${activeLevel.level} GOLD ⭐ — skor ${score}/${questions.length}`);
+                setShowShareModal(true);
+              }}
+              className="w-full py-3 rounded-2xl flex items-center justify-center gap-2 text-white font-medium"
+              style={{ background: 'linear-gradient(135deg, #c9a961, #d4b876)', boxShadow: '0 8px 20px -6px rgba(201,169,97,0.5)' }}
+            >
+              <Share2 size={16} /> Pamerin Pencapaianmu
             </button>
           )}
 
@@ -2328,6 +2334,21 @@ function ChallengeScreen({ onBack, onShare, onComplete, onNextLevel, scenario, l
             {' · '}
             {existingProgress.attempts} kali main
           </p>
+        )}
+
+        {/* Share modal multi-platform — render kalau user pencet Pamerin */}
+        {showShareModal && (
+          <ShareModal
+            achievement={{
+              scenarioName: activeScenario.name,
+              scenarioEmoji: activeScenario.emoji,
+              level: activeLevel.level,
+              score,
+              total: questions.length,
+              xpEarned: xp,
+            }}
+            onClose={() => setShowShareModal(false)}
+          />
         )}
       </div>
     );
@@ -3267,6 +3288,250 @@ function TourOverlay({ onComplete, onSkip }) {
               </>
             )}
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// SHARE MODAL — multi-platform: WhatsApp, Facebook, Twitter/X, Telegram,
+// Instagram (copy + redirect), Copy link, + Web Share API native fallback.
+// Tujuan: makin banyak yang tahu Tulis Noon via berbagai channel sosmed.
+// ============================================================================
+function ShareModal({ achievement, onClose }) {
+  const [copied, setCopied] = useState(false);
+  const [igCopied, setIgCopied] = useState(false);
+
+  const appUrl = 'https://tulis-noon.vercel.app';
+  const shareText = `Saya baru dapat GOLD ⭐ di Tantangan ${achievement.scenarioName} ${achievement.scenarioEmoji} Level ${achievement.level} di Tulis Noon! 🏆\nSkor: ${achievement.score}/${achievement.total} · +${achievement.xpEarned} XP\n\nYuk belajar bahasa Arab bareng untuk Umrah & Haji:`;
+  const fullShareText = `${shareText} ${appUrl}`;
+  const shareTitle = `GOLD ⭐ di Tulis Noon — ${achievement.scenarioName} Level ${achievement.level}`;
+
+  // Native Web Share API — buka share sheet device (iOS/Android punya banyak app)
+  const handleNativeShare = async () => {
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: appUrl,
+        });
+      } catch (err) {
+        // User cancel — gak masalah, biarin aja
+        console.log('Native share cancelled:', err?.message);
+      }
+    }
+  };
+
+  // Per-platform share URLs
+  const openWhatsApp = () => {
+    window.open(`https://wa.me/?text=${encodeURIComponent(fullShareText)}`, '_blank');
+  };
+
+  const openFacebook = () => {
+    // FB sharer butuh u (url) + quote (caption). Caption ga selalu muncul di mobile.
+    window.open(
+      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(appUrl)}&quote=${encodeURIComponent(shareText)}`,
+      '_blank',
+      'width=600,height=600'
+    );
+  };
+
+  const openTwitter = () => {
+    window.open(
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(appUrl)}`,
+      '_blank',
+      'width=600,height=600'
+    );
+  };
+
+  const openTelegram = () => {
+    window.open(
+      `https://t.me/share/url?url=${encodeURIComponent(appUrl)}&text=${encodeURIComponent(shareText)}`,
+      '_blank'
+    );
+  };
+
+  // Instagram ga punya direct share URL (privacy reason). Workaround:
+  // copy text ke clipboard + arahin user buka IG manual.
+  const openInstagram = async () => {
+    try {
+      await navigator.clipboard.writeText(fullShareText);
+      setIgCopied(true);
+      setTimeout(() => setIgCopied(false), 2500);
+      // Coba buka IG app via deep link (kalau install) atau web
+      setTimeout(() => {
+        window.open('https://www.instagram.com/', '_blank');
+      }, 500);
+    } catch (e) {
+      console.error('IG share clipboard error:', e);
+    }
+  };
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(fullShareText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (e) {
+      console.error('Copy error:', e);
+    }
+  };
+
+  // Daftar platform — disusun by popularitas di Indonesia (jamaah umrah)
+  const platforms = [
+    {
+      id: 'wa',
+      label: 'WhatsApp',
+      bg: '#25D366',
+      iconType: 'emoji',
+      icon: '💬',
+      onClick: openWhatsApp,
+    },
+    {
+      id: 'ig',
+      label: igCopied ? 'Disalin!' : 'Instagram',
+      bg: 'linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)',
+      iconType: 'lucide',
+      icon: Instagram,
+      onClick: openInstagram,
+    },
+    {
+      id: 'fb',
+      label: 'Facebook',
+      bg: '#1877F2',
+      iconType: 'lucide',
+      icon: Facebook,
+      onClick: openFacebook,
+    },
+    {
+      id: 'tw',
+      label: 'X (Twitter)',
+      bg: '#000000',
+      iconType: 'lucide',
+      icon: Twitter,
+      onClick: openTwitter,
+    },
+    {
+      id: 'tg',
+      label: 'Telegram',
+      bg: '#0088cc',
+      iconType: 'emoji',
+      icon: '✈️',
+      onClick: openTelegram,
+    },
+    {
+      id: 'copy',
+      label: copied ? 'Tersalin!' : 'Salin Link',
+      bg: copied ? '#0a4d3c' : '#6b6b6b',
+      iconType: 'lucide',
+      icon: copied ? Check : Copy,
+      onClick: handleCopy,
+    },
+  ];
+
+  const hasNativeShare = typeof navigator !== 'undefined' && !!navigator.share;
+
+  return (
+    <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ background: 'rgba(10,30,25,0.8)' }} onClick={onClose}>
+      <div
+        className="w-full max-w-md max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl shadow-2xl"
+        style={{ background: 'linear-gradient(180deg, #faf6ee 0%, #f3ebd9 100%)' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between px-6 pt-6 pb-3">
+          <div className="flex-1">
+            <p className="text-[10px] tracking-[0.25em] uppercase font-bold mb-1" style={{ color: '#c9a961' }}>Pamerin pencapaianmu</p>
+            <h2 className="text-2xl leading-tight" style={{ fontFamily: 'Fraunces, serif', fontWeight: 700, color: '#0a4d3c' }}>
+              Bagikan ke teman 🎉
+            </h2>
+            <p className="text-xs mt-1" style={{ color: '#666' }}>Pilih platform — ajak temanmu belajar bareng.</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ background: 'rgba(10,77,60,0.08)' }}
+            aria-label="Tutup"
+          >
+            <X size={16} style={{ color: '#0a4d3c' }} />
+          </button>
+        </div>
+
+        {/* Preview kartu pencapaian */}
+        <div className="mx-6 mb-4 p-3 rounded-2xl flex items-center gap-3" style={{ background: 'white', border: '1.5px dashed #c9a961' }}>
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0" style={{ background: 'linear-gradient(135deg, #c9a961, #d4b876)' }}>
+            🏆
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold" style={{ color: '#c9a961' }}>GOLD ⭐</p>
+            <p className="text-sm font-semibold leading-tight" style={{ color: '#0a4d3c' }}>
+              {achievement.scenarioEmoji} {achievement.scenarioName} · Level {achievement.level}
+            </p>
+            <p className="text-xs mt-0.5" style={{ color: '#8b6b3d' }}>
+              Skor {achievement.score}/{achievement.total} · +{achievement.xpEarned} XP
+            </p>
+          </div>
+        </div>
+
+        {/* Grid platform buttons */}
+        <div className="px-6 pb-4">
+          <div className="grid grid-cols-3 gap-3">
+            {platforms.map((p) => {
+              const IconComponent = p.iconType === 'lucide' ? p.icon : null;
+              return (
+                <button
+                  key={p.id}
+                  onClick={p.onClick}
+                  className="flex flex-col items-center gap-2 p-3 rounded-2xl transition-transform active:scale-95"
+                  style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.1)' }}
+                >
+                  <div
+                    className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-md"
+                    style={{ background: p.bg }}
+                  >
+                    {p.iconType === 'lucide' ? (
+                      <IconComponent size={22} color="white" strokeWidth={2.2} />
+                    ) : (
+                      <span style={{ fontSize: '22px' }}>{p.icon}</span>
+                    )}
+                  </div>
+                  <span className="text-[11px] font-semibold text-center leading-tight" style={{ color: '#3d2817' }}>
+                    {p.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Native share API fallback — kalau device support, kasih opsi tambahan */}
+          {hasNativeShare && (
+            <button
+              onClick={handleNativeShare}
+              className="w-full mt-4 py-3 rounded-2xl flex items-center justify-center gap-2 text-sm font-semibold"
+              style={{ background: 'rgba(10,77,60,0.08)', color: '#0a4d3c' }}
+            >
+              <Share2 size={15} /> Bagikan ke aplikasi lain
+            </button>
+          )}
+
+          {/* Hint kalau Instagram di-click (clipboard copied) */}
+          {igCopied && (
+            <div className="mt-3 p-3 rounded-xl text-xs flex items-start gap-2" style={{ background: 'rgba(220,39,67,0.08)', border: '1px solid rgba(220,39,67,0.2)' }}>
+              <Sparkles size={14} style={{ color: '#dc2743' }} className="mt-0.5 flex-shrink-0" />
+              <p style={{ color: '#7a3d2a' }}>
+                Teks pencapaianmu sudah <strong>disalin</strong>. Buka Instagram → buat Story baru → tempel teksnya. 📸
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Footer dakwah note */}
+        <div className="px-6 pb-6 pt-2">
+          <p className="text-[11px] text-center leading-relaxed italic" style={{ color: '#8b6b3d' }}>
+            "Sebaik-baik manusia adalah yang paling bermanfaat bagi sesama" — HR. Ahmad
+          </p>
         </div>
       </div>
     </div>
