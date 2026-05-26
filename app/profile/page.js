@@ -7,6 +7,7 @@ import { useAuth } from '../../lib/auth-context';
 import { getXpProgress, TIERS, XP_SOURCES } from '../../lib/xp-system';
 import { Star, Flame, BookOpen, Sparkles, ArrowLeft, MapPin, LogOut, ChevronRight, Trophy, Target, Award, MessageCircle, HelpCircle, X, Lock, Check, Mic, Globe } from 'lucide-react';
 import XpLevelInfoModal from '../../components/XpLevelInfoModal';
+import AdminHelpFAB from '../../components/AdminHelpFAB';
 import { isInMiddleEast, isInIndonesia, getUserTimezone } from '../../lib/geo-detect';
 
 export default function ProfilePage() {
@@ -334,6 +335,9 @@ export default function ProfilePage() {
       {showLevelInfo && (
         <XpLevelInfoModal xp={xp} onClose={() => setShowLevelInfo(false)} />
       )}
+
+      {/* Floating Admin Help — HANYA di Profile, gak di tempat lain */}
+      <AdminHelpFAB user={user} userProfile={userProfile} />
     </div>
   );
 }

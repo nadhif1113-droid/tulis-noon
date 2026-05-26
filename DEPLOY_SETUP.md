@@ -254,6 +254,36 @@ Setelah approved → app muncul di App Store. Update bisa di-push tanpa review (
 
 ---
 
+## 5.5️⃣ AI ADMIN — EMAIL ESCALATION (Resend)
+
+Fitur **Admin AI** (FAB di Profile) menjawab keluhan user pakai Claude. Kalau AI gak bisa jawab → tap "Tanyakan ke Founder" → otomatis kirim email ke `nadhif1113@gmail.com`.
+
+### Step 1: Daftar Resend (gratis 100 email/hari)
+1. https://resend.com → Sign up (pakai email kamu)
+2. Verify email
+3. Dashboard → **API Keys** → Create API Key → copy
+
+### Step 2: Verify Domain (optional tapi recommended)
+- Untuk launch awal, bisa pakai `onboarding@resend.dev` (default Resend test address, langsung jalan)
+- Untuk production: Settings → Domains → add `tulisnoon.app` (atau apapun domain kamu), tambah DNS records, tunggu verify
+
+### Step 3: Env Vars di Vercel
+```
+RESEND_API_KEY=re_XXXXXXXXXXXX
+ESCALATION_FROM_EMAIL=onboarding@resend.dev    # atau admin@tulisnoon.app kalau domain sudah verified
+```
+
+⚠️ Kalau `RESEND_API_KEY` gak di-set, escalation tetap jalan — tapi cuma simpan ke Firestore (`escalations` collection). Founder bisa cek manual di Firebase Console. Email gak terkirim.
+
+### Step 4: Test
+1. Buka Profile → tap FAB "Tanya Admin" (hijau, bawah kanan)
+2. Tanya: "Pembayaran QRIS saya belum masuk koinnya"
+3. AI akan jawab + flag `needs_human = true` → tombol "Tanyakan ke Founder" muncul
+4. Tap tombol itu → email masuk ke `nadhif1113@gmail.com` dalam ~5 detik
+5. Cek juga di Firebase Console → Firestore → `escalations` collection
+
+---
+
 ## 6️⃣ ENV VARS YANG WAJIB SET DI VERCEL
 
 ```bash
@@ -276,6 +306,10 @@ MIDTRANS_SERVER_KEY=SB-Mid-server-XXX
 NEXT_PUBLIC_MIDTRANS_CLIENT_KEY=SB-Mid-client-XXX
 MIDTRANS_IS_PRODUCTION=false
 NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION=false
+
+# Resend (BARU — untuk AI Admin email escalation ke founder)
+RESEND_API_KEY=re_XXXXXXXXXXXX
+ESCALATION_FROM_EMAIL=onboarding@resend.dev    # atau admin@tulisnoon.app kalau domain sudah verified
 ```
 
 Setelah set env vars, **redeploy** dari Vercel dashboard (atau push commit kosong).
