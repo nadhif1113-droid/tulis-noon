@@ -12,6 +12,14 @@ export default function TebakGambarScreen({ lives = 10, onNoLives, onBack, onHom
   const [selectedLevel, setSelectedLevel] = useState(null);
   const [result, setResult] = useState(null);
 
+  // Cari index kategori sekarang untuk tentuin "next level"
+  const currentLevelIdx = selectedLevel
+    ? TEBAK_GAMBAR_LEVELS.findIndex((l) => l.id === selectedLevel.id)
+    : -1;
+  const nextLevel = currentLevelIdx >= 0 && currentLevelIdx < TEBAK_GAMBAR_LEVELS.length - 1
+    ? TEBAK_GAMBAR_LEVELS[currentLevelIdx + 1]
+    : null;
+
   const handleSelectLevel = (level) => {
     if (lives <= 0) {
       if (onNoLives) onNoLives();
@@ -29,6 +37,17 @@ export default function TebakGambarScreen({ lives = 10, onNoLives, onBack, onHom
     if (onComplete) onComplete({ earned: xpEarned, score, totalQuestions });
   };
 
+  // Handler lanjut ke kategori berikutnya
+  const handleNextLevel = () => {
+    if (!nextLevel) return;
+    if (lives <= 0) {
+      if (onNoLives) onNoLives();
+      return;
+    }
+    setSelectedLevel(nextLevel);
+    setView('play');
+  };
+
   if (view === 'play' && selectedLevel) {
     return (
       <PlayView
@@ -43,6 +62,7 @@ export default function TebakGambarScreen({ lives = 10, onNoLives, onBack, onHom
     return (
       <ResultView
         level={selectedLevel}
+        nextLevel={nextLevel}
         result={result}
         lives={lives}
         onRetry={() => {
@@ -52,6 +72,7 @@ export default function TebakGambarScreen({ lives = 10, onNoLives, onBack, onHom
           }
           setView('play');
         }}
+        onNextLevel={handleNextLevel}
         onBack={() => setView('list')}
       />
     );
@@ -163,11 +184,13 @@ function PlayView({ level, onBack, onComplete }) {
     synth.speak(utter);
   };
 
-  const proceedToNext = () => {
+  // FIX BUG: score state pakai functional update, tapi setTimeout closure
+  // capture score LAMA. Solusi: pass finalScore explicit ke proceedToNext.
+  const proceedToNext = (finalScore) => {
     setSelected(null);
     setFeedback(null);
     if (qIdx === questions.length - 1) {
-      onComplete({ score, totalQuestions: questions.length });
+      onComplete({ score: finalScore, totalQuestions: questions.length });
     } else {
       setQIdx(qIdx + 1);
     }
@@ -178,11 +201,13 @@ function PlayView({ level, onBack, onComplete }) {
     setSelected(choice);
     const isCorrect = choice === current.arabic;
     setFeedback(isCorrect ? 'correct' : 'wrong');
+    // Hitung newScore lokal (gak tunggu setScore commit) — pass eksplisit ke proceedToNext
+    const newScore = isCorrect ? score + 1 : score;
     if (isCorrect) {
-      setScore((s) => s + 1);
-      speakArabic(current.arabic); // bunyikan jawaban benar
+      setScore(newScore);
+      speakArabic(current.arabic);
     }
-    setTimeout(proceedToNext, 1500);
+    setTimeout(() => proceedToNext(newScore), 1500);
   };
 
   if (!current) return null;
@@ -266,10 +291,11 @@ function PlayView({ level, onBack, onComplete }) {
 // ============================================================================
 // RESULT VIEW — score + retry
 // ============================================================================
-function ResultView({ level, result, lives, onRetry, onBack }) {
+function ResultView({ level, nextLevel, result, lives, onRetry, onNextLevel, onBack }) {
   const { score, totalQuestions, xpEarned, isPerfect } = result;
   const isPartial = score > 0 && !isPerfect;
   const noLives = lives <= 0;
+  const hasNextLevel = !!nextLevel;
   const tier = isPerfect
     ? { label: 'MUMTAAZ!', emoji: '🏆', color: '#c9a961', gradient: 'linear-gradient(135deg, #d4b876, #c9a961)' }
     : isPartial
@@ -309,6 +335,18 @@ function ResultView({ level, result, lives, onRetry, onBack }) {
       )}
 
       <div className="w-full max-w-xs space-y-2 mt-2 pb-4">
+        {/* PRIMARY: Lanjut ke kategori berikutnya (kalau perfect & ada next level) */}
+        {isPerfect && hasNextLevel && (
+          <button
+            onClick={onNextLevel}
+            className="w-full py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 text-white"
+            style={{ background: 'linear-gradient(135deg, #0a4d3c, #1a6b56)', boxShadow: '0 10px 24px -8px rgba(10,77,60,0.5)' }}
+          >
+            <ArrowRight size={16} /> Lanjut: {nextLevel.title}
+          </button>
+        )}
+
+        {/* PRIMARY (alt): Ulangi kalau belum perfect */}
         {!isPerfect && (
           <button
             onClick={onRetry}
@@ -318,15 +356,28 @@ function ResultView({ level, result, lives, onRetry, onBack }) {
             {noLives ? <>❤️ Nyawa habis — beli atau tunggu</> : <><RefreshCw size={16} /> Ulangi Kategori</>}
           </button>
         )}
+
+        {/* SECONDARY: Main lagi kalau perfect (replay) */}
         {isPerfect && (
           <button
-            onClick={onBack}
-            className="w-full py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 text-white"
-            style={{ background: tier.gradient }}
+            onClick={onRetry}
+            className="w-full py-2.5 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2"
+            style={{ background: 'rgba(201,169,97,0.18)', color: '#8b6b3d' }}
           >
-            <Sparkles size={16} /> Pilih Kategori Lain
+            <RefreshCw size={14} /> Main lagi kategori ini
           </button>
         )}
+
+        {/* Pesan kalau udah selesai semua kategori */}
+        {isPerfect && !hasNextLevel && (
+          <div className="rounded-2xl p-3" style={{ background: 'rgba(201,169,97,0.12)', border: '1px dashed #c9a961' }}>
+            <p className="text-xs text-center font-semibold" style={{ color: '#8b6b3d' }}>
+              🎉 Semua kategori selesai! Vocab baru akan ditambah di update berikutnya.
+            </p>
+          </div>
+        )}
+
+        {/* TERTIARY: Kembali ke list */}
         <button onClick={onBack} className="w-full py-3 rounded-2xl text-sm font-semibold" style={{ background: 'rgba(10,77,60,0.08)', color: '#0a4d3c' }}>
           Kembali ke Pilih Kategori
         </button>
