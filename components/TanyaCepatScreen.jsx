@@ -7,7 +7,9 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Home, Mic, MicOff, Send, Volume2, Sparkles, Loader2, X, Coins, MessageCircle, Lightbulb, Copy, Check } from 'lucide-react';
+import { ArrowLeft, Home, Mic, MicOff, Send, Volume2, Sparkles, Loader2, X, Coins, MessageCircle, Lightbulb, Copy, Check, Info, HelpCircle } from 'lucide-react';
+
+const INTRO_STORAGE_KEY = 'tanyaCepatIntroSeen_v1';
 
 export const TANYA_CEPAT_FREE_LIMIT = 5;
 export const TANYA_CEPAT_BUNDLE_COST = 5; // koin
@@ -28,10 +30,30 @@ export default function TanyaCepatScreen({
   const [error, setError] = useState(null);
   const [showBundleModal, setShowBundleModal] = useState(false);
   const [copiedIdx, setCopiedIdx] = useState(null);
+  const [showIntro, setShowIntro] = useState(false);
 
   const recognitionRef = useRef(null);
   const messagesEndRef = useRef(null);
   const transcriptRef = useRef('');
+
+  // Show intro modal saat first open (localStorage check)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const seen = window.localStorage.getItem(INTRO_STORAGE_KEY);
+      if (!seen) setShowIntro(true);
+    } catch (e) {
+      // localStorage gak available — tetep show
+      setShowIntro(true);
+    }
+  }, []);
+
+  const handleCloseIntro = (dontShowAgain = true) => {
+    if (dontShowAgain && typeof window !== 'undefined') {
+      try { window.localStorage.setItem(INTRO_STORAGE_KEY, '1'); } catch {}
+    }
+    setShowIntro(false);
+  };
 
   // Compute remaining quota
   const freeUsed = userProfile?.tanyaCepatFreeUsed || 0;
@@ -170,6 +192,9 @@ export default function TanyaCepatScreen({
             Asisten Arab Hijazi
           </h2>
         </div>
+        <button onClick={() => setShowIntro(true)} className="w-9 h-9 rounded-full flex items-center justify-center mr-1" style={{ background: 'rgba(201,169,97,0.18)' }} aria-label="Info">
+          <Info size={15} style={{ color: '#8b6b3d' }} />
+        </button>
         <div className="flex flex-col items-end">
           <div className="text-[10px] font-bold" style={{ color: hasQuota ? '#0a4d3c' : '#a05536' }}>
             {totalRemaining} tersisa
@@ -288,6 +313,9 @@ export default function TanyaCepatScreen({
       </div>
 
       {/* Bundle modal */}
+      {/* Intro modal — keterangan singkat tujuan Tanya Cepat */}
+      {showIntro && <TanyaCepatIntroModal onClose={handleCloseIntro} />}
+
       {showBundleModal && (
         <BundleModal
           coins={userProfile?.coins || 0}
@@ -479,6 +507,114 @@ function BundleModal({ coins, onClose, onBuy }) {
               Koin kurang. Top-up koin atau selesaikan game untuk dapet free.
             </p>
           )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// INTRO MODAL — keterangan singkat tujuan Tanya Cepat
+// Muncul sekali pas first open. User bisa tap info icon (ⓘ) di header buat re-open.
+// ============================================================================
+function TanyaCepatIntroModal({ onClose }) {
+  return (
+    <div className="fixed inset-0 z-[85] flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ background: 'rgba(10,30,25,0.88)' }} onClick={() => onClose(true)}>
+      <div
+        className="w-full max-w-md max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl shadow-2xl"
+        style={{ background: 'linear-gradient(180deg, #faf6ee 0%, #f3ebd9 100%)' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between px-6 pt-6 pb-2">
+          <div className="flex-1">
+            <p className="text-[10px] tracking-[0.3em] uppercase font-bold mb-1" style={{ color: '#c9a961' }}>
+              ⚡ APA INI?
+            </p>
+            <h2 className="text-2xl leading-tight" style={{ fontFamily: 'Fraunces, serif', fontWeight: 700, color: '#0a4d3c' }}>
+              Tanya Cepat
+            </h2>
+          </div>
+          <button onClick={() => onClose(true)} className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(10,77,60,0.08)' }} aria-label="Tutup">
+            <X size={16} style={{ color: '#0a4d3c' }} />
+          </button>
+        </div>
+
+        <div className="px-6 pb-6">
+          {/* Hero */}
+          <div className="rounded-3xl p-5 mb-4 text-center relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #c9a961, #d4b876)' }}>
+            <div className="absolute inset-0 opacity-15" style={{ background: 'radial-gradient(circle at 50% 30%, white 0%, transparent 60%)' }} />
+            <div className="relative">
+              <div className="text-6xl mb-2">⚡</div>
+              <p className="text-base text-white opacity-95 font-semibold leading-tight" style={{ fontFamily: 'Fraunces, serif' }}>
+                Asisten Bahasa Arab Hijazi
+              </p>
+              <p className="text-xs text-white opacity-90 mt-1">
+                Khusus jamaah yang lagi di Saudi
+              </p>
+            </div>
+          </div>
+
+          {/* Bullet penjelasan */}
+          <p className="text-sm leading-relaxed mb-4" style={{ color: '#3d2817' }}>
+            Tombol ini bantu kamu <strong>ngomong sama orang Saudi</strong> walaupun gak bisa Arab — pas kondisi mendesak di Mekkah/Madinah.
+          </p>
+
+          <div className="space-y-2 mb-4">
+            {[
+              { icon: '🎙️', t: 'Tap mic → ngomong dalam Bahasa Indonesia', d: 'Contoh: "Gimana cara tanya di mana toilet?"' },
+              { icon: '🗣️', t: 'AI jawab pakai Arab Hijazi (Mekkah/Madinah)', d: 'Bukan Fusha formal — pakai dialek native yang dipake sehari-hari' },
+              { icon: '🔊', t: 'Auto-suara native + transliterasi latin', d: 'Tinggal tirukan, langsung paham orang Saudi-nya' },
+              { icon: '💡', t: 'Plus tips konteks & alternatif kata', d: 'Biar tau pakai yang formal atau casual' },
+            ].map((b, i) => (
+              <div key={i} className="flex items-start gap-3 rounded-xl p-3" style={{ background: 'white', border: '1px solid rgba(10,77,60,0.08)' }}>
+                <span className="text-xl flex-shrink-0">{b.icon}</span>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold leading-tight" style={{ color: '#0a4d3c' }}>{b.t}</p>
+                  <p className="text-[11px] mt-1 leading-snug" style={{ color: '#8b6b3d' }}>{b.d}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Use cases */}
+          <div className="rounded-2xl p-3 mb-4" style={{ background: 'rgba(10,77,60,0.05)', border: '1.5px dashed rgba(10,77,60,0.2)' }}>
+            <p className="text-[10px] tracking-widest uppercase font-bold mb-2" style={{ color: '#0a4d3c' }}>📌 Cocok dipake buat:</p>
+            <ul className="text-xs space-y-1.5" style={{ color: '#3d2817' }}>
+              <li>🗺️ Tanya arah ke masjid, hotel, restoran</li>
+              <li>🛍️ Nawar harga di pasar / toko</li>
+              <li>🚖 Komunikasi sama supir taksi</li>
+              <li>🍽️ Order makanan di restoran</li>
+              <li>🆘 Minta bantuan ke polisi/security</li>
+              <li>👨‍⚕️ Tanya obat di apotek</li>
+            </ul>
+          </div>
+
+          {/* Quota info */}
+          <div className="rounded-2xl p-3 mb-4 flex items-center gap-3" style={{ background: 'linear-gradient(135deg, rgba(10,77,60,0.08), rgba(201,169,97,0.08))', border: '1.5px solid rgba(10,77,60,0.15)' }}>
+            <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(201,169,97,0.3)' }}>
+              <Coins size={16} style={{ color: '#c9a961' }} />
+            </div>
+            <div className="flex-1">
+              <p className="text-xs font-bold mb-0.5" style={{ color: '#0a4d3c' }}>5 percakapan GRATIS</p>
+              <p className="text-[11px] leading-snug" style={{ color: '#8b6b3d' }}>
+                Setelah habis, top-up <strong>5 koin = 10 percakapan</strong>
+              </p>
+            </div>
+          </div>
+
+          {/* CTA */}
+          <button
+            onClick={() => onClose(true)}
+            className="w-full py-4 rounded-2xl text-white font-bold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+            style={{ background: 'linear-gradient(135deg, #0a4d3c, #1a6b56)', boxShadow: '0 10px 24px -8px rgba(10,77,60,0.5)' }}
+          >
+            <Sparkles size={16} /> Oke, Coba Sekarang
+          </button>
+
+          <p className="text-[10px] text-center mt-3" style={{ color: '#8b6b3d' }}>
+            Bisa buka info ini lagi lewat ikon <Info size={10} className="inline" /> di pojok kanan atas
+          </p>
         </div>
       </div>
     </div>
