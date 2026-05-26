@@ -9,6 +9,8 @@ import { ROLEPLAY_SCENARIOS } from '@/data/roleplay-scenarios';
 import RoleplayScreen from '@/components/RoleplayScreen';
 import TulisArabScreen from '@/components/TulisArabScreen';
 import XpLevelInfoModal from '@/components/XpLevelInfoModal';
+import CoinInfoModal from '@/components/CoinInfoModal';
+import StreakInfoModal from '@/components/StreakInfoModal';
 
 export default function TulisNoonApp() {
   const router = useRouter();
@@ -57,6 +59,10 @@ export default function TulisNoonApp() {
   const [showArabicSurvey, setShowArabicSurvey] = useState(false);
   // XP/Level info modal — trigger dari XP pill di home (atau dari profile).
   const [showXpModal, setShowXpModal] = useState(false);
+  // Coin info modal — trigger dari coin pill di home (atau dari profile).
+  const [showCoinModal, setShowCoinModal] = useState(false);
+  // Streak info modal — trigger dari flame pill di home.
+  const [showStreakModal, setShowStreakModal] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -231,7 +237,7 @@ export default function TulisNoonApp() {
         {screen === 'main' && (
           <>
             <div className="flex-1 pb-20">
-              {tab === 'home' && <HomeTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} onShowXpInfo={() => setShowXpModal(true)} onOpenLesson={() => { setSelectedPath({id:'umrah', title:'Wisatawan & Jamaah Umrah'}); setScreen('lessons'); }} onOpenGame={(g) => {
+              {tab === 'home' && <HomeTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} coins={authProfile?.coins || 0} onShowXpInfo={() => setShowXpModal(true)} onShowCoinInfo={() => setShowCoinModal(true)} onShowStreakInfo={() => setShowStreakModal(true)} onOpenLesson={() => { setSelectedPath({id:'umrah', title:'Wisatawan & Jamaah Umrah'}); setScreen('lessons'); }} onOpenGame={(g) => {
                 // Special routing untuk game yang punya screen sendiri.
                 // Game lain (image-quiz, video-quiz, story) tetap ke GameScreen placeholder.
                 if (g.id === 'chat-roleplay') {
@@ -392,6 +398,24 @@ export default function TulisNoonApp() {
         {/* XP/Level info modal — trigger dari XP pill di home */}
         {showXpModal && (
           <XpLevelInfoModal xp={xp || 0} onClose={() => setShowXpModal(false)} />
+        )}
+
+        {/* Coin info modal — trigger dari coin pill di home */}
+        {showCoinModal && (
+          <CoinInfoModal
+            coins={authProfile?.coins || 0}
+            onClose={() => setShowCoinModal(false)}
+            onTopUp={() => {
+              // Placeholder: top-up flow akan diaktifkan di update berikutnya
+              // (butuh payment gateway integration: Midtrans, Xendit, atau Stripe).
+              alert('Sistem top-up koin akan diaktifkan di update berikutnya. Saat ini bisa dapet koin gratis dari aktivitas belajar.');
+            }}
+          />
+        )}
+
+        {/* Streak info modal — trigger dari flame pill di home */}
+        {showStreakModal && (
+          <StreakInfoModal streak={streak || 0} onClose={() => setShowStreakModal(false)} />
         )}
 
         {/* Tour 4-slide overlay — kenalan dengan tab Beranda/Belajar/Sosial/Profil */}
@@ -827,7 +851,7 @@ function WelcomeScreen({ onComplete, initialName = '' }) {
 }
 
 // ============ HOME TAB ============
-function HomeTab({ userName, userProfile, xp, streak, onShowXpInfo, onOpenLesson, onOpenGame, onOpenChallenge, onOpenGuru, achievements }) {
+function HomeTab({ userName, userProfile, xp, streak, coins, onShowXpInfo, onShowCoinInfo, onShowStreakInfo, onOpenLesson, onOpenGame, onOpenChallenge, onOpenGuru, achievements }) {
   // Personalized greeting based on interests
   const personalizedNote = userProfile?.interests?.includes('religion')
     ? 'Mari belajar bahasa Al-Quran hari ini'
@@ -871,11 +895,27 @@ function HomeTab({ userName, userProfile, xp, streak, onShowXpInfo, onOpenLesson
     <div className="px-5 py-6">
       <div className="flex items-center justify-between mb-1">
         <p className="text-sm" style={{ color: '#8b6b3d' }}>Marhaban,</p>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 px-2.5 py-1 rounded-full" style={{ background: 'rgba(201,169,97,0.2)' }}>
-            <Flame size={12} style={{ color: '#c9a961' }} />
-            <span className="text-xs font-bold" style={{ color: '#8b6b3d' }}>{streak}</span>
-          </div>
+        <div className="flex items-center gap-1.5">
+          {/* Streak pill — clickable, jelasin apa itu flame & cara dapet milestone */}
+          <button
+            onClick={onShowStreakInfo}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full transition-transform active:scale-95"
+            style={{ background: 'rgba(160,85,54,0.15)', cursor: 'pointer' }}
+            aria-label="Pelajari tentang streak"
+          >
+            <Flame size={12} style={{ color: '#a05536' }} />
+            <span className="text-xs font-bold" style={{ color: '#a05536' }}>{streak}</span>
+          </button>
+          {/* Coin pill — clickable, buka modal info Koin & paket top-up */}
+          <button
+            onClick={onShowCoinInfo}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full transition-transform active:scale-95"
+            style={{ background: 'rgba(201,169,97,0.2)', cursor: 'pointer' }}
+            aria-label="Pelajari tentang Koin"
+          >
+            <span style={{ fontSize: '12px' }}>🪙</span>
+            <span className="text-xs font-bold" style={{ color: '#8b6b3d' }}>{coins || 0}</span>
+          </button>
           {/* XP pill — clickable, buka XpLevelInfoModal yg nerangin XP & cara naik level */}
           <button
             onClick={onShowXpInfo}
@@ -885,7 +925,6 @@ function HomeTab({ userName, userProfile, xp, streak, onShowXpInfo, onOpenLesson
           >
             <Star size={12} style={{ color: '#0a4d3c' }} fill="#0a4d3c" />
             <span className="text-xs font-bold" style={{ color: '#0a4d3c' }}>{xp}</span>
-            <span className="text-[9px] opacity-50" style={{ color: '#0a4d3c' }}>ⓘ</span>
           </button>
         </div>
       </div>
