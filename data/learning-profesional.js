@@ -8,7 +8,7 @@ export const LEARNING_PROFESIONAL = [
     id: 'taaruf-kerja',
     pathId: 'profesi',
     order: 1,
-    title: 'Perkenalan di Lingkungan Kerja',
+    title: 'Perkenalan Diri (Kerja)',
     arabic: 'التعارف في بيئة العمل',
     emoji: '🤝',
     color: '#8b6b3d',

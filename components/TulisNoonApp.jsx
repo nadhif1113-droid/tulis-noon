@@ -22,6 +22,7 @@ import PerkenalanDiriScreen from '@/components/PerkenalanDiriScreen';
 import TanyaCepatScreen, { TANYA_CEPAT_FREE_LIMIT, TANYA_CEPAT_BUNDLE_COST, TANYA_CEPAT_BUNDLE_QUOTA } from '@/components/TanyaCepatScreen';
 import TanyaCepatFAB from '@/components/TanyaCepatFAB';
 import LessonDetailScreen from '@/components/LessonDetailScreen';
+import PerkenalanContextPicker from '@/components/PerkenalanContextPicker';
 import { LEARNING_UMRAH } from '@/data/learning-umrah';
 import { LEARNING_PELAJAR } from '@/data/learning-pelajar';
 import { LEARNING_PROFESIONAL } from '@/data/learning-profesional';
@@ -91,6 +92,8 @@ export default function TulisNoonApp() {
   const [showLivesModal, setShowLivesModal] = useState(false);
   // Hafalan Premium unlock modal — trigger pas user tap surat locked.
   const [showUnlockHafalan, setShowUnlockHafalan] = useState(false);
+  // Perkenalan Diri context picker — muncul saat tap "Lanjut Belajar" di home
+  const [showPerkenalanPicker, setShowPerkenalanPicker] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -387,7 +390,7 @@ export default function TulisNoonApp() {
         {screen === 'main' && (
           <>
             <div className="flex-1 pb-20">
-              {tab === 'home' && <HomeTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} coins={authProfile?.coins || 0} lives={authProfile?.lives ?? 10} maxLives={authProfile?.maxLives ?? 10} hafalanProgress={authProfile?.hafalanProgress || {}} perkenalanCompleted={authProfile?.completedPerkenalanMateri || []} tanyaCepatFreeUsed={authProfile?.tanyaCepatFreeUsed || 0} tanyaCepatBundleQuota={authProfile?.tanyaCepatBundleQuota || 0} onOpenTanyaCepat={() => setScreen('tanya-cepat')} onOpenHafalan={() => setScreen('hafalan')} onShowXpInfo={() => setShowXpModal(true)} onShowCoinInfo={() => setShowCoinModal(true)} onShowStreakInfo={() => setShowStreakModal(true)} onShowLivesInfo={() => setShowLivesModal(true)} onOpenLesson={() => setScreen('perkenalan-diri')} onOpenGame={(g) => {
+              {tab === 'home' && <HomeTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} coins={authProfile?.coins || 0} lives={authProfile?.lives ?? 10} maxLives={authProfile?.maxLives ?? 10} hafalanProgress={authProfile?.hafalanProgress || {}} perkenalanCompleted={authProfile?.completedPerkenalanMateri || []} tanyaCepatFreeUsed={authProfile?.tanyaCepatFreeUsed || 0} tanyaCepatBundleQuota={authProfile?.tanyaCepatBundleQuota || 0} onOpenTanyaCepat={() => setScreen('tanya-cepat')} onOpenHafalan={() => setScreen('hafalan')} onShowXpInfo={() => setShowXpModal(true)} onShowCoinInfo={() => setShowCoinModal(true)} onShowStreakInfo={() => setShowStreakModal(true)} onShowLivesInfo={() => setShowLivesModal(true)} onOpenLesson={() => setShowPerkenalanPicker(true)} onOpenGame={(g) => {
                 // Special routing untuk game yang punya screen sendiri.
                 // Game lain (image-quiz, video-quiz, story) tetap ke GameScreen placeholder.
                 if (g.id === 'chat-roleplay') {
@@ -871,6 +874,39 @@ export default function TulisNoonApp() {
         )}
 
         {/* Top-up koin via Midtrans Snap — QRIS, VA Bank, GoPay, Apple Pay, Google Pay, dll */}
+        {/* Perkenalan Diri context picker — modal pilih konteks sebelum masuk materi */}
+        {showPerkenalanPicker && (
+          <PerkenalanContextPicker
+            onClose={() => setShowPerkenalanPicker(false)}
+            onPick={(target) => {
+              setShowPerkenalanPicker(false);
+              if (target === 'perkenalan-diri') {
+                // Generic 12 materi standalone
+                setScreen('perkenalan-diri');
+                return;
+              }
+              // Format target: 'pathId-orderNumber' (e.g. 'beasiswa-1', 'profesi-1', 'umrah-15')
+              const [pathId, orderStr] = target.split('-');
+              const order = parseInt(orderStr, 10);
+              const sourceArr = pathId === 'umrah' ? LEARNING_UMRAH
+                : pathId === 'profesi' ? LEARNING_PROFESIONAL
+                : pathId === 'beasiswa' ? LEARNING_PELAJAR
+                : null;
+              if (!sourceArr) return;
+              const targetModule = sourceArr.find((m) => m.order === order);
+              if (!targetModule) return;
+              setSelectedPath({
+                id: pathId,
+                title: pathId === 'umrah' ? 'Wisatawan & Jamaah Umrah'
+                  : pathId === 'profesi' ? 'Profesional & Bisnis'
+                  : 'Pelajar / Siswa / Mahasiswa',
+              });
+              setSelectedLesson({ ...targetModule, pathId });
+              setScreen('lesson-detail');
+            }}
+          />
+        )}
+
         {showTopUpModal && (
           <TopUpKoinModal
             user={user}
