@@ -11,6 +11,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Home, Volume2, Check, Mic, MicOff, BookOpen, Sparkles, ChevronRight, RotateCcw, Star, X, Play, Pause, Lock } from 'lucide-react';
+import HafalanMotivasiModal from '@/components/HafalanMotivasiModal';
 import { HAFALAN_SURAT } from '@/data/hafalan-surat';
 import { QURAN_SURAT } from '@/data/quran-metadata';
 import {
@@ -92,14 +93,53 @@ export default function HafalanScreen({
 // LIST VIEW — daftar surat + progress chunk per surat
 // ============================================================================
 function ListView({ hafalanProgress, userProfile, coins, onBack, onHome, onShowUnlockModal, onSelect }) {
+  // Motivasi modal — muncul sekali tiap user masuk Hafalan screen
+  const [showMotivasi, setShowMotivasi] = useState(true);
+  // Pagination state
+  const [page, setPage] = useState(0);
+  // Search query — filter surat by name/number
+  const [searchQuery, setSearchQuery] = useState('');
+  const ITEMS_PER_PAGE = 12;
+
   // Map seeded content (id-based) ke surat number untuk quick lookup
   const seededByNumber = new Map(HAFALAN_SURAT.map((s) => [s.number, s]));
 
-  // Pisahkan surat ke 3 section: Al-Fatihah, Juz 30, Premium (Juz 1-29)
+  // Pisahkan surat: Al-Fatihah, Juz 30, Premium (Juz 1-29)
   const alFatihahMeta = QURAN_SURAT.find((s) => s.number === 1);
   const juz30Surat = QURAN_SURAT.filter((s) => s.number !== 1 && s.juz.includes(30));
   const premiumSurat = QURAN_SURAT.filter((s) => s.number !== 1 && !s.juz.includes(30));
   const isPremiumUnlocked = !!userProfile?.hafalanFullUnlocked;
+
+  // Filter by search query (kalau ada)
+  const matchSearch = (meta) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase().trim();
+    return (
+      meta.name.toLowerCase().includes(q) ||
+      meta.arName.includes(q) || // Arabic name (no lowercasing)
+      meta.number.toString() === q ||
+      meta.number.toString().includes(q) ||
+      meta.meaning.toLowerCase().includes(q)
+    );
+  };
+
+  // Filtered list — kombinasi Juz 30 dulu lalu Premium
+  const filteredJuz30 = juz30Surat.filter(matchSearch);
+  const filteredPremium = premiumSurat.filter(matchSearch);
+  const alFatihahMatches = matchSearch(alFatihahMeta);
+  const paginatedSurat = [...filteredJuz30, ...filteredPremium];
+
+  // Pagination — reset ke page 0 kalau search baru
+  const totalPages = Math.max(1, Math.ceil(paginatedSurat.length / ITEMS_PER_PAGE));
+  const safePage = Math.min(page, totalPages - 1);
+  const pageStart = safePage * ITEMS_PER_PAGE;
+  const currentPageSurat = paginatedSurat.slice(pageStart, pageStart + ITEMS_PER_PAGE);
+
+  // Handler search dgn auto-reset pagination ke page 0
+  const handleSearchChange = (q) => {
+    setSearchQuery(q);
+    setPage(0);
+  };
 
   // Progress: hitung total chunks completed across all hafalan
   const totalChunksCompleted = Object.values(hafalanProgress).reduce(
@@ -111,12 +151,10 @@ function ListView({ hafalanProgress, userProfile, coins, onBack, onHome, onShowU
   const handleSelectSurat = (meta) => {
     const seeded = seededByNumber.get(meta.number);
     if (!seeded) {
-      // Surat content belum di-seed — kasih tau user
       alert(`Konten ${meta.name} sedang disiapkan. Akan tersedia di update berikutnya.\n\nUntuk sekarang, coba: Al-Fatihah, Al-Fil, Quraisy, Al-Maun, Al-Kautsar, Al-Kafirun, An-Nasr, Al-Lahab, Al-Ikhlas, Al-Falaq, An-Naas.`);
       return;
     }
     if (!isSuratUnlocked(meta, userProfile)) {
-      // Premium locked — buka unlock modal
       if (onShowUnlockModal) onShowUnlockModal();
       return;
     }
@@ -133,9 +171,9 @@ function ListView({ hafalanProgress, userProfile, coins, onBack, onHome, onShowU
           <Home size={17} style={{ color: '#0a4d3c' }} />
         </button>
         <div className="flex-1">
-          <p className="text-xs tracking-widest uppercase" style={{ color: '#8b6b3d' }}>Hafalan</p>
+          <p className="text-xs tracking-widest uppercase" style={{ color: '#8b6b3d' }}>Hafalan Quran</p>
           <h2 className="text-xl font-semibold" style={{ color: '#0a4d3c', fontFamily: 'Fraunces, serif' }}>
-            Quran Juz Amma
+            Mari mulai menghafal!
           </h2>
         </div>
       </div>
@@ -147,7 +185,7 @@ function ListView({ hafalanProgress, userProfile, coins, onBack, onHome, onShowU
           Mulai dari Al-Fatihah
         </h3>
         <p className="text-sm text-white opacity-95 leading-relaxed mb-3">
-          Audio syekh Alafasy + cek bacaan via mic. Free: Al-Fatihah + 37 surat Juz Amma. Premium: 30 juz penuh ({PREMIUM_UNLOCK_COST} 🪙 sekali bayar).
+          Audio syekh Alafasy + cek bacaan via mic. <strong>Free: Al-Fatihah + 37 surat Juz Amma</strong>.
         </p>
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-1 px-2.5 py-1 rounded-full" style={{ background: 'rgba(201,169,97,0.3)' }}>
@@ -162,76 +200,159 @@ function ListView({ hafalanProgress, userProfile, coins, onBack, onHome, onShowU
         </div>
       </div>
 
-      {/* SECTION 1: Al-Fatihah — starter */}
-      <p className="text-xs tracking-widest uppercase mb-3 flex items-center gap-2" style={{ color: '#0a4d3c' }}>
-        🌟 Permulaan — Surat Al-Fatihah
-      </p>
-      <div className="mb-5">
-        <SuratCard
-          meta={alFatihahMeta}
-          seeded={seededByNumber.get(1)}
-          progress={hafalanProgress[seededByNumber.get(1)?.id] || []}
-          isUnlocked={true}
-          onSelect={() => handleSelectSurat(alFatihahMeta)}
-          accentColor="#c9a961"
-          isStarter
+      {/* PREMIUM UPSELL CARD — tonjolkan "bayar sekali" pitch */}
+      {!isPremiumUnlocked && (
+        <button
+          onClick={onShowUnlockModal}
+          className="w-full text-left rounded-3xl p-5 mb-4 relative overflow-hidden transition-transform active:scale-[0.98]"
+          style={{ background: 'linear-gradient(135deg, #c9a961, #d4b876)', boxShadow: '0 10px 30px -10px rgba(201,169,97,0.5)' }}
+        >
+          <div className="absolute -right-6 -top-4 text-7xl opacity-15">🕌</div>
+          <p className="text-[10px] tracking-[0.3em] uppercase text-white opacity-90 mb-1 font-bold">Premium · Bayar Sekali</p>
+          <h3 className="text-xl text-white mb-1 leading-tight" style={{ fontFamily: 'Fraunces, serif', fontWeight: 700 }}>
+            Hafal 30 Juz Sampai Bisa
+          </h3>
+          <p className="text-sm text-white opacity-95 leading-relaxed mb-3">
+            Buka 76 surat lainnya (Juz 1-29) — termasuk Al-Baqarah, Yasin, Ar-Rahman, Al-Mulk. <strong>Akses seumur hidup</strong>, tanpa langganan bulanan.
+          </p>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-white" style={{ color: '#8b6b3d' }}>
+            🪙 {PREMIUM_UNLOCK_COST} koin · Sekali Bayar <ChevronRight size={12} />
+          </span>
+        </button>
+      )}
+
+      {/* SEARCH BAR — cari surat by name/number */}
+      <div className="rounded-2xl mb-4 flex items-center gap-2 px-4 py-3" style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.1)' }}>
+        <span className="text-lg" style={{ opacity: 0.5 }}>🔍</span>
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          placeholder="Cari surat: nama, nomor, atau arti..."
+          className="flex-1 outline-none text-sm"
+          style={{ background: 'transparent', color: '#1a1a1a' }}
         />
-      </div>
-
-      {/* SECTION 2: Juz 30 — Juz Amma (free) */}
-      <p className="text-xs tracking-widest uppercase mb-3 flex items-center gap-2" style={{ color: '#0a4d3c' }}>
-        📖 Juz 30 (Juz Amma) — Gratis
-      </p>
-      <div className="space-y-2 mb-5">
-        {juz30Surat.map((meta) => {
-          const seeded = seededByNumber.get(meta.number);
-          return (
-            <SuratCard
-              key={meta.number}
-              meta={meta}
-              seeded={seeded}
-              progress={seeded ? (hafalanProgress[seeded.id] || []) : []}
-              isUnlocked={true}
-              onSelect={() => handleSelectSurat(meta)}
-            />
-          );
-        })}
-      </div>
-
-      {/* SECTION 3: Juz 1-29 — Premium */}
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-xs tracking-widest uppercase flex items-center gap-2" style={{ color: isPremiumUnlocked ? '#0a4d3c' : '#8b6b3d' }}>
-          {isPremiumUnlocked ? '🕌 Juz 1-29 — UNLOCKED' : '🔒 Juz 1-29 — Premium'}
-        </p>
-        {!isPremiumUnlocked && (
-          <button
-            onClick={onShowUnlockModal}
-            className="text-[10px] font-bold px-2.5 py-1 rounded-full"
-            style={{ background: '#c9a961', color: 'white' }}
-          >
-            {PREMIUM_UNLOCK_COST} 🪙 unlock
+        {searchQuery && (
+          <button onClick={() => handleSearchChange('')} className="text-xs font-semibold" style={{ color: '#8b6b3d' }}>
+            ✕ clear
           </button>
         )}
       </div>
-      <div className="space-y-2 mb-4">
-        {premiumSurat.map((meta) => {
-          const seeded = seededByNumber.get(meta.number);
-          return (
+
+      {/* AL-FATIHAH — always shown at top (kecuali pas search & ga match) */}
+      {(!searchQuery || alFatihahMatches) && (
+        <>
+          <p className="text-xs tracking-widest uppercase mb-3 flex items-center gap-2" style={{ color: '#0a4d3c' }}>
+            🌟 Permulaan — Surat Al-Fatihah
+          </p>
+          <div className="mb-5">
             <SuratCard
-              key={meta.number}
-              meta={meta}
-              seeded={seeded}
-              progress={seeded ? (hafalanProgress[seeded.id] || []) : []}
-              isUnlocked={isPremiumUnlocked}
-              onSelect={() => handleSelectSurat(meta)}
+              meta={alFatihahMeta}
+              seeded={seededByNumber.get(1)}
+              progress={hafalanProgress[seededByNumber.get(1)?.id] || []}
+              isUnlocked={true}
+              onSelect={() => handleSelectSurat(alFatihahMeta)}
+              accentColor="#c9a961"
+              isStarter
             />
-          );
-        })}
-      </div>
+          </div>
+        </>
+      )}
+
+      {/* PAGINATED SURAT LIST */}
+      {paginatedSurat.length > 0 ? (
+        <>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs tracking-widest uppercase" style={{ color: '#8b6b3d' }}>
+              {searchQuery
+                ? `Hasil pencarian (${paginatedSurat.length})`
+                : `Daftar Surat — Halaman ${safePage + 1}/${totalPages}`}
+            </p>
+            {!searchQuery && (
+              <span className="text-[10px] font-semibold" style={{ color: '#8b6b3d' }}>
+                {pageStart + 1}–{Math.min(pageStart + ITEMS_PER_PAGE, paginatedSurat.length)} dari {paginatedSurat.length}
+              </span>
+            )}
+          </div>
+
+          {/* Page tabs — horizontal scrollable */}
+          {totalPages > 1 && (
+            <div className="flex gap-1.5 mb-3 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+              {Array.from({ length: totalPages }).map((_, i) => {
+                const isActive = i === safePage;
+                return (
+                  <button
+                    key={i}
+                    onClick={() => setPage(i)}
+                    className="px-3 py-1.5 rounded-full text-xs font-bold flex-shrink-0 transition-all"
+                    style={{
+                      background: isActive ? '#0a4d3c' : 'rgba(10,77,60,0.08)',
+                      color: isActive ? 'white' : '#0a4d3c',
+                    }}
+                  >
+                    {i + 1}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="space-y-2 mb-4">
+            {currentPageSurat.map((meta) => {
+              const seeded = seededByNumber.get(meta.number);
+              const isFree = meta.juz.includes(30);
+              const isUnlocked = isFree || isPremiumUnlocked;
+              return (
+                <SuratCard
+                  key={meta.number}
+                  meta={meta}
+                  seeded={seeded}
+                  progress={seeded ? (hafalanProgress[seeded.id] || []) : []}
+                  isUnlocked={isUnlocked}
+                  onSelect={() => handleSelectSurat(meta)}
+                />
+              );
+            })}
+          </div>
+
+          {/* Prev/Next buttons */}
+          {totalPages > 1 && (
+            <div className="flex gap-2 mb-4">
+              <button
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={safePage === 0}
+                className="flex-1 py-3 rounded-2xl text-sm font-semibold disabled:opacity-40"
+                style={{ background: 'rgba(10,77,60,0.08)', color: '#0a4d3c' }}
+              >
+                ← Sebelumnya
+              </button>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                disabled={safePage >= totalPages - 1}
+                className="flex-1 py-3 rounded-2xl text-sm font-semibold disabled:opacity-40 text-white"
+                style={{ background: '#0a4d3c' }}
+              >
+                Berikutnya →
+              </button>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="rounded-2xl p-6 mb-4 text-center" style={{ background: 'rgba(10,77,60,0.05)' }}>
+          <p className="text-4xl mb-2">🔍</p>
+          <p className="text-sm font-semibold mb-1" style={{ color: '#0a4d3c' }}>Tidak ada surat ditemukan</p>
+          <p className="text-xs" style={{ color: '#8b6b3d' }}>
+            Coba kata kunci lain — nama surat, nomor, atau arti.
+          </p>
+        </div>
+      )}
 
       <p className="text-[11px] text-center mt-4 italic" style={{ color: '#8b6b3d' }}>
         "Sebaik-baik kalian adalah yang belajar Al-Quran dan mengajarkannya" — HR. Bukhari
       </p>
+
+      {/* Motivasi modal — muncul pas pertama buka */}
+      {showMotivasi && <HafalanMotivasiModal onClose={() => setShowMotivasi(false)} />}
     </div>
   );
 }
