@@ -109,13 +109,34 @@ export async function POST(request) {
     });
 
     const reply = response.content?.[0]?.text || '';
+
+    // Parse [USER_TRANSLATED] block kalau ada — terjemahan apa yang user mau
+    // omongin kalau pakai bahasa Arab. Block-nya dihapus dari AI reply, lalu
+    // dikirim balik sbg `userTranslation` supaya frontend bisa attach ke user bubble.
+    let userTranslation = null;
+    const translatedMatch = reply.match(/\[USER_TRANSLATED\]([\s\S]*?)\[\/USER_TRANSLATED\]/);
+    if (translatedMatch) {
+      const inside = translatedMatch[1].trim();
+      const lines = inside.split('\n').map((l) => l.trim()).filter((l) => l);
+      // Line 1 harus Arabic (cek char), line 2 Latin
+      const arabic = lines.find((l) => /[؀-ۿ]/.test(l));
+      const latin = lines.find((l) => !/[؀-ۿ]/.test(l));
+      if (arabic && latin) {
+        userTranslation = { arabic, latin };
+      }
+    }
+
     // Detect end token
     const endDetected = reply.includes('[END_SCENARIO]');
-    // Strip token kalau ada (gak perlu di-display ke user)
-    const cleanReply = reply.replace('[END_SCENARIO]', '').trim();
+    // Strip [USER_TRANSLATED] block + [END_SCENARIO] token dari reply
+    const cleanReply = reply
+      .replace(/\[USER_TRANSLATED\][\s\S]*?\[\/USER_TRANSLATED\]/, '')
+      .replace('[END_SCENARIO]', '')
+      .trim();
 
     return NextResponse.json({
       reply: cleanReply,
+      userTranslation, // null kalau user pakai Arabic, atau {arabic, latin} kalau Indo/English
       endScenario: endDetected,
       usage: response.usage, // untuk debug cost
     });

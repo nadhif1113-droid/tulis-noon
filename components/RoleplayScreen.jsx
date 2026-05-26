@@ -88,14 +88,30 @@ export default function RoleplayScreen({ scenario, userId, onBack, onComplete, o
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'AI ga merespon');
 
-      setMessages([...newMessages, { role: 'assistant', content: data.reply }]);
+      // Attach userTranslation (kalau ada) ke last user message — supaya bubble
+      // user nampilin terjemahan Arab+Latin di bawah teks Indo-nya.
+      const userMessagesWithTranslation = [...newMessages];
+      if (data.userTranslation) {
+        const lastIdx = userMessagesWithTranslation.length - 1;
+        userMessagesWithTranslation[lastIdx] = {
+          ...userMessagesWithTranslation[lastIdx],
+          translation: data.userTranslation,
+        };
+      }
+
+      const finalMessages = [
+        ...userMessagesWithTranslation,
+        { role: 'assistant', content: data.reply },
+      ];
+      setMessages(finalMessages);
+
       if (data.endScenario) {
         setEndDetected(true);
         // Auto trigger grading setelah 1.5s biar user sempet baca closing message
-        setTimeout(() => requestGrading([...newMessages, { role: 'assistant', content: data.reply }]), 1500);
+        setTimeout(() => requestGrading(finalMessages), 1500);
       } else if (newMessages.filter((m) => m.role === 'user').length >= scenario.maxTurns) {
         // Max turns tercapai — auto grade
-        setTimeout(() => requestGrading([...newMessages, { role: 'assistant', content: data.reply }]), 800);
+        setTimeout(() => requestGrading(finalMessages), 800);
       }
     } catch (e) {
       setError(e.message);
@@ -522,11 +538,13 @@ function MessageBubble({ message, scenarioColor, personaAvatar }) {
 
   if (isUser) {
     // User message: kalau Arab, render rtl + Amiri font. Kalau Indo/English, render normal.
+    // Plus: kalau ada translation (AI udah terjemahin Indo user ke Arab+Latin),
+    // tampilin di bawah teks user sbg learning aid.
     const hasArabic = /[؀-ۿ]/.test(message.content);
     return (
       <div className="flex justify-end">
         <div
-          className="max-w-[78%] rounded-2xl rounded-br-md px-4 py-2.5 shadow-sm"
+          className="max-w-[82%] rounded-2xl rounded-br-md px-4 py-2.5 shadow-sm"
           style={{ background: scenarioColor, color: 'white' }}
         >
           <p
@@ -540,6 +558,41 @@ function MessageBubble({ message, scenarioColor, personaAvatar }) {
           >
             {message.content}
           </p>
+          {/* Learning aid: terjemahan Arab+Latin dari apa yang user ketik */}
+          {message.translation && (
+            <div
+              className="mt-2 pt-2"
+              style={{ borderTop: '1px solid rgba(255,255,255,0.3)' }}
+            >
+              <p
+                className="leading-snug"
+                style={{
+                  fontFamily: 'Amiri, serif',
+                  fontSize: '17px',
+                  direction: 'rtl',
+                  color: 'rgba(255,255,255,0.95)',
+                }}
+              >
+                {message.translation.arabic}
+              </p>
+              <p
+                className="leading-snug italic mt-0.5"
+                style={{
+                  fontSize: '11px',
+                  color: 'rgba(255,255,255,0.8)',
+                  letterSpacing: '0.01em',
+                }}
+              >
+                {message.translation.latin}
+              </p>
+              <p
+                className="mt-1 text-[10px] italic"
+                style={{ color: 'rgba(255,255,255,0.6)' }}
+              >
+                ↑ cara ngomong di Arab
+              </p>
+            </div>
+          )}
         </div>
       </div>
     );
