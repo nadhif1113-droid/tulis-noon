@@ -414,31 +414,43 @@ export default function TulisNoonApp() {
           }}
         />}
 
-        {/* Match Arena — kompetitif race lawan bot (sosial game) */}
+        {/* Match Arena — kompetitif race lawan bot/user real (smart matchmaking) */}
         {screen === 'match' && <MatchArenaScreen
           lives={authProfile?.lives ?? 10}
+          matchesPlayed={authProfile?.matchesPlayed || 0}
+          currentUserId={user?.uid}
           userName={userName}
           onNoLives={() => setShowLivesModal(true)}
           onBack={() => { setTab('sosial'); setScreen('main'); }}
           onHome={() => { setTab('home'); setScreen('main'); }}
-          onComplete={({ earned, coinEarned, result, userScore, botScore, difficulty }) => {
+          onComplete={({ earned, coinEarned, result, userScore, botScore, opponentName, opponentLevel, isHuman }) => {
             // Award XP + koin
             awardXp(earned);
+            const updates = {};
+            // Coin reward
             if (coinEarned > 0) {
-              const curCoins = authProfile?.coins || 0;
-              updateUserProfile({ coins: curCoins + coinEarned }).catch((err) =>
-                console.error('Coin reward failed:', err)
+              updates.coins = (authProfile?.coins || 0) + coinEarned;
+            }
+            // Increment match counter (untuk smart matchmaking selanjutnya)
+            updates.matchesPlayed = (authProfile?.matchesPlayed || 0) + 1;
+            if (result === 'win') {
+              updates.matchesWon = (authProfile?.matchesWon || 0) + 1;
+            }
+            if (Object.keys(updates).length > 0) {
+              updateUserProfile(updates).catch((err) =>
+                console.error('Match stats update failed:', err)
               );
             }
-            // Deduct nyawa kalau kalah (tie = aman)
-            deductLifeIfLost(result !== 'lose' ? true : false);
+            // Deduct nyawa kalau kalah (win/tie = aman)
+            deductLifeIfLost(result !== 'lose');
             // Catat achievement
             const resultLabel = result === 'win' ? 'MENANG' : result === 'lose' ? 'kalah' : 'seri';
+            const opponentTag = isHuman ? `@${opponentName}` : `${opponentName} (Lv${opponentLevel})`;
             setAchievements((a) => [{
               id: Date.now(),
               type: 'match',
-              text: `Match Arena (${difficulty}) — ${resultLabel} ${userScore} vs ${botScore} (+${earned} XP)`,
-              emoji: result === 'win' ? '🏆' : '⚔️',
+              text: `Match vs ${opponentTag} — ${resultLabel} ${userScore} vs ${botScore} (+${earned} XP)`,
+              emoji: result === 'win' ? '🏆' : isHuman ? '👥' : '🤖',
               time: 'baru saja',
               user: userName || 'Anda',
             }, ...a]);
