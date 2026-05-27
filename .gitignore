@@ -40,3 +40,22 @@ firebase-adminsdk-*.json
 serviceAccount*.json
 *service-account*.json
 
+# google-services.json — JANGAN UPLOAD (Firebase config per-project)
+android/app/google-services.json
+GoogleService-Info.plist
+
+# Android Studio / IDE
+android/.idea/
+android/.gradle/
+android/local.properties
+android/app/build/
+android/build/
+.idea/
+
+# Android bug reports & build artifacts
+bugreport-*.zip
+*.apk
+*.aab
+*.keystore
+*.jks
+
