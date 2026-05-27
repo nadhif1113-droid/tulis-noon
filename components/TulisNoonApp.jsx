@@ -1587,66 +1587,64 @@ function HomeTab({ userName, userProfile, location, xp, streak, coins, lives, ma
       <p className="text-sm mb-4" style={{ color: '#8b6b3d' }}>{personalizedNote}</p>
 
       {/* Tanggal Masehi + Hijriah - sederet di atas card Pasar Madinah */}
-      {/* Location chip — lokasi user terkini (auto-detect atau fallback) */}
-      {(() => {
-        const loc = location;
-        if (!loc) return null;
-        const flag = {
-          SA: '🇸🇦', AE: '🇦🇪', QA: '🇶🇦', BH: '🇧🇭', KW: '🇰🇼', OM: '🇴🇲',
-          JO: '🇯🇴', EG: '🇪🇬', YE: '🇾🇪', ID: '🇮🇩', MY: '🇲🇾', SG: '🇸🇬', BN: '🇧🇳',
-        }[loc.countryCode] || '🌍';
-        const promoLabel = {
-          'umrah': 'Mode Umrah',
-          'transit': 'Transit ME',
-          'study-abroad': 'Pelajar',
-          'pre-departure': 'Pra-Berangkat',
-        }[loc.promoTier] || '';
-        return (
-          <div
-            className="flex items-center justify-between mb-2 px-3 py-2 rounded-xl"
-            style={{
-              background: 'linear-gradient(90deg, rgba(10,77,60,0.10), rgba(10,77,60,0.05))',
-              border: '1px solid rgba(10,77,60,0.15)',
-            }}
-          >
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              <span className="text-base flex-shrink-0">{flag}</span>
-              <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-widest font-bold leading-tight" style={{ color: '#8b6b3d' }}>
-                  Lokasi Saat Ini
-                </p>
-                <p className="text-xs font-semibold truncate" style={{ color: '#0a4d3c' }}>
-                  {loc.city || loc.country || 'Tidak diketahui'}{loc.country && loc.city ? `, ${loc.country}` : ''}
-                </p>
-              </div>
-            </div>
-            {promoLabel && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ml-2" style={{ background: 'rgba(201,169,97,0.25)', color: '#8b6b3d' }}>
-                {promoLabel}
-              </span>
-            )}
-          </div>
-        );
-      })()}
-
+      {/* Kotak gabungan: Lokasi + Tanggal Masehi + Hijriah */}
       <div
-        className="flex items-center justify-between mb-3 px-4 py-3 rounded-xl"
+        className="mb-3 px-4 py-3 rounded-xl"
         style={{
           background: 'linear-gradient(90deg, rgba(201,169,97,0.22), rgba(10,77,60,0.10))',
           border: '1.5px solid rgba(201,169,97,0.45)',
         }}
       >
-        <div className="flex items-center gap-2">
-          <Calendar size={14} style={{ color: '#0a4d3c' }} />
-          <span className="text-xs font-semibold" style={{ color: '#0a4d3c' }}>
-            {gregorianDate}
-          </span>
+        {/* Baris 1: Lokasi (kalau ada) */}
+        {(() => {
+          const loc = location;
+          if (!loc) return null;
+          const flag = {
+            SA: '🇸🇦', AE: '🇦🇪', QA: '🇶🇦', BH: '🇧🇭', KW: '🇰🇼', OM: '🇴🇲',
+            JO: '🇯🇴', EG: '🇪🇬', YE: '🇾🇪', ID: '🇮🇩', MY: '🇲🇾', SG: '🇸🇬', BN: '🇧🇳',
+          }[loc.countryCode] || '🌍';
+          const promoLabel = {
+            'umrah': 'Mode Umrah',
+            'transit': 'Transit ME',
+            'study-abroad': 'Pelajar',
+            'pre-departure': 'Pra-Berangkat',
+          }[loc.promoTier] || '';
+          return (
+            <div className="flex items-center justify-between pb-2 mb-2" style={{ borderBottom: '1px dashed rgba(10,77,60,0.18)' }}>
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <span className="text-base flex-shrink-0">{flag}</span>
+                <div className="min-w-0">
+                  <p className="text-[9px] uppercase tracking-widest font-bold leading-tight" style={{ color: '#8b6b3d' }}>
+                    Lokasi Saat Ini
+                  </p>
+                  <p className="text-xs font-semibold truncate" style={{ color: '#0a4d3c' }}>
+                    {loc.city || loc.country || 'Tidak diketahui'}{loc.country && loc.city ? `, ${loc.country}` : ''}
+                  </p>
+                </div>
+              </div>
+              {promoLabel && (
+                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ml-2" style={{ background: 'rgba(201,169,97,0.4)', color: '#8b6b3d' }}>
+                  {promoLabel}
+                </span>
+              )}
+            </div>
+          );
+        })()}
+
+        {/* Baris 2: Tanggal Masehi + Hijriah */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Calendar size={14} style={{ color: '#0a4d3c' }} />
+            <span className="text-xs font-semibold" style={{ color: '#0a4d3c' }}>
+              {gregorianDate}
+            </span>
+          </div>
+          {hijriDate && (
+            <span className="text-xs font-semibold" style={{ color: '#8b6b3d' }}>
+              {hijriDate}
+            </span>
+          )}
         </div>
-        {hijriDate && (
-          <span className="text-xs font-semibold" style={{ color: '#8b6b3d' }}>
-            {hijriDate}
-          </span>
-        )}
       </div>
 
       {/* Daily Challenge Card — rotasi berdasarkan tanggal */}
