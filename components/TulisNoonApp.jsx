@@ -81,6 +81,23 @@ export default function TulisNoonApp() {
     { id: 2, type: 'lesson', text: 'Selesai: Salam & Sapaan', emoji: '🤝', time: '5 jam lalu', user: 'Siti' },
     { id: 3, type: 'badge', text: 'Lulus Quiz Pasar Madinah', emoji: '🏆', time: '1 hari lalu', user: 'Yusuf' },
   ]);
+  // Tantangan unggulan — ROTASI tiap buka app (bukan fix per tanggal).
+  // Baca index tersimpan → tampilkan itu; index di-increment di useEffect untuk sesi berikutnya.
+  const [featuredChallenge] = useState(() => {
+    try {
+      const prev = parseInt(localStorage.getItem('challengeRotationIdx') || '0', 10) || 0;
+      return CHALLENGE_SCENARIOS[prev % CHALLENGE_SCENARIOS.length];
+    } catch (e) {
+      return getTodayChallenge();
+    }
+  });
+  useEffect(() => {
+    try {
+      const prev = parseInt(localStorage.getItem('challengeRotationIdx') || '0', 10) || 0;
+      localStorage.setItem('challengeRotationIdx', String((prev + 1) % CHALLENGE_SCENARIOS.length));
+    } catch (e) {}
+  }, []);
+
   // Offline detection — tampilkan banner sopan kalau user kehilangan koneksi.
   // Penting krn app pakai Firestore (perlu internet buat sync XP/progress).
   const [isOffline, setIsOffline] = useState(false);
@@ -569,7 +586,7 @@ export default function TulisNoonApp() {
                 }
                 setSelectedGame(g);
                 setScreen('game');
-              }} onOpenChallenge={(scenario) => { setSelectedChallenge(scenario || getTodayChallenge()); setScreen('challenge-levels'); }} onOpenGuru={() => setScreen('guru')} achievements={achievements} />}
+              }} onOpenChallenge={(scenario) => { setSelectedChallenge(scenario || getTodayChallenge()); setScreen('challenge-levels'); }} onOpenGuru={() => setScreen('guru')} achievements={achievements} onSeeAllActivity={() => setTab('sosial')} featuredChallenge={featuredChallenge} />}
               {tab === 'belajar' && <BelajarTab onSelectPath={(p) => { setSelectedPath(p); setScreen('lessons'); }} onOpenGuru={() => setScreen('guru')} progress={progress} />}
               {tab === 'sosial' && <SosialTab achievements={achievements} userName={userName} currentUserId={user?.uid} userProfile={authProfile} onOpenMatch={() => setScreen('match')} onOpenFriends={() => setScreen('friends')} onOpenCommunity={() => setScreen('community')} onRankComputed={handleRankComputed} />}
               {tab === 'profil' && <ProfilTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} progress={progress} onOpenPremium={() => setScreen('premium')} />}
@@ -1529,13 +1546,89 @@ function WelcomeScreen({ onComplete, initialName = '' }) {
 }
 
 // ============ HOME TAB ============
-function HomeTab({ userName, userProfile, location, xp, streak, coins, lives, maxLives, hafalanProgress, perkenalanCompleted, tanyaCepatFreeUsed, tanyaCepatBundleQuota, onOpenTanyaCepat, onOpenHafalan, onShowXpInfo, onShowCoinInfo, onShowStreakInfo, onShowLivesInfo, onOpenLesson, onOpenGame, onOpenChallenge, onOpenGuru, achievements }) {
+// Modal "Apa itu Tulis Noon?" — visi misi + fitur, bahasa lugas (semua umur 10+).
+function AboutModal({ onClose }) {
+  const FITUR = [
+    { emoji: '📚', title: 'Belajar', desc: 'Modul percakapan Arab: buat umrah/haji, sehari-hari, sekolah, & kerja.' },
+    { emoji: '📿', title: 'Hafalan', desc: 'Hafal surat & doa pelan-pelan, ditemani suara qari biar gampang nempel.' },
+    { emoji: '💬', title: 'Tanya Cepat', desc: 'Bingung cara ngomong sesuatu dalam Arab? Tanya, langsung dijawab.' },
+    { emoji: '🎮', title: 'Main sambil Belajar', desc: 'Tebak Gambar, Cerita, Tulis Arab, & Tantangan harian yang seru.' },
+    { emoji: '⚔️', title: 'Match Arena', desc: 'Adu cepat jawab soal lawan pemain lain — menang dapat poin.' },
+    { emoji: '🫂', title: 'Sosial', desc: 'Tambah teman, lihat aktivitas, & naik papan peringkat bareng.' },
+    { emoji: '🕌', title: 'Pengingat Sholat', desc: 'Notifikasi waktu sholat lengkap dengan hadis singkat.' },
+  ];
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ background: 'rgba(0,0,0,0.45)' }} onClick={onClose}>
+      <div className="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl pb-safe" style={{ background: '#faf6ee', maxHeight: '85vh', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
+        {/* Header */}
+        <div className="sticky top-0 px-5 pt-5 pb-3 flex items-center justify-between" style={{ background: '#faf6ee' }}>
+          <div className="flex items-center gap-2">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0a4d3c, #1a6b56)' }}>
+              <span style={{ fontFamily: 'Amiri, serif', color: '#fff', fontSize: 20 }}>ن</span>
+            </div>
+            <h3 className="text-lg font-bold" style={{ color: '#0a4d3c', fontFamily: 'Fraunces, serif' }}>Apa itu Tulis Noon?</h3>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'rgba(10,77,60,0.08)', color: '#0a4d3c' }}>✕</button>
+        </div>
+
+        <div className="px-5 pb-6">
+          {/* Visi singkat */}
+          <div className="rounded-2xl p-4 mb-4" style={{ background: 'linear-gradient(135deg, #0a4d3c, #1a6b56)' }}>
+            <p className="text-[10px] tracking-widest uppercase mb-1" style={{ color: 'rgba(255,255,255,0.7)' }}>Tujuan Kami</p>
+            <p className="text-sm leading-relaxed" style={{ color: '#fff' }}>
+              Bikin belajar bahasa Arab jadi <strong>gampang & menyenangkan</strong> — supaya kamu paham arti doa, ngerti Al-Qur'an, dan berani ngobrol saat umrah, haji, sekolah, atau kerja di negara Arab.
+            </p>
+          </div>
+
+          {/* Cara kami */}
+          <p className="text-xs tracking-widest uppercase mb-2" style={{ color: '#8b6b3d' }}>Cara Kami</p>
+          <div className="space-y-1.5 mb-4">
+            {[
+              'Belajar dengan MEMAHAMI, bukan menghafal yang bikin pusing.',
+              'Materinya nyambung sama kehidupan nyata di Tanah Suci.',
+              'Seru kayak main game — ada poin, nyawa, & tantangan.',
+            ].map((t, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <span style={{ color: '#c9a961' }}>✓</span>
+                <p className="text-sm leading-snug" style={{ color: '#3d2817' }}>{t}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Fitur */}
+          <p className="text-xs tracking-widest uppercase mb-2" style={{ color: '#8b6b3d' }}>Fitur Utama</p>
+          <div className="space-y-2">
+            {FITUR.map((f) => (
+              <div key={f.title} className="flex items-start gap-3 p-3 rounded-2xl" style={{ background: 'white', border: '1px solid rgba(10,77,60,0.08)' }}>
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0" style={{ background: 'rgba(201,169,97,0.15)' }}>{f.emoji}</div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold" style={{ color: '#0a4d3c' }}>{f.title}</p>
+                  <p className="text-xs leading-snug" style={{ color: '#8b6b3d' }}>{f.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-center text-xs mt-5 mb-1" style={{ color: '#8b6b3d', fontFamily: 'Amiri, serif' }}>بسم الله، selamat belajar! 🌙</p>
+
+          <button onClick={onClose} className="w-full mt-3 py-3 rounded-2xl font-semibold text-white" style={{ background: '#0a4d3c' }}>
+            Mulai Belajar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HomeTab({ userName, userProfile, location, xp, streak, coins, lives, maxLives, hafalanProgress, perkenalanCompleted, tanyaCepatFreeUsed, tanyaCepatBundleQuota, onOpenTanyaCepat, onOpenHafalan, onShowXpInfo, onShowCoinInfo, onShowStreakInfo, onShowLivesInfo, onOpenLesson, onOpenGame, onOpenChallenge, onOpenGuru, achievements, onSeeAllActivity, featuredChallenge }) {
   // Personalized greeting based on interests
   const personalizedNote = userProfile?.interests?.includes('religion')
     ? 'Mari belajar bahasa Al-Quran hari ini'
     : userProfile?.interests?.includes('travel')
     ? 'Siapkan dirimu untuk perjalanan ke Arab'
     : 'Senang melihatmu lagi';
+
+  const [showAbout, setShowAbout] = useState(false);
 
   // Format tanggal Masehi (Indonesia) + Hijriah (Umm al-Qura — kalender resmi Saudi)
   const today = new Date();
@@ -1619,7 +1712,19 @@ function HomeTab({ userName, userProfile, location, xp, streak, coins, lives, ma
       <h1 className="text-2xl mb-1" style={{ fontFamily: 'Fraunces, serif', fontWeight: 600, color: '#0a4d3c' }}>
         {userName || 'Sahabat'} 👋
       </h1>
-      <p className="text-sm mb-4" style={{ color: '#8b6b3d' }}>{personalizedNote}</p>
+      <p className="text-sm mb-2" style={{ color: '#8b6b3d' }}>{personalizedNote}</p>
+
+      {/* Tombol Tentang aplikasi — fitur + visi misi, bahasa lugas */}
+      <button
+        onClick={() => setShowAbout(true)}
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full mb-4 active:scale-95 transition-transform"
+        style={{ background: 'rgba(10,77,60,0.06)', border: '1px solid rgba(10,77,60,0.12)' }}
+      >
+        <Sparkles size={13} style={{ color: '#c9a961' }} />
+        <span className="text-xs font-semibold" style={{ color: '#0a4d3c' }}>Apa itu Tulis Noon?</span>
+      </button>
+
+      {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}
 
       {/* Tanggal Masehi + Hijriah - sederet di atas card Pasar Madinah */}
       {/* Kotak gabungan: Lokasi + Tanggal Masehi + Hijriah */}
@@ -1682,9 +1787,9 @@ function HomeTab({ userName, userProfile, location, xp, streak, coins, lives, ma
         </div>
       </div>
 
-      {/* Daily Challenge Card — rotasi berdasarkan tanggal */}
+      {/* Daily Challenge Card — ROTASI tiap buka app (dari featuredChallenge) */}
       {(() => {
-        const todayChallenge = getTodayChallenge();
+        const todayChallenge = featuredChallenge || getTodayChallenge();
         const otherChallenges = CHALLENGE_SCENARIOS.filter((s) => s.id !== todayChallenge.id);
         return (
           <>
@@ -1948,7 +2053,7 @@ function HomeTab({ userName, userProfile, location, xp, streak, coins, lives, ma
       {/* Activity Preview */}
       <div className="flex items-center justify-between mb-3">
         <p className="text-xs tracking-widest uppercase" style={{ color: '#8b6b3d' }}>Aktivitas Komunitas</p>
-        <span className="text-xs" style={{ color: '#c9a961', fontWeight: 500 }}>Lihat semua</span>
+        <button onClick={onSeeAllActivity} className="text-xs" style={{ color: '#c9a961', fontWeight: 500 }}>Lihat semua</button>
       </div>
       <div className="space-y-2">
         {achievements.slice(0,4).map((a) => (
