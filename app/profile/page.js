@@ -8,6 +8,7 @@ import { getXpProgress, TIERS, XP_SOURCES } from '../../lib/xp-system';
 import { Star, Flame, BookOpen, Sparkles, ArrowLeft, MapPin, LogOut, ChevronRight, Trophy, Target, Award, MessageCircle, HelpCircle, X, Lock, Check, Mic, Globe } from 'lucide-react';
 import XpLevelInfoModal from '../../components/XpLevelInfoModal';
 import AdminHelpFAB from '../../components/AdminHelpFAB';
+import BrandLoader from '../../components/BrandLoader';
 import { isInMiddleEast, isInIndonesia, getUserTimezone } from '../../lib/geo-detect';
 import { sendTestNotification, getPendingPrayerNotifsCount } from '../../lib/local-prayer-notifications';
 
@@ -39,20 +40,7 @@ export default function ProfilePage() {
 
   // Loading state — match home theme
   if (loading) {
-    return (
-      <div
-        className="flex items-center justify-center min-h-screen"
-        style={{ background: 'linear-gradient(180deg, #faf6ee 0%, #f3ebd9 100%)', fontFamily: "'DM Sans', system-ui, sans-serif" }}
-      >
-        <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=DM+Sans:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet" />
-        <div className="text-center">
-          <div className="w-14 h-14 rounded-2xl mx-auto mb-3 flex items-center justify-center animate-pulse" style={{ background: 'linear-gradient(135deg, #0a4d3c, #1a6b56)', transform: 'rotate(-6deg)' }}>
-            <span className="text-2xl" style={{ fontFamily: 'Amiri, serif', color: '#f3ebd9', transform: 'rotate(6deg)', display: 'inline-block' }}>ن</span>
-          </div>
-          <p className="text-sm" style={{ color: '#8b6b3d' }}>Memuat profilmu...</p>
-        </div>
-      </div>
-    );
+    return <BrandLoader fullScreen text="Memuat profilmu..." />;
   }
 
   if (!user) return null;

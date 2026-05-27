@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import TulisNoonApp from '@/components/TulisNoonApp';
+import BrandLoader from '@/components/BrandLoader';
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -25,14 +26,7 @@ export default function Home() {
 
   // Loading state
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen" style={{ background: 'linear-gradient(180deg, #faf6ee 0%, #f3ebd9 100%)' }}>
-        <div className="text-center">
-          <div className="w-16 h-16 rounded-full mx-auto mb-4 animate-spin" style={{ background: 'linear-gradient(90deg, #0a4d3c, #1a6b56)', backgroundClip: 'border-box', borderTop: '4px solid #c9a961' }} />
-          <p style={{ color: '#8b6b3d' }}>Memuat...</p>
-        </div>
-      </div>
-    );
+    return <BrandLoader fullScreen text="Memuat..." />;
   }
 
   // Kalau user sudah login, render app

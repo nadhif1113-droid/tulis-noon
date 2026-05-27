@@ -23,6 +23,7 @@ import TanyaCepatScreen, { TANYA_CEPAT_FREE_LIMIT, TANYA_CEPAT_BUNDLE_COST, TANY
 import TanyaCepatFAB from '@/components/TanyaCepatFAB';
 import LessonDetailScreen from '@/components/LessonDetailScreen';
 import PerkenalanContextPicker from '@/components/PerkenalanContextPicker';
+import BrandLoader from '@/components/BrandLoader';
 import { LEARNING_UMRAH } from '@/data/learning-umrah';
 import { LEARNING_PELAJAR } from '@/data/learning-pelajar';
 import { LEARNING_PROFESIONAL } from '@/data/learning-profesional';
@@ -440,12 +441,7 @@ export default function TulisNoonApp() {
 
         {screen === null && (
           <div className="flex-1 flex items-center justify-center px-6">
-            <div className="text-center">
-              <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center animate-pulse" style={{ background: 'linear-gradient(135deg, #0a4d3c, #1a6b56)', transform: 'rotate(-6deg)' }}>
-                <span className="text-3xl" style={{ fontFamily: 'Amiri, serif', color: '#f3ebd9', transform: 'rotate(6deg)', display: 'inline-block' }}>ن</span>
-              </div>
-              <p className="text-sm" style={{ color: '#8b6b3d' }}>Memuat profilmu...</p>
-            </div>
+            <BrandLoader inline text="Memuat profilmu..." />
           </div>
         )}
         {screen === 'welcome' && <WelcomeScreen
@@ -2066,10 +2062,7 @@ function SosialTab({ achievements, userName, currentUserId, onOpenMatch }) {
           <span className="text-[10px] uppercase tracking-widest" style={{ color: '#8b6b3d' }}>Top 10 · XP</span>
         </div>
         {leaderboardLoading ? (
-          <div className="py-4 text-center">
-            <div className="w-6 h-6 rounded-full mx-auto animate-spin" style={{ border: '2px solid rgba(10,77,60,0.15)', borderTopColor: '#c9a961' }} />
-            <p className="text-xs mt-2" style={{ color: '#8b6b3d' }}>Memuat ranking...</p>
-          </div>
+          <BrandLoader inline size="sm" text="Memuat ranking..." className="py-4" />
         ) : leaderboard.length === 0 ? (
           <p className="text-xs text-center py-4" style={{ color: '#8b6b3d' }}>Belum ada user di peringkat.</p>
         ) : (
@@ -2251,11 +2244,8 @@ function LessonsScreen({ path, onBack, onSelectLesson, progress, userProfile, on
   }, [path, onBack]);
   if (!path) {
     return (
-      <div className="flex-1 flex items-center justify-center px-6 text-center">
-        <div>
-          <div className="text-5xl mb-3">📚</div>
-          <p className="text-sm" style={{ color: '#8b6b3d' }}>Memuat ulang halaman...</p>
-        </div>
+      <div className="flex-1 flex items-center justify-center px-6">
+        <BrandLoader inline text="Memuat ulang halaman..." />
       </div>
     );
   }

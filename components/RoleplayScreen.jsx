@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Send, Sparkles, Star, RefreshCw, Share2, X, Lightbulb, BookOpen, Trophy, Volume2 } from 'lucide-react';
+import BrandLoader from '@/components/BrandLoader';
 
 export default function RoleplayScreen({ scenario, userId, lives = 10, onNoLives, onBack, onComplete, onShare }) {
   const [messages, setMessages] = useState([]); // [{role: 'user'|'assistant', content: '...'}]
@@ -454,7 +455,7 @@ export default function RoleplayScreen({ scenario, userId, lives = 10, onNoLives
     return (
       <div className="flex-1 flex items-center justify-center px-5">
         <div className="text-center">
-          <div className="w-16 h-16 rounded-full mx-auto mb-4 animate-spin" style={{ background: 'conic-gradient(from 0deg, #0a4d3c, #c9a961, #0a4d3c)', borderRadius: '50%' }} />
+          <BrandLoader inline text="" className="mb-4" />
           <p className="text-sm" style={{ color: '#8b6b3d' }}>{scenario.persona.name} mengevaluasi percakapanmu...</p>
           <p className="text-xs mt-1 italic" style={{ color: '#c9a961' }}>إن شاء الله سيكون جيد</p>
         </div>
