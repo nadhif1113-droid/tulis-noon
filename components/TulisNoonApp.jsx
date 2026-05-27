@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, ArrowRight, Volume2, Mic, Check, X, Sparkles, Lock, MapPin, Briefcase, GraduationCap, Trophy, Flame, Star, Home, BookOpen, Users, User, Heart, Share2, Send, Play, Image as ImageIcon, MessageCircle, Calendar, Target, Zap, ChevronRight, Bot, Video, Clock, Award, UserCheck, Coffee, Music, Film, Gamepad2, Heart as HeartIcon, Mountain, Facebook, Instagram, Twitter, Link2, Copy, Coins } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Volume2, Mic, Check, X, Sparkles, Lock, MapPin, Briefcase, GraduationCap, Trophy, Flame, Star, Home, BookOpen, Users, User, Heart, Share2, Send, Play, Image as ImageIcon, MessageCircle, Calendar, Target, Zap, ChevronRight, Bot, Video, Clock, Award, UserCheck, Coffee, Music, Film, Gamepad2, Heart as HeartIcon, Mountain, Facebook, Instagram, Twitter, Link2, Copy, Coins, HelpCircle } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { CHALLENGE_SCENARIOS, getTodayChallenge, getXpForLevel } from '@/data/challenge-levels';
 import { ROLEPLAY_SCENARIOS } from '@/data/roleplay-scenarios';
@@ -1712,17 +1712,7 @@ function HomeTab({ userName, userProfile, location, xp, streak, coins, lives, ma
       <h1 className="text-2xl mb-1" style={{ fontFamily: 'Fraunces, serif', fontWeight: 600, color: '#0a4d3c' }}>
         {userName || 'Sahabat'} 👋
       </h1>
-      <p className="text-sm mb-2" style={{ color: '#8b6b3d' }}>{personalizedNote}</p>
-
-      {/* Tombol Tentang aplikasi — fitur + visi misi, bahasa lugas */}
-      <button
-        onClick={() => setShowAbout(true)}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full mb-4 active:scale-95 transition-transform"
-        style={{ background: 'rgba(10,77,60,0.06)', border: '1px solid rgba(10,77,60,0.12)' }}
-      >
-        <Sparkles size={13} style={{ color: '#c9a961' }} />
-        <span className="text-xs font-semibold" style={{ color: '#0a4d3c' }}>Apa itu Tulis Noon?</span>
-      </button>
+      <p className="text-sm mb-4" style={{ color: '#8b6b3d' }}>{personalizedNote}</p>
 
       {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}
 
@@ -1762,11 +1752,22 @@ function HomeTab({ userName, userProfile, location, xp, streak, coins, lives, ma
                   </p>
                 </div>
               </div>
-              {promoLabel && (
-                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ml-2" style={{ background: 'rgba(201,169,97,0.4)', color: '#8b6b3d' }}>
-                  {promoLabel}
-                </span>
-              )}
+              <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
+                {promoLabel && (
+                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(201,169,97,0.4)', color: '#8b6b3d' }}>
+                    {promoLabel}
+                  </span>
+                )}
+                {/* Tombol "Apa itu Tulis Noon?" — info fitur + visi misi */}
+                <button
+                  onClick={() => setShowAbout(true)}
+                  className="w-7 h-7 rounded-full flex items-center justify-center active:scale-90 transition-transform"
+                  style={{ background: 'rgba(10,77,60,0.1)' }}
+                  aria-label="Apa itu Tulis Noon?"
+                >
+                  <HelpCircle size={15} style={{ color: '#0a4d3c' }} />
+                </button>
+              </div>
             </div>
           );
         })()}
