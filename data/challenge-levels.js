@@ -450,7 +450,7 @@ export const CHALLENGE_SCENARIOS = [
     id: 'tower-zamzam',
     name: 'Tower Zam-Zam',
     arName: 'برج الزمزم',
-    emoji: '🏗️',
+    emoji: '🗼',
     location: 'Komplek Abraj Al-Bait — restoran, kafe, oleh-oleh premium',
     desc: 'Order makanan & minuman halal',
     color: '#8b6b3d',
