@@ -1,19 +1,32 @@
 // components/NgomongScreen.jsx
 // Game #6 "Belajar Ngomong" — latihan produksi suara.
-// Alur: dengar contoh (TTS Arab) → rekam suaramu → sistem cek pengucapan (Web Speech API).
-// Level aktif: KATA (barang sehari-hari). 3 soal gratis/materi, sesi lanjutan 5 koin.
+// Level KATA: dengar contoh → rekam → cek pengucapan.
+// Level KALIMAT: susun kata jadi kalimat benar → dengar contoh → rekam → cek.
+// 3 soal gratis/materi, sesi lanjutan 5 koin.
 
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Home, Volume2, Mic, Check, X, Lock, ChevronRight, Coins, RotateCcw, Sparkles } from 'lucide-react';
-import { NGOMONG_FREE_ITEMS, NGOMONG_SESSION_COST, NGOMONG_LEVELS, getNgomongKataMateri } from '@/data/ngomong-materi';
+import { ArrowLeft, Home, Volume2, Mic, Check, X, Lock, ChevronRight, Coins, RotateCcw } from 'lucide-react';
+import { NGOMONG_FREE_ITEMS, NGOMONG_SESSION_COST, NGOMONG_LEVELS, getNgomongMateriByLevel } from '@/data/ngomong-materi';
 import { speakArabic } from '@/lib/tts';
 import { compareArabicSpeech, isSpeechRecognitionSupported } from '@/lib/hafalan-method';
 
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  // Hindari kebetulan urutannya sama persis
+  if (a.length > 1 && a.every((v, i) => v === arr[i])) { [a[0], a[1]] = [a[1], a[0]]; }
+  return a;
+}
+
 export default function NgomongScreen({ coins = 0, unlocked = [], onUnlockMateri, onBack, onHome, onComplete, onUpgrade }) {
+  const [activeLevel, setActiveLevel] = useState('kata');
   const [activeMateri, setActiveMateri] = useState(null);
-  const materiList = getNgomongKataMateri();
+  const materiList = getNgomongMateriByLevel(activeLevel);
 
   if (activeMateri) {
     return (
@@ -32,7 +45,6 @@ export default function NgomongScreen({ coins = 0, unlocked = [], onUnlockMateri
 
   return (
     <div className="flex-1 overflow-y-auto" style={{ height: '100%' }}>
-      {/* Header */}
       <div className="flex items-center gap-3 px-5 py-3 sticky top-0 z-10" style={{ background: '#faf6ee', borderBottom: '1px solid rgba(10,77,60,0.08)' }}>
         <button onClick={onBack} className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'rgba(10,77,60,0.08)' }}>
           <ArrowLeft size={17} style={{ color: '#0a4d3c' }} />
@@ -47,25 +59,31 @@ export default function NgomongScreen({ coins = 0, unlocked = [], onUnlockMateri
       </div>
 
       <div className="px-5 py-4">
-        {/* Tangga level */}
+        {/* Tangga level — bisa di-tap (kecuali yg coming soon) */}
         <div className="flex gap-2 mb-4">
-          {NGOMONG_LEVELS.map((lv, i) => (
-            <div key={lv.id} className="flex-1 rounded-2xl p-2.5 text-center relative" style={{
-              background: lv.comingSoon ? 'rgba(10,77,60,0.04)' : 'white',
-              border: lv.comingSoon ? '1px dashed rgba(10,77,60,0.18)' : '1.5px solid rgba(201,169,97,0.5)',
-            }}>
-              {lv.comingSoon && <span className="absolute top-1 right-1 text-[7px] uppercase tracking-wide px-1 py-0.5 rounded-full font-bold" style={{ background: 'rgba(201,169,97,0.2)', color: '#a05536' }}>Soon</span>}
-              <div className="text-xl mb-0.5">{lv.emoji}</div>
-              <p className="text-[11px] font-semibold leading-tight" style={{ color: lv.comingSoon ? '#8b6b3d' : '#0a4d3c' }}>{lv.label}</p>
-            </div>
-          ))}
+          {NGOMONG_LEVELS.map((lv) => {
+            const isActive = lv.id === activeLevel && !lv.comingSoon;
+            return (
+              <button key={lv.id} disabled={lv.comingSoon} onClick={() => { if (!lv.comingSoon) setActiveLevel(lv.id); }}
+                className="flex-1 rounded-2xl p-2.5 text-center relative active:scale-95 transition-transform"
+                style={{
+                  background: lv.comingSoon ? 'rgba(10,77,60,0.04)' : (isActive ? 'white' : 'rgba(255,255,255,0.5)'),
+                  border: lv.comingSoon ? '1px dashed rgba(10,77,60,0.18)' : (isActive ? '1.5px solid rgba(201,169,97,0.6)' : '1px solid rgba(10,77,60,0.1)'),
+                }}>
+                {lv.comingSoon && <span className="absolute top-1 right-1 text-[7px] uppercase tracking-wide px-1 py-0.5 rounded-full font-bold" style={{ background: 'rgba(201,169,97,0.2)', color: '#a05536' }}>Soon</span>}
+                <div className="text-xl mb-0.5">{lv.emoji}</div>
+                <p className="text-[11px] font-semibold leading-tight" style={{ color: lv.comingSoon ? '#8b6b3d' : (isActive ? '#0a4d3c' : '#8b6b3d') }}>{lv.label}</p>
+              </button>
+            );
+          })}
         </div>
 
-        {/* Intro */}
         <div className="rounded-2xl p-4 mb-4" style={{ background: 'linear-gradient(135deg, #0a4d3c, #1a6b56)' }}>
-          <p className="text-sm font-bold text-white mb-1">Latih lidahmu bicara Arab 🗣️</p>
+          <p className="text-sm font-bold text-white mb-1">{activeLevel === 'kalimat' ? 'Susun lalu ucapkan 🧩' : 'Latih lidahmu bicara Arab 🗣️'}</p>
           <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
-            Dengar contoh pengucapannya, lalu rekam suaramu. Sistem bakal cek apakah ucapanmu sudah pas. Mulai dari nama barang yang kamu lihat tiap hari.
+            {activeLevel === 'kalimat'
+              ? 'Rangkai kata-kata jadi kalimat yang benar, lalu dengar contohnya dan rekam suaramu. Mulai dari kalimat sehari-hari yang ringan.'
+              : 'Dengar contoh pengucapannya, lalu rekam suaramu. Sistem bakal cek apakah ucapanmu sudah pas. Mulai dari nama barang yang kamu lihat tiap hari.'}
           </p>
         </div>
 
@@ -78,7 +96,7 @@ export default function NgomongScreen({ coins = 0, unlocked = [], onUnlockMateri
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 text-2xl" style={{ background: 'rgba(201,169,97,0.12)' }}>{m.emoji}</div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm" style={{ color: '#0a4d3c' }}>{m.title}</p>
-                  <p className="text-xs" style={{ color: '#8b6b3d' }}>{m.desc} · {m.items.length} kata</p>
+                  <p className="text-xs" style={{ color: '#8b6b3d' }}>{m.desc} · {m.items.length} {activeLevel === 'kalimat' ? 'kalimat' : 'kata'}</p>
                 </div>
                 {isUnlocked ? (
                   <span className="text-[10px] font-bold px-2 py-1 rounded-full flex-shrink-0" style={{ background: 'rgba(22,163,74,0.12)', color: '#16a34a' }}>Penuh</span>
@@ -95,17 +113,23 @@ export default function NgomongScreen({ coins = 0, unlocked = [], onUnlockMateri
 }
 
 // ============================================================================
-// SESI MATERI — rekam & nilai pengucapan
+// SESI MATERI — kata (langsung ucap) atau kalimat (susun → ucap)
 // ============================================================================
 function MateriSession({ materi, isUnlocked, coins, onUnlock, onUpgrade, onExit, onFinish, onHome }) {
   const items = materi.items;
+  const isKalimat = materi.level === 'kalimat';
   const [idx, setIdx] = useState(0);
-  const [recognized, setRecognized] = useState(null); // { transcript, isMatch, similarity }
+  const [phase, setPhase] = useState(isKalimat ? 'arrange' : 'speak'); // arrange → speak
+  const [recognized, setRecognized] = useState(null);
   const [isListening, setIsListening] = useState(false);
   const [interim, setInterim] = useState('');
   const [correct, setCorrect] = useState(0);
   const [speaking, setSpeaking] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
+  // Arrange state
+  const [shuffled, setShuffled] = useState([]); // [{tok, i}]
+  const [built, setBuilt] = useState([]); // indices into shuffled
+  const [arrangeResult, setArrangeResult] = useState(null); // null | true | false
   const recRef = useRef(null);
   const transcriptRef = useRef('');
 
@@ -115,9 +139,26 @@ function MateriSession({ materi, isUnlocked, coins, onUnlock, onUpgrade, onExit,
   const isDone = idx >= items.length;
   const current = items[idx];
 
-  // Setup speech recognition tiap ganti kata
+  // Reset per kata/kalimat
   useEffect(() => {
-    if (!supported || typeof window === 'undefined' || isDone || showPaywall) return;
+    if (isDone || showPaywall || !current) return;
+    if (isKalimat) {
+      setPhase('arrange');
+      setShuffled(shuffle(current.tokens).map((tok, i) => ({ tok, i })));
+      setBuilt([]);
+      setArrangeResult(null);
+    } else {
+      setPhase('speak');
+    }
+    setRecognized(null);
+    setInterim('');
+    transcriptRef.current = '';
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idx, showPaywall, isDone]);
+
+  // Speech recognition — cuma pas fase ucapkan
+  useEffect(() => {
+    if (!supported || typeof window === 'undefined' || isDone || showPaywall || phase !== 'speak') return;
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     const rec = new SR();
     rec.continuous = false;
@@ -147,7 +188,7 @@ function MateriSession({ materi, isUnlocked, coins, onUnlock, onUpgrade, onExit,
     recRef.current = rec;
     return () => { try { rec.stop(); } catch (e) {} };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idx, supported, showPaywall, isDone]);
+  }, [idx, phase, supported, showPaywall, isDone]);
 
   const playExample = () => {
     if (!current) return;
@@ -167,20 +208,25 @@ function MateriSession({ materi, isUnlocked, coins, onUnlock, onUpgrade, onExit,
     }
   };
 
+  // Arrange handlers
+  const addToken = (sIdx) => { if (!built.includes(sIdx)) setBuilt((b) => [...b, sIdx]); setArrangeResult(null); };
+  const removeToken = (sIdx) => { setBuilt((b) => b.filter((x) => x !== sIdx)); setArrangeResult(null); };
+  const checkArrange = () => {
+    const builtTokens = built.map((i) => shuffled[i].tok);
+    const ok = builtTokens.length === current.tokens.length && builtTokens.every((t, i) => t === current.tokens[i]);
+    setArrangeResult(ok);
+  };
+
   const goNext = () => {
     if (recognized?.isMatch) setCorrect((c) => c + 1);
-    setRecognized(null);
-    setInterim('');
-    transcriptRef.current = '';
     setIdx((i) => i + 1);
   };
 
   const handleUnlock = async () => {
     if (coins < NGOMONG_SESSION_COST || unlocking) return;
     setUnlocking(true);
-    const ok = await onUnlock?.(materi.id);
+    await onUnlock?.(materi.id);
     setUnlocking(false);
-    // kalau sukses, prop isUnlocked berubah → paywall hilang otomatis
   };
 
   // ---- SELESAI ----
@@ -199,10 +245,11 @@ function MateriSession({ materi, isUnlocked, coins, onUnlock, onUpgrade, onExit,
     );
   }
 
-  // ---- PAYWALL SESI LANJUTAN ----
+  // ---- PAYWALL ----
   if (showPaywall) {
     const remaining = items.length - freeLimit;
     const enough = coins >= NGOMONG_SESSION_COST;
+    const unit = isKalimat ? 'kalimat' : 'kata';
     return (
       <div className="flex-1 flex flex-col" style={{ height: '100%' }}>
         <SessionHeader title={materi.title} onExit={onExit} onHome={onHome} />
@@ -211,9 +258,8 @@ function MateriSession({ materi, isUnlocked, coins, onUnlock, onUpgrade, onExit,
             <Lock size={28} style={{ color: '#c9a961' }} />
           </div>
           <h2 className="text-xl font-bold mb-2" style={{ fontFamily: 'Fraunces, serif', color: '#0a4d3c' }}>Sesi lanjutan</h2>
-          <p className="text-sm mb-1" style={{ color: '#3d2817' }}>Masih ada <b>{remaining} kata</b> lagi yang lebih seru di materi ini.</p>
+          <p className="text-sm mb-1" style={{ color: '#3d2817' }}>Masih ada <b>{remaining} {unit}</b> lagi yang lebih seru di materi ini.</p>
           <p className="text-xs mb-5" style={{ color: '#8b6b3d' }}>Buka sesi penuh dengan {NGOMONG_SESSION_COST} koin.</p>
-
           {enough ? (
             <button onClick={handleUnlock} disabled={unlocking} className="w-full max-w-xs py-3.5 rounded-2xl text-white font-bold flex items-center justify-center gap-2 mb-2 disabled:opacity-50" style={{ background: '#0a4d3c' }}>
               <Coins size={17} /> {unlocking ? 'Membuka...' : `Buka (${NGOMONG_SESSION_COST} koin)`}
@@ -232,37 +278,81 @@ function MateriSession({ materi, isUnlocked, coins, onUnlock, onUpgrade, onExit,
     );
   }
 
-  // ---- LATIHAN ----
   const progressTotal = isUnlocked ? items.length : Math.min(freeLimit, items.length);
+
+  // ---- FASE SUSUN (kalimat) ----
+  if (isKalimat && phase === 'arrange') {
+    const builtTokens = built.map((i) => shuffled[i].tok);
+    return (
+      <div className="flex-1 flex flex-col" style={{ height: '100%' }}>
+        <SessionHeader title={materi.title} onExit={onExit} onHome={onHome} />
+        <ProgressBar idx={idx} total={progressTotal} correct={correct} unit="kalimat" />
+        <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
+          <p className="text-xs mb-1" style={{ color: '#8b6b3d' }}>Susun jadi kalimat Arab yang benar:</p>
+          <p className="text-base font-semibold mb-5" style={{ color: '#0a4d3c' }}>"{current.id}"</p>
+
+          {/* Area susunan */}
+          <div className="w-full min-h-[64px] rounded-2xl p-3 mb-4 flex flex-wrap gap-2 items-center justify-center" dir="rtl" style={{ background: 'white', border: arrangeResult === false ? '1.5px solid #c0392b' : (arrangeResult ? '1.5px solid #16a34a' : '1.5px dashed rgba(10,77,60,0.2)') }}>
+            {builtTokens.length === 0 ? (
+              <span className="text-xs" dir="ltr" style={{ color: '#b8a888' }}>Tap kata di bawah untuk menyusun</span>
+            ) : built.map((sIdx) => (
+              <button key={sIdx} onClick={() => removeToken(sIdx)} className="px-3 py-1.5 rounded-xl text-lg" style={{ fontFamily: 'Amiri, serif', background: 'rgba(10,77,60,0.1)', color: '#0a4d3c' }}>{shuffled[sIdx].tok}</button>
+            ))}
+          </div>
+
+          {/* Bank kata */}
+          <div className="w-full flex flex-wrap gap-2 items-center justify-center mb-5" dir="rtl">
+            {shuffled.map((s, sIdx) => {
+              const used = built.includes(sIdx);
+              return (
+                <button key={sIdx} disabled={used} onClick={() => addToken(sIdx)} className="px-3.5 py-2 rounded-xl text-xl transition-opacity" style={{ fontFamily: 'Amiri, serif', background: used ? 'rgba(10,77,60,0.04)' : 'white', color: used ? '#cdc4b4' : '#0a4d3c', border: '1px solid rgba(10,77,60,0.12)', opacity: used ? 0.4 : 1 }}>{s.tok}</button>
+              );
+            })}
+          </div>
+
+          {arrangeResult === false && (
+            <div className="w-full max-w-xs rounded-xl p-2.5 mb-3 flex items-center justify-center gap-2" style={{ background: 'rgba(192,57,43,0.07)' }}>
+              <X size={15} style={{ color: '#c0392b' }} />
+              <p className="text-xs font-semibold" style={{ color: '#c0392b' }}>Urutannya belum tepat, coba lagi</p>
+            </div>
+          )}
+
+          {arrangeResult ? (
+            <button onClick={() => setPhase('speak')} className="w-full max-w-xs py-3.5 rounded-2xl text-white font-bold flex items-center justify-center gap-1.5" style={{ background: '#16a34a' }}>
+              Lanjut: ucapkan <ChevronRight size={16} />
+            </button>
+          ) : (
+            <div className="flex items-center gap-2 w-full max-w-xs">
+              {built.length > 0 && (
+                <button onClick={() => { setBuilt([]); setArrangeResult(null); }} className="flex-1 py-3 rounded-2xl font-semibold flex items-center justify-center gap-1.5" style={{ background: 'rgba(10,77,60,0.08)', color: '#0a4d3c' }}>
+                  <RotateCcw size={15} /> Reset
+                </button>
+              )}
+              <button onClick={checkArrange} disabled={built.length !== current.tokens.length} className="flex-1 py-3 rounded-2xl text-white font-bold disabled:opacity-40" style={{ background: '#0a4d3c' }}>Cek susunan</button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ---- FASE UCAPKAN (kata & kalimat) ----
   return (
     <div className="flex-1 flex flex-col" style={{ height: '100%' }}>
       <SessionHeader title={materi.title} onExit={onExit} onHome={onHome} />
-
-      {/* Progress */}
-      <div className="px-5 pt-3">
-        <div className="flex items-center justify-between mb-1">
-          <p className="text-[11px]" style={{ color: '#8b6b3d' }}>Kata {idx + 1} dari {progressTotal}</p>
-          <p className="text-[11px]" style={{ color: '#16a34a' }}>{correct} benar</p>
-        </div>
-        <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(10,77,60,0.08)' }}>
-          <div className="h-full rounded-full transition-all" style={{ width: `${((idx) / progressTotal) * 100}%`, background: '#0a4d3c' }} />
-        </div>
-      </div>
+      <ProgressBar idx={idx} total={progressTotal} correct={correct} unit={isKalimat ? 'kalimat' : 'kata'} />
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
-        {/* Kartu kata */}
-        <div className="text-6xl mb-3">{current.emoji}</div>
+        {!isKalimat && <div className="text-6xl mb-3">{current.emoji}</div>}
         <p className="text-xs mb-3" style={{ color: '#8b6b3d' }}>Ucapkan dalam bahasa Arab:</p>
-        <p className="text-5xl mb-1" dir="rtl" style={{ fontFamily: 'Amiri, serif', color: '#0a4d3c' }}>{current.ar}</p>
+        <p className={isKalimat ? 'text-3xl mb-2 leading-relaxed' : 'text-5xl mb-1'} dir="rtl" style={{ fontFamily: 'Amiri, serif', color: '#0a4d3c' }}>{current.ar}</p>
         <p className="text-sm italic mb-1" style={{ color: '#a87f47' }}>{current.latin}</p>
         <p className="text-sm mb-5" style={{ color: '#3d2817' }}>"{current.id}"</p>
 
-        {/* Dengar contoh */}
         <button onClick={playExample} className="flex items-center gap-2 px-5 py-2.5 rounded-full font-semibold mb-5" style={{ background: 'rgba(10,77,60,0.08)', color: '#0a4d3c' }}>
           <Volume2 size={17} className={speaking ? 'animate-pulse' : ''} /> Dengar contoh
         </button>
 
-        {/* Hasil rekam */}
         {recognized && (
           <div className="w-full max-w-xs rounded-2xl p-3 mb-4" style={{ background: recognized.isMatch ? 'rgba(22,163,74,0.08)' : 'rgba(192,57,43,0.07)' }}>
             <div className="flex items-center justify-center gap-2 mb-1">
@@ -278,7 +368,6 @@ function MateriSession({ materi, isUnlocked, coins, onUnlock, onUpgrade, onExit,
           <p className="text-sm mb-3" dir="rtl" style={{ fontFamily: 'Amiri, serif', color: '#8b6b3d' }}>{interim}</p>
         )}
 
-        {/* Tombol rekam / lanjut */}
         {supported ? (
           <>
             <button onClick={toggleRecord} className="w-20 h-20 rounded-full flex items-center justify-center mb-3 transition-transform active:scale-95" style={{ background: isListening ? '#c0392b' : '#0a4d3c', boxShadow: isListening ? '0 0 0 6px rgba(192,57,43,0.15)' : '0 4px 14px -4px rgba(10,77,60,0.5)' }}>
@@ -300,6 +389,20 @@ function MateriSession({ materi, isUnlocked, coins, onUnlock, onUpgrade, onExit,
             {idx + 1 >= progressTotal ? 'Selesai' : 'Lanjut'} <ChevronRight size={16} />
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function ProgressBar({ idx, total, correct, unit }) {
+  return (
+    <div className="px-5 pt-3">
+      <div className="flex items-center justify-between mb-1">
+        <p className="text-[11px]" style={{ color: '#8b6b3d' }}>{unit === 'kalimat' ? 'Kalimat' : 'Kata'} {idx + 1} dari {total}</p>
+        <p className="text-[11px]" style={{ color: '#16a34a' }}>{correct} benar</p>
+      </div>
+      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(10,77,60,0.08)' }}>
+        <div className="h-full rounded-full transition-all" style={{ width: `${(idx / total) * 100}%`, background: '#0a4d3c' }} />
       </div>
     </div>
   );

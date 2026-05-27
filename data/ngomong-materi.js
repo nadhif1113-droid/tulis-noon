@@ -13,7 +13,7 @@ export const NGOMONG_SESSION_COST = 5; // koin untuk buka sesi lanjutan
 // Tangga 3 level. Yang "comingSoon" belum aktif (rangka untuk fase berikutnya).
 export const NGOMONG_LEVELS = [
   { id: 'kata', label: 'Kata', emoji: '🔤', desc: 'Ucapkan nama barang sehari-hari' },
-  { id: 'kalimat', label: 'Susun Kalimat', emoji: '📝', desc: 'Rangkai kata jadi kalimat utuh', comingSoon: true },
+  { id: 'kalimat', label: 'Susun Kalimat', emoji: '📝', desc: 'Rangkai kata jadi kalimat utuh' },
   { id: 'cerita', label: 'Susun Cerita', emoji: '📖', desc: 'Ceritakan kegiatan harianmu', comingSoon: true },
 ];
 
@@ -112,12 +112,70 @@ export const NGOMONG_MATERI = [
   },
 ];
 
-// Helper: ambil materi by id
+// LEVEL 2 — KALIMAT. Tiap kalimat: { ar (berharakat), tokens (urutan benar untuk
+// latihan susun), latin, id (arti) }. Pakai kosakata dari Level 1 biar nyambung.
+export const NGOMONG_KALIMAT = [
+  {
+    id: 'kalimat-lokasi',
+    level: 'kalimat',
+    title: 'Di Mana Barangnya?',
+    emoji: '📍',
+    desc: 'Kalimat lokasi: fi (di dalam) & ala (di atas)',
+    items: [
+      { ar: 'الْمِفْتَاحُ فِي الْحَقِيبَةِ', tokens: ['الْمِفْتَاحُ', 'فِي', 'الْحَقِيبَةِ'], latin: 'al-miftaahu fil-haqiibah', id: 'Kunci itu ada di dalam tas' },
+      { ar: 'الْكِتَابُ عَلَى الطَّاوِلَةِ', tokens: ['الْكِتَابُ', 'عَلَى', 'الطَّاوِلَةِ'], latin: "al-kitaabu 'alath-thaawilah", id: 'Buku itu ada di atas meja' },
+      { ar: 'الْمَاءُ فِي الْكُوبِ', tokens: ['الْمَاءُ', 'فِي', 'الْكُوبِ'], latin: 'al-maa-u fil-kuub', id: 'Air itu ada di dalam gelas' },
+      { ar: 'السَّاعَةُ عَلَى الْجِدَارِ', tokens: ['السَّاعَةُ', 'عَلَى', 'الْجِدَارِ'], latin: "as-saa'atu 'alal-jidaar", id: 'Jam itu ada di dinding' },
+      { ar: 'الصَّابُونُ فِي الْحَمَّامِ', tokens: ['الصَّابُونُ', 'فِي', 'الْحَمَّامِ'], latin: 'ash-shaabuunu fil-hammaam', id: 'Sabun itu ada di kamar mandi' },
+      { ar: 'الْقَلَمُ فِي الدَّفْتَرِ', tokens: ['الْقَلَمُ', 'فِي', 'الدَّفْتَرِ'], latin: 'al-qalamu fid-daftar', id: 'Pena itu ada di buku tulis' },
+    ],
+  },
+  {
+    id: 'kalimat-milik',
+    level: 'kalimat',
+    title: 'Ini Punyaku',
+    emoji: '🙋',
+    desc: 'Kalimat kepemilikan: hadza/hadzihi (ini)',
+    items: [
+      { ar: 'هَذَا قَلَمِي', tokens: ['هَذَا', 'قَلَمِي'], latin: 'haadzaa qalamii', id: 'Ini penaku' },
+      { ar: 'هَذِهِ حَقِيبَتِي', tokens: ['هَذِهِ', 'حَقِيبَتِي'], latin: 'haadzihi haqiibatii', id: 'Ini tasku' },
+      { ar: 'هَذَا كِتَابُكَ', tokens: ['هَذَا', 'كِتَابُكَ'], latin: 'haadzaa kitaabuka', id: 'Ini bukumu' },
+      { ar: 'هَذَا هَاتِفِي', tokens: ['هَذَا', 'هَاتِفِي'], latin: 'haadzaa haatifii', id: 'Ini teleponku' },
+      { ar: 'هَذِهِ نَظَّارَتِي', tokens: ['هَذِهِ', 'نَظَّارَتِي'], latin: 'haadzihi nazhzhaaratii', id: 'Ini kacamataku' },
+      { ar: 'هَذَا صَحْنٌ كَبِيرٌ', tokens: ['هَذَا', 'صَحْنٌ', 'كَبِيرٌ'], latin: 'haadzaa sahnun kabiir', id: 'Ini piring besar' },
+    ],
+  },
+  {
+    id: 'kalimat-aktivitas',
+    level: 'kalimat',
+    title: 'Kegiatan Harian',
+    emoji: '🏃',
+    desc: 'Kalimat aktivitas: kata kerja + objek',
+    items: [
+      { ar: 'أَشْرَبُ الْمَاءَ', tokens: ['أَشْرَبُ', 'الْمَاءَ'], latin: "asyrabul-maa'", id: 'Aku minum air' },
+      { ar: 'آكُلُ الْخُبْزَ', tokens: ['آكُلُ', 'الْخُبْزَ'], latin: 'aakulul-khubz', id: 'Aku makan roti' },
+      { ar: 'أَقْرَأُ الْكِتَابَ', tokens: ['أَقْرَأُ', 'الْكِتَابَ'], latin: "aqra-ul-kitaab", id: 'Aku membaca buku' },
+      { ar: 'أَكْتُبُ بِالْقَلَمِ', tokens: ['أَكْتُبُ', 'بِالْقَلَمِ'], latin: 'aktubu bil-qalam', id: 'Aku menulis dengan pena' },
+      { ar: 'أَفْتَحُ الْبَابَ', tokens: ['أَفْتَحُ', 'الْبَابَ'], latin: 'aftahul-baab', id: 'Aku membuka pintu' },
+      { ar: 'أَغْسِلُ الصَّحْنَ', tokens: ['أَغْسِلُ', 'الصَّحْنَ'], latin: 'aghsilush-shahn', id: 'Aku mencuci piring' },
+    ],
+  },
+];
+
+// Gabungan semua materi (kata + kalimat) untuk lookup.
+const ALL_NGOMONG = [...NGOMONG_MATERI, ...NGOMONG_KALIMAT];
+
+// Helper: ambil materi by id (semua level)
 export function getNgomongMateri(id) {
-  return NGOMONG_MATERI.find((m) => m.id === id) || null;
+  return ALL_NGOMONG.find((m) => m.id === id) || null;
 }
 
-// Helper: materi level Kata aja (buat list saat ini)
+// Helper: materi level Kata aja
 export function getNgomongKataMateri() {
   return NGOMONG_MATERI.filter((m) => m.level === 'kata');
+}
+
+// Helper: materi per level ('kata' | 'kalimat')
+export function getNgomongMateriByLevel(level) {
+  return ALL_NGOMONG.filter((m) => m.level === level);
 }
