@@ -25,8 +25,9 @@ import LessonDetailScreen from '@/components/LessonDetailScreen';
 import PerkenalanContextPicker from '@/components/PerkenalanContextPicker';
 import BrandLoader from '@/components/BrandLoader';
 import FriendsScreen from '@/components/FriendsScreen';
+import CommunityScreen from '@/components/CommunityScreen';
 import { speakArabic as ttsSpeakArabic } from '@/lib/tts';
-import { postActivity, getCommunityFeed } from '@/lib/social';
+import { postActivity, getCommunityFeed, getLeaderboard } from '@/lib/social';
 import { LEARNING_UMRAH } from '@/data/learning-umrah';
 import { LEARNING_PELAJAR } from '@/data/learning-pelajar';
 import { LEARNING_PROFESIONAL } from '@/data/learning-profesional';
@@ -219,6 +220,7 @@ export default function TulisNoonApp() {
           if (s === 'roleplay-list') { setScreen('main'); return true; }
           if (s === 'match') { setScreen('main'); return true; }
           if (s === 'friends') { setScreen('main'); return true; }
+          if (s === 'community') { setScreen('main'); return true; }
           if (s === 'guru') { setScreen('main'); return true; }
           if (s === 'premium') { setScreen('main'); return true; }
           // Di 'main': kalau lagi di tab selain home, balik ke home dulu (jangan exit/history).
@@ -525,7 +527,7 @@ export default function TulisNoonApp() {
                 setScreen('game');
               }} onOpenChallenge={(scenario) => { setSelectedChallenge(scenario || getTodayChallenge()); setScreen('challenge-levels'); }} onOpenGuru={() => setScreen('guru')} achievements={achievements} />}
               {tab === 'belajar' && <BelajarTab onSelectPath={(p) => { setSelectedPath(p); setScreen('lessons'); }} onOpenGuru={() => setScreen('guru')} progress={progress} />}
-              {tab === 'sosial' && <SosialTab achievements={achievements} userName={userName} currentUserId={user?.uid} onOpenMatch={() => setScreen('match')} onOpenFriends={() => setScreen('friends')} />}
+              {tab === 'sosial' && <SosialTab achievements={achievements} userName={userName} currentUserId={user?.uid} userProfile={authProfile} onOpenMatch={() => setScreen('match')} onOpenFriends={() => setScreen('friends')} onOpenCommunity={() => setScreen('community')} />}
               {tab === 'profil' && <ProfilTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} progress={progress} onOpenPremium={() => setScreen('premium')} />}
             </div>
             <BottomNav active={tab} onChange={setTab} router={router} />
@@ -897,6 +899,7 @@ export default function TulisNoonApp() {
         />}
 
         {screen === 'friends' && <FriendsScreen userId={user?.uid} userProfile={authProfile} onBack={() => setScreen('main')} onHome={() => { setTab('home'); setScreen('main'); }} />}
+        {screen === 'community' && <CommunityScreen userId={user?.uid} userProfile={authProfile} onBack={() => setScreen('main')} onHome={() => { setTab('home'); setScreen('main'); }} />}
         {screen === 'guru' && <GuruScreen onBack={() => setScreen('main')} onSelectGuru={(g) => { setSelectedGuru(g); setScreen('guru-detail'); }} />}
         {screen === 'guru-detail' && <GuruDetailScreen guru={selectedGuru} onBack={() => setScreen('guru')} />}
         {screen === 'premium' && <PremiumScreen onBack={() => setScreen('main')} userProfile={userProfile} onSubmit={(motivData) => {
@@ -1996,28 +1999,30 @@ function BelajarTab({ onSelectPath, onOpenGuru, progress }) {
 }
 
 // ============ SOSIAL TAB ============
-function SosialTab({ achievements, userName, currentUserId, onOpenMatch, onOpenFriends }) {
+function SosialTab({ achievements, userName, currentUserId, userProfile, onOpenMatch, onOpenFriends, onOpenCommunity }) {
   const [leaderboard, setLeaderboard] = useState([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
+  const [lbScope, setLbScope] = useState('global'); // global | friends | regional
 
-  // Fetch real leaderboard dari Firestore: top 10 users by XP
+  const myCountry = userProfile?.location?.countryCode || null;
+  const myFriends = userProfile?.friends || [];
+
+  // Fetch leaderboard sesuai scope
   useEffect(() => {
-    async function fetchLeaderboard() {
-      try {
-        const { firestore } = await import('@/lib/firebase');
-        const { collection, query, orderBy, limit, getDocs } = await import('firebase/firestore');
-        const q = query(collection(firestore, 'users'), orderBy('xp', 'desc'), limit(10));
-        const snap = await getDocs(q);
-        const users = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-        setLeaderboard(users);
-      } catch (e) {
-        console.error('Leaderboard fetch error:', e);
-      } finally {
-        setLeaderboardLoading(false);
-      }
-    }
-    fetchLeaderboard();
-  }, []);
+    let cancelled = false;
+    setLeaderboardLoading(true);
+    getLeaderboard({
+      scope: lbScope,
+      uid: currentUserId,
+      friendIds: myFriends,
+      countryCode: myCountry,
+      n: 20,
+    }).then((list) => {
+      if (!cancelled) { setLeaderboard(list); setLeaderboardLoading(false); }
+    }).catch(() => { if (!cancelled) setLeaderboardLoading(false); });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lbScope, currentUserId]);
 
   return (
     <div className="px-5 py-6">
@@ -2043,6 +2048,36 @@ function SosialTab({ achievements, userName, currentUserId, onOpenMatch, onOpenF
         </div>
         <ArrowRight size={16} style={{ color: '#8b6b3d' }} />
       </button>
+
+      {/* Komunitas — feed posting/like/komentar */}
+      <button
+        onClick={onOpenCommunity}
+        className="w-full text-left rounded-2xl p-4 mb-3 flex items-center gap-3 transition-transform active:scale-[0.98]"
+        style={{ background: 'white', border: '1px solid rgba(10,77,60,0.1)' }}
+      >
+        <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(201,169,97,0.15)' }}>
+          <MessageCircle size={20} style={{ color: '#c9a961' }} />
+        </div>
+        <div className="flex-1">
+          <h3 className="font-semibold text-sm" style={{ color: '#0a4d3c' }}>Komunitas</h3>
+          <p className="text-xs" style={{ color: '#8b6b3d' }}>Cerita, tanya, & kasih semangat ke jamaah lain</p>
+        </div>
+        <ArrowRight size={16} style={{ color: '#8b6b3d' }} />
+      </button>
+
+      {/* Grup Belajar — COMING SOON (teaser) */}
+      <div className="w-full text-left rounded-2xl p-4 mb-3 flex items-center gap-3 opacity-90" style={{ background: 'white', border: '1px dashed rgba(10,77,60,0.18)' }}>
+        <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(10,77,60,0.06)' }}>
+          <Users size={20} style={{ color: '#8b6b3d' }} />
+        </div>
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-sm" style={{ color: '#0a4d3c' }}>Grup Belajar</h3>
+            <span className="text-[9px] tracking-wider uppercase px-1.5 py-0.5 rounded-full font-bold" style={{ background: 'rgba(201,169,97,0.18)', color: '#a05536' }}>Segera</span>
+          </div>
+          <p className="text-xs" style={{ color: '#8b6b3d' }}>Belajar bareng rombongan umrah & leaderboard grup</p>
+        </div>
+      </div>
 
       {/* Match Arena CTA — entry point ke game competitive */}
       <button
