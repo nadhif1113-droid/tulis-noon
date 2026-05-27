@@ -473,7 +473,7 @@ export default function TulisNoonApp() {
         {screen === 'main' && (
           <>
             <div className="flex-1 pb-20">
-              {tab === 'home' && <HomeTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} coins={authProfile?.coins || 0} lives={authProfile?.lives ?? 10} maxLives={authProfile?.maxLives ?? 10} hafalanProgress={authProfile?.hafalanProgress || {}} perkenalanCompleted={authProfile?.completedPerkenalanMateri || []} tanyaCepatFreeUsed={authProfile?.tanyaCepatFreeUsed || 0} tanyaCepatBundleQuota={authProfile?.tanyaCepatBundleQuota || 0} onOpenTanyaCepat={() => setScreen('tanya-cepat')} onOpenHafalan={() => setScreen('hafalan')} onShowXpInfo={() => setShowXpModal(true)} onShowCoinInfo={() => setShowCoinModal(true)} onShowStreakInfo={() => setShowStreakModal(true)} onShowLivesInfo={() => setShowLivesModal(true)} onOpenLesson={() => setShowPerkenalanPicker(true)} onOpenGame={(g) => {
+              {tab === 'home' && <HomeTab userName={userName} userProfile={userProfile} location={authProfile?.location} xp={xp} streak={streak} coins={authProfile?.coins || 0} lives={authProfile?.lives ?? 10} maxLives={authProfile?.maxLives ?? 10} hafalanProgress={authProfile?.hafalanProgress || {}} perkenalanCompleted={authProfile?.completedPerkenalanMateri || []} tanyaCepatFreeUsed={authProfile?.tanyaCepatFreeUsed || 0} tanyaCepatBundleQuota={authProfile?.tanyaCepatBundleQuota || 0} onOpenTanyaCepat={() => setScreen('tanya-cepat')} onOpenHafalan={() => setScreen('hafalan')} onShowXpInfo={() => setShowXpModal(true)} onShowCoinInfo={() => setShowCoinModal(true)} onShowStreakInfo={() => setShowStreakModal(true)} onShowLivesInfo={() => setShowLivesModal(true)} onOpenLesson={() => setShowPerkenalanPicker(true)} onOpenGame={(g) => {
                 // Special routing untuk game yang punya screen sendiri.
                 // Game lain (image-quiz, video-quiz, story) tetap ke GameScreen placeholder.
                 if (g.id === 'chat-roleplay') {
@@ -1494,7 +1494,7 @@ function WelcomeScreen({ onComplete, initialName = '' }) {
 }
 
 // ============ HOME TAB ============
-function HomeTab({ userName, userProfile, xp, streak, coins, lives, maxLives, hafalanProgress, perkenalanCompleted, tanyaCepatFreeUsed, tanyaCepatBundleQuota, onOpenTanyaCepat, onOpenHafalan, onShowXpInfo, onShowCoinInfo, onShowStreakInfo, onShowLivesInfo, onOpenLesson, onOpenGame, onOpenChallenge, onOpenGuru, achievements }) {
+function HomeTab({ userName, userProfile, location, xp, streak, coins, lives, maxLives, hafalanProgress, perkenalanCompleted, tanyaCepatFreeUsed, tanyaCepatBundleQuota, onOpenTanyaCepat, onOpenHafalan, onShowXpInfo, onShowCoinInfo, onShowStreakInfo, onShowLivesInfo, onOpenLesson, onOpenGame, onOpenChallenge, onOpenGuru, achievements }) {
   // Personalized greeting based on interests
   const personalizedNote = userProfile?.interests?.includes('religion')
     ? 'Mari belajar bahasa Al-Quran hari ini'
@@ -1587,6 +1587,48 @@ function HomeTab({ userName, userProfile, xp, streak, coins, lives, maxLives, ha
       <p className="text-sm mb-4" style={{ color: '#8b6b3d' }}>{personalizedNote}</p>
 
       {/* Tanggal Masehi + Hijriah - sederet di atas card Pasar Madinah */}
+      {/* Location chip — lokasi user terkini (auto-detect atau fallback) */}
+      {(() => {
+        const loc = location;
+        if (!loc) return null;
+        const flag = {
+          SA: '🇸🇦', AE: '🇦🇪', QA: '🇶🇦', BH: '🇧🇭', KW: '🇰🇼', OM: '🇴🇲',
+          JO: '🇯🇴', EG: '🇪🇬', YE: '🇾🇪', ID: '🇮🇩', MY: '🇲🇾', SG: '🇸🇬', BN: '🇧🇳',
+        }[loc.countryCode] || '🌍';
+        const promoLabel = {
+          'umrah': 'Mode Umrah',
+          'transit': 'Transit ME',
+          'study-abroad': 'Pelajar',
+          'pre-departure': 'Pra-Berangkat',
+        }[loc.promoTier] || '';
+        return (
+          <div
+            className="flex items-center justify-between mb-2 px-3 py-2 rounded-xl"
+            style={{
+              background: 'linear-gradient(90deg, rgba(10,77,60,0.10), rgba(10,77,60,0.05))',
+              border: '1px solid rgba(10,77,60,0.15)',
+            }}
+          >
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <span className="text-base flex-shrink-0">{flag}</span>
+              <div className="min-w-0">
+                <p className="text-[10px] uppercase tracking-widest font-bold leading-tight" style={{ color: '#8b6b3d' }}>
+                  Lokasi Saat Ini
+                </p>
+                <p className="text-xs font-semibold truncate" style={{ color: '#0a4d3c' }}>
+                  {loc.city || loc.country || 'Tidak diketahui'}{loc.country && loc.city ? `, ${loc.country}` : ''}
+                </p>
+              </div>
+            </div>
+            {promoLabel && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ml-2" style={{ background: 'rgba(201,169,97,0.25)', color: '#8b6b3d' }}>
+                {promoLabel}
+              </span>
+            )}
+          </div>
+        );
+      })()}
+
       <div
         className="flex items-center justify-between mb-3 px-4 py-3 rounded-xl"
         style={{
