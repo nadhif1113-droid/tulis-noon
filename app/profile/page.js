@@ -29,6 +29,9 @@ export default function ProfilePage() {
   const [showLevelInfo, setShowLevelInfo] = useState(false);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [savingAvatar, setSavingAvatar] = useState(false);
+  const [showNameEdit, setShowNameEdit] = useState(false);
+  const [nameInput, setNameInput] = useState('');
+  const [savingName, setSavingName] = useState(false);
   const [detectedTz, setDetectedTz] = useState(null);
   useEffect(() => { setDetectedTz(getUserTimezone()); }, []);
   const isME = isInMiddleEast();
@@ -71,6 +74,20 @@ export default function ProfilePage() {
     await updateUserProfile({ avatarEmoji: emoji });
     setSavingAvatar(false);
     setShowAvatarPicker(false);
+  }
+
+  function openNameEdit() {
+    setNameInput(userProfile?.displayName || '');
+    setShowNameEdit(true);
+  }
+
+  async function saveName() {
+    const name = nameInput.trim();
+    if (!name || name.length < 2) return;
+    setSavingName(true);
+    await updateUserProfile({ displayName: name.slice(0, 30) });
+    setSavingName(false);
+    setShowNameEdit(false);
   }
 
   // Count gold (perfect-scored levels) di Challenge
@@ -143,9 +160,12 @@ export default function ProfilePage() {
                 <span className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-[11px] shadow" style={{ background: '#c9a961', color: '#0a4d3c' }}>✏️</span>
               </button>
               <div className="flex-1 min-w-0">
-                <h2 className="text-xl font-bold text-white leading-tight" style={{ fontFamily: 'Fraunces, serif' }}>
-                  {displayName}
-                </h2>
+                <button onClick={openNameEdit} className="flex items-center gap-1.5 text-left">
+                  <h2 className="text-xl font-bold text-white leading-tight truncate" style={{ fontFamily: 'Fraunces, serif' }}>
+                    {displayName}
+                  </h2>
+                  <span className="text-xs flex-shrink-0" style={{ opacity: 0.85 }}>✏️</span>
+                </button>
                 <p className="text-xs text-white/85 truncate">{user.email}</p>
               </div>
             </div>
@@ -417,6 +437,36 @@ export default function ProfilePage() {
                 Hapus avatar emoji
               </button>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Edit Nama */}
+      {showNameEdit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{ background: 'rgba(0,0,0,0.45)' }} onClick={() => setShowNameEdit(false)}>
+          <div className="w-full max-w-sm rounded-3xl p-5" style={{ background: '#faf6ee' }} onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-bold" style={{ color: '#0a4d3c', fontFamily: 'Fraunces, serif' }}>Edit Nama</h3>
+              <button onClick={() => setShowNameEdit(false)} className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'rgba(10,77,60,0.08)', color: '#0a4d3c' }}>✕</button>
+            </div>
+            <input
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              placeholder="Nama tampilan"
+              maxLength={30}
+              autoFocus
+              className="w-full px-4 py-3 rounded-xl text-sm outline-none mb-1"
+              style={{ background: 'white', border: '1px solid rgba(10,77,60,0.15)', color: '#0a4d3c' }}
+            />
+            <p className="text-[11px] mb-4" style={{ color: '#8b6b3d' }}>Nama ini muncul di teman, leaderboard, & feed komunitas. Min 2 karakter.</p>
+            <button
+              onClick={saveName}
+              disabled={savingName || nameInput.trim().length < 2}
+              className="w-full py-3 rounded-xl font-semibold text-white disabled:opacity-50"
+              style={{ background: '#0a4d3c' }}
+            >
+              {savingName ? 'Menyimpan...' : 'Simpan'}
+            </button>
           </div>
         </div>
       )}
