@@ -4,8 +4,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Home, Heart, MessageCircle, Send, Trash2, Loader2, Sparkles } from 'lucide-react';
-import { createPost, getPosts, toggleLikePost, deletePost, addComment, getComments } from '@/lib/social';
+import { ArrowLeft, Home, Heart, MessageCircle, Send, Trash2, Loader2, Sparkles, Info, AlertCircle } from 'lucide-react';
+import { createPost, getPosts, toggleLikePost, deletePost, addComment, getComments, validateArabicText } from '@/lib/social';
+
+// Hanya izinkan huruf Arab, angka, spasi, tanda baca umum (huruf latin diblok).
+const ALLOWED_RE = /[^؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿\s0-9٠-٩.,!?؟،؛:"'()\-]/g;
 
 function Avatar({ emoji, name, size = 40 }) {
   return (
@@ -31,6 +34,9 @@ export default function CommunityScreen({ userId, userProfile, onBack, onHome })
   const [comments, setComments] = useState([]);
   const [commentDraft, setCommentDraft] = useState('');
   const [commentLoading, setCommentLoading] = useState(false);
+  const [showRules, setShowRules] = useState(true);
+  const [postError, setPostError] = useState(null);
+  const [commentError, setCommentError] = useState(null);
 
   const loadPosts = async () => {
     const list = await getPosts(30);
@@ -44,6 +50,13 @@ export default function CommunityScreen({ userId, userProfile, onBack, onHome })
     const text = draft.trim();
     if (!text || posting) return;
     setPosting(true);
+    setPostError(null);
+    const check = await validateArabicText(text);
+    if (!check.valid) {
+      setPostError(check.reason || 'Postingan harus bahasa Arab yang bermakna');
+      setPosting(false);
+      return;
+    }
     const res = await createPost(me, text);
     if (res.success) {
       setDraft('');
@@ -86,6 +99,12 @@ export default function CommunityScreen({ userId, userProfile, onBack, onHome })
   const handleComment = async (postId) => {
     const text = commentDraft.trim();
     if (!text) return;
+    setCommentError(null);
+    const check = await validateArabicText(text);
+    if (!check.valid) {
+      setCommentError(check.reason || 'Komentar harus bahasa Arab yang bermakna');
+      return;
+    }
     const res = await addComment(postId, me, text);
     if (res.success) {
       setCommentDraft('');
@@ -112,20 +131,33 @@ export default function CommunityScreen({ userId, userProfile, onBack, onHome })
         )}
       </div>
 
+      {/* Banner aturan */}
+      <button onClick={() => setShowRules(true)} className="w-full flex items-center gap-2 px-3 py-2 rounded-xl mb-3" style={{ background: 'rgba(201,169,97,0.12)' }}>
+        <Info size={14} style={{ color: '#a05536' }} className="flex-shrink-0" />
+        <p className="text-[11px] text-left flex-1" style={{ color: '#8b6b3d' }}>Komunitas ini <strong>khusus bahasa Arab baku</strong>. Tap untuk baca aturan.</p>
+      </button>
+
       {/* Composer */}
-      <div className="rounded-2xl p-4 mb-5" style={{ background: 'white', border: '1px solid rgba(10,77,60,0.1)' }}>
+      <div className="rounded-2xl p-4 mb-3" style={{ background: 'white', border: '1px solid rgba(10,77,60,0.1)' }}>
         <div className="flex gap-3">
           <Avatar emoji={me.avatarEmoji} name={me.name} size={40} />
           <div className="flex-1">
             <textarea
               value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              placeholder="Bagikan progres, tanya, atau kasih semangat ke jamaah lain..."
+              onChange={(e) => { setDraft(e.target.value.replace(ALLOWED_RE, '')); if (postError) setPostError(null); }}
+              placeholder="اكتب بالعربية الفصحى..."
+              dir="rtl"
               maxLength={500}
               rows={2}
-              className="w-full text-sm outline-none resize-none"
-              style={{ color: '#1a1a1a', background: 'transparent' }}
+              className="w-full text-base outline-none resize-none"
+              style={{ fontFamily: 'Amiri, serif', color: '#1a1a1a', background: 'transparent' }}
             />
+            {postError && (
+              <div className="flex items-center gap-1.5 mt-1">
+                <AlertCircle size={13} style={{ color: '#c0392b' }} />
+                <p className="text-[11px]" style={{ color: '#c0392b' }}>{postError}</p>
+              </div>
+            )}
             <div className="flex items-center justify-between mt-2">
               <span className="text-[11px]" style={{ color: '#8b6b3d' }}>{draft.length}/500</span>
               <button
@@ -169,7 +201,7 @@ export default function CommunityScreen({ userId, userProfile, onBack, onHome })
                       )}
                     </div>
                     <p className="text-[11px] mb-1.5" style={{ color: '#8b6b3d' }}>{post.time}</p>
-                    <p className="text-sm whitespace-pre-wrap" style={{ color: '#1a1a1a' }}>{post.text}</p>
+                    <p className="text-base whitespace-pre-wrap" dir="rtl" style={{ fontFamily: 'Amiri, serif', color: '#1a1a1a' }}>{post.text}</p>
 
                     {/* Actions */}
                     <div className="flex items-center gap-5 mt-3">
@@ -196,21 +228,28 @@ export default function CommunityScreen({ userId, userProfile, onBack, onHome })
                                 <Avatar emoji={c.authorAvatar} name={c.authorName} size={28} />
                                 <div className="flex-1 rounded-xl px-3 py-2" style={{ background: 'rgba(10,77,60,0.04)' }}>
                                   <p className="text-xs font-semibold" style={{ color: '#0a4d3c' }}>{c.authorName} <span className="font-normal" style={{ color: '#8b6b3d' }}>· {c.time}</span></p>
-                                  <p className="text-xs mt-0.5" style={{ color: '#1a1a1a' }}>{c.text}</p>
+                                  <p className="text-sm mt-0.5" dir="rtl" style={{ fontFamily: 'Amiri, serif', color: '#1a1a1a' }}>{c.text}</p>
                                 </div>
                               </div>
                             ))}
                           </div>
                         )}
+                        {commentError && (
+                          <div className="flex items-center gap-1.5 mb-1.5">
+                            <AlertCircle size={12} style={{ color: '#c0392b' }} />
+                            <p className="text-[11px]" style={{ color: '#c0392b' }}>{commentError}</p>
+                          </div>
+                        )}
                         <div className="flex gap-2 items-center">
                           <input
                             value={commentDraft}
-                            onChange={(e) => setCommentDraft(e.target.value)}
+                            onChange={(e) => { setCommentDraft(e.target.value.replace(ALLOWED_RE, '')); if (commentError) setCommentError(null); }}
                             onKeyDown={(e) => { if (e.key === 'Enter') handleComment(post.id); }}
-                            placeholder="Tulis komentar..."
+                            placeholder="علّق بالعربية..."
+                            dir="rtl"
                             maxLength={300}
-                            className="flex-1 px-3 py-2 rounded-full text-xs outline-none"
-                            style={{ background: 'rgba(10,77,60,0.05)', border: '1px solid rgba(10,77,60,0.1)', color: '#1a1a1a' }}
+                            className="flex-1 px-3 py-2 rounded-full text-sm outline-none"
+                            style={{ fontFamily: 'Amiri, serif', background: 'rgba(10,77,60,0.05)', border: '1px solid rgba(10,77,60,0.1)', color: '#1a1a1a' }}
                           />
                           <button onClick={() => handleComment(post.id)} disabled={!commentDraft.trim()} className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 disabled:opacity-40" style={{ background: '#0a4d3c' }}>
                             <Send size={14} color="white" />
@@ -223,6 +262,34 @@ export default function CommunityScreen({ userId, userProfile, onBack, onHome })
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Modal aturan komunitas */}
+      {showRules && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{ background: 'rgba(0,0,0,0.5)' }}>
+          <div className="w-full max-w-sm rounded-3xl p-5" style={{ background: '#faf6ee' }}>
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: 'linear-gradient(135deg, #0a4d3c, #1a6b56)' }}>
+              <span style={{ fontFamily: 'Amiri, serif', color: '#fff', fontSize: 24 }}>ن</span>
+            </div>
+            <h3 className="text-lg font-bold text-center mb-2" style={{ color: '#0a4d3c', fontFamily: 'Fraunces, serif' }}>Aturan Komunitas: Arab Baku</h3>
+            <div className="space-y-2 mb-4">
+              {[
+                'Posting & komentar WAJIB pakai bahasa Arab baku (fusha) yang jelas artinya.',
+                'Harus bermakna — bukan huruf acak atau asal ketik.',
+                'Bahasa lain (latin) otomatis tidak bisa diketik & tidak terkirim.',
+                'Tujuannya: melatih nulis & berdiskusi dalam bahasa Arab bareng jamaah lain 🌙',
+              ].map((t, i) => (
+                <div key={i} className="flex items-start gap-2">
+                  <span style={{ color: '#c9a961' }}>•</span>
+                  <p className="text-sm leading-snug" style={{ color: '#3d2817' }}>{t}</p>
+                </div>
+              ))}
+            </div>
+            <button onClick={() => setShowRules(false)} className="w-full py-3 rounded-2xl font-semibold text-white" style={{ background: '#0a4d3c' }}>
+              Mengerti
+            </button>
+          </div>
         </div>
       )}
     </div>
