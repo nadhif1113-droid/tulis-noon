@@ -27,7 +27,7 @@ import BrandLoader from '@/components/BrandLoader';
 import FriendsScreen from '@/components/FriendsScreen';
 import CommunityScreen from '@/components/CommunityScreen';
 import { speakArabic as ttsSpeakArabic } from '@/lib/tts';
-import { postActivity, getCommunityFeed, getLeaderboard, getUserGlobalRank } from '@/lib/social';
+import { postActivity, getCommunityFeed, getLeaderboard, getUserGlobalRank, updatePresence } from '@/lib/social';
 import { LEARNING_UMRAH } from '@/data/learning-umrah';
 import { LEARNING_PELAJAR } from '@/data/learning-pelajar';
 import { LEARNING_PROFESIONAL } from '@/data/learning-profesional';
@@ -385,6 +385,24 @@ export default function TulisNoonApp() {
     getCommunityFeed(25).then((feed) => {
       if (feed && feed.length) setAchievements(feed);
     }).catch(() => {});
+  }, [user?.uid]);
+
+  // Presence heartbeat — tandai user online tiap 60 detik selama app aktif.
+  // Teman akan lihat status online (titik hijau) → enabling live match.
+  useEffect(() => {
+    if (!user?.uid) return;
+    updatePresence(user.uid);
+    const iv = setInterval(() => {
+      if (typeof document === 'undefined' || document.visibilityState === 'visible') {
+        updatePresence(user.uid);
+      }
+    }, 60000);
+    const onVis = () => { if (document.visibilityState === 'visible') updatePresence(user.uid); };
+    if (typeof document !== 'undefined') document.addEventListener('visibilitychange', onVis);
+    return () => {
+      clearInterval(iv);
+      if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', onVis);
+    };
   }, [user?.uid]);
 
   // Log 1 aktivitas: tampil instan di feed lokal + persist ke Firestore (community).

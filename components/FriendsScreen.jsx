@@ -40,6 +40,15 @@ export default function FriendsScreen({ userId, userProfile, onBack, onHome, onC
     })();
   }, [userId]);
 
+  // Auto-refresh status online tiap 45 detik (biar "live")
+  useEffect(() => {
+    if (!userId) return;
+    const iv = setInterval(async () => {
+      try { setFriends(await getFriends(userId)); } catch (e) {}
+    }, 45000);
+    return () => clearInterval(iv);
+  }, [userId]);
+
   const copyCode = async () => {
     try {
       await navigator.clipboard.writeText(myCode);
@@ -187,13 +196,20 @@ export default function FriendsScreen({ userId, userProfile, onBack, onHome, onC
           {friends.map((f, i) => (
             <div key={f.uid} className="p-3 rounded-2xl" style={{ background: 'white', border: '1px solid rgba(10,77,60,0.08)' }}>
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: f.avatarEmoji ? 'rgba(201,169,97,0.15)' : 'linear-gradient(135deg, #0a4d3c, #1a6b56)' }}>
-                  {f.avatarEmoji ? <span className="text-xl">{f.avatarEmoji}</span> : f.photoURL ? <img src={f.photoURL} alt="" className="w-full h-full object-cover" /> : <span className="text-white font-bold">{(f.displayName || '?')[0].toUpperCase()}</span>}
+                <div className="relative flex-shrink-0">
+                  <div className="w-11 h-11 rounded-full flex items-center justify-center overflow-hidden" style={{ background: f.avatarEmoji ? 'rgba(201,169,97,0.15)' : 'linear-gradient(135deg, #0a4d3c, #1a6b56)' }}>
+                    {f.avatarEmoji ? <span className="text-xl">{f.avatarEmoji}</span> : f.photoURL ? <img src={f.photoURL} alt="" className="w-full h-full object-cover" /> : <span className="text-white font-bold">{(f.displayName || '?')[0].toUpperCase()}</span>}
+                  </div>
+                  {/* Status online */}
+                  <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white" style={{ background: f.online ? '#22c55e' : '#c4c4c4' }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm truncate" style={{ color: '#1a1a1a' }}>
-                    {FLAGS[f.countryCode] ? FLAGS[f.countryCode] + ' ' : ''}{f.displayName}
-                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="font-semibold text-sm truncate" style={{ color: '#1a1a1a' }}>
+                      {FLAGS[f.countryCode] ? FLAGS[f.countryCode] + ' ' : ''}{f.displayName}
+                    </p>
+                    {f.online && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: 'rgba(34,197,94,0.15)', color: '#16a34a' }}>ONLINE</span>}
+                  </div>
                   <div className="flex items-center gap-3 text-xs" style={{ color: '#8b6b3d' }}>
                     <span className="flex items-center gap-1"><Trophy size={11} style={{ color: '#c9a961' }} /> {f.xp} XP</span>
                     <span>Lv {f.level}</span>
