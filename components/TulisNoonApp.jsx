@@ -24,6 +24,7 @@ import TanyaCepatFAB from '@/components/TanyaCepatFAB';
 import LessonDetailScreen from '@/components/LessonDetailScreen';
 import PerkenalanContextPicker from '@/components/PerkenalanContextPicker';
 import BrandLoader from '@/components/BrandLoader';
+import FriendsScreen from '@/components/FriendsScreen';
 import { speakArabic as ttsSpeakArabic } from '@/lib/tts';
 import { LEARNING_UMRAH } from '@/data/learning-umrah';
 import { LEARNING_PELAJAR } from '@/data/learning-pelajar';
@@ -216,6 +217,7 @@ export default function TulisNoonApp() {
           if (s === 'roleplay') { setScreen('roleplay-list'); return true; }
           if (s === 'roleplay-list') { setScreen('main'); return true; }
           if (s === 'match') { setScreen('main'); return true; }
+          if (s === 'friends') { setScreen('main'); return true; }
           if (s === 'guru') { setScreen('main'); return true; }
           if (s === 'premium') { setScreen('main'); return true; }
           // Di 'main': kalau lagi di tab selain home, balik ke home dulu (jangan exit/history).
@@ -502,7 +504,7 @@ export default function TulisNoonApp() {
                 setScreen('game');
               }} onOpenChallenge={(scenario) => { setSelectedChallenge(scenario || getTodayChallenge()); setScreen('challenge-levels'); }} onOpenGuru={() => setScreen('guru')} achievements={achievements} />}
               {tab === 'belajar' && <BelajarTab onSelectPath={(p) => { setSelectedPath(p); setScreen('lessons'); }} onOpenGuru={() => setScreen('guru')} progress={progress} />}
-              {tab === 'sosial' && <SosialTab achievements={achievements} userName={userName} currentUserId={user?.uid} onOpenMatch={() => setScreen('match')} />}
+              {tab === 'sosial' && <SosialTab achievements={achievements} userName={userName} currentUserId={user?.uid} onOpenMatch={() => setScreen('match')} onOpenFriends={() => setScreen('friends')} />}
               {tab === 'profil' && <ProfilTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} progress={progress} onOpenPremium={() => setScreen('premium')} />}
             </div>
             <BottomNav active={tab} onChange={setTab} router={router} />
@@ -915,6 +917,7 @@ export default function TulisNoonApp() {
           onUpgrade={() => setScreen('premium')}
         />}
 
+        {screen === 'friends' && <FriendsScreen userId={user?.uid} userProfile={authProfile} onBack={() => setScreen('main')} onHome={() => { setTab('home'); setScreen('main'); }} />}
         {screen === 'guru' && <GuruScreen onBack={() => setScreen('main')} onSelectGuru={(g) => { setSelectedGuru(g); setScreen('guru-detail'); }} />}
         {screen === 'guru-detail' && <GuruDetailScreen guru={selectedGuru} onBack={() => setScreen('guru')} />}
         {screen === 'premium' && <PremiumScreen onBack={() => setScreen('main')} userProfile={userProfile} onSubmit={(motivData) => {
@@ -1901,7 +1904,7 @@ function HomeTab({ userName, userProfile, location, xp, streak, coins, lives, ma
         <div className="absolute -right-4 -bottom-4 text-7xl opacity-15" style={{ fontFamily: 'Amiri, serif', color: '#f3ebd9' }}>ع</div>
         <div className="flex items-center gap-2 mb-2">
           <UserCheck size={16} color="#f3ebd9" />
-          <p className="text-xs tracking-widest uppercase text-white opacity-90">Baru!</p>
+          <p className="text-xs tracking-widest uppercase text-white opacity-90">Segera Hadir</p>
         </div>
         <h3 className="text-xl text-white mb-1" style={{ fontFamily: 'Fraunces, serif', fontWeight: 600 }}>Belajar dengan Ustadz</h3>
         <p className="text-sm text-white opacity-80 mb-3">Kelas grup atau privat 1-on-1 dengan guru asli</p>
@@ -1910,9 +1913,9 @@ function HomeTab({ userName, userProfile, location, xp, streak, coins, lives, ma
             <div className="flex -space-x-1">
               {['👨🏽','👨🏽‍🦱','👳🏽‍♂️'].map((e,i)=>(<div key={i} className="w-6 h-6 rounded-full flex items-center justify-center text-xs border-2" style={{background:'white',borderColor:'#7a3d2a'}}>{e}</div>))}
             </div>
-            <span className="text-xs text-white opacity-80">12 guru tersedia</span>
+            <span className="text-xs text-white opacity-80">Lagi disiapin untukmu</span>
           </div>
-          <span className="text-sm font-semibold text-white flex items-center gap-1">Lihat <ChevronRight size={14}/></span>
+          <span className="text-sm font-semibold text-white flex items-center gap-1">Segera <ChevronRight size={14}/></span>
         </div>
       </button>
 
@@ -2000,7 +2003,10 @@ function BelajarTab({ onSelectPath, onOpenGuru, progress }) {
             <UserCheck size={22} style={{ color: '#7a3d2a' }} />
           </div>
           <div className="flex-1 text-left">
-            <h3 className="font-semibold text-base" style={{ color: '#1a1a1a' }}>Belajar dengan Ustadz</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-base" style={{ color: '#1a1a1a' }}>Belajar dengan Ustadz</h3>
+              <span className="text-[9px] tracking-wider uppercase px-1.5 py-0.5 rounded-full font-bold" style={{ background: 'rgba(201,169,97,0.18)', color: '#a05536' }}>Segera</span>
+            </div>
             <p className="text-sm" style={{ color: '#666' }}>Kelas grup atau privat 1-on-1</p>
           </div>
           <ChevronRight size={18} style={{ color: '#8b6b3d' }} />
@@ -2011,7 +2017,7 @@ function BelajarTab({ onSelectPath, onOpenGuru, progress }) {
 }
 
 // ============ SOSIAL TAB ============
-function SosialTab({ achievements, userName, currentUserId, onOpenMatch }) {
+function SosialTab({ achievements, userName, currentUserId, onOpenMatch, onOpenFriends }) {
   const [leaderboard, setLeaderboard] = useState([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
 
@@ -2043,10 +2049,26 @@ function SosialTab({ achievements, userName, currentUserId, onOpenMatch }) {
         </div>
       </div>
 
+      {/* Teman — entry point ke FriendsScreen */}
+      <button
+        onClick={onOpenFriends}
+        className="w-full text-left rounded-2xl p-4 mt-4 mb-3 flex items-center gap-3 transition-transform active:scale-[0.98]"
+        style={{ background: 'white', border: '1px solid rgba(10,77,60,0.1)' }}
+      >
+        <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(10,77,60,0.08)' }}>
+          <Users size={20} style={{ color: '#0a4d3c' }} />
+        </div>
+        <div className="flex-1">
+          <h3 className="font-semibold text-sm" style={{ color: '#0a4d3c' }}>Teman</h3>
+          <p className="text-xs" style={{ color: '#8b6b3d' }}>Add teman pakai kode & belajar bareng</p>
+        </div>
+        <ArrowRight size={16} style={{ color: '#8b6b3d' }} />
+      </button>
+
       {/* Match Arena CTA — entry point ke game competitive */}
       <button
         onClick={onOpenMatch}
-        className="w-full text-left rounded-3xl p-5 my-4 relative overflow-hidden transition-transform active:scale-[0.98]"
+        className="w-full text-left rounded-3xl p-5 mb-4 relative overflow-hidden transition-transform active:scale-[0.98]"
         style={{ background: 'linear-gradient(135deg, #a05536, #c46a3f)' }}
       >
         <div className="absolute -right-6 -top-4 text-7xl opacity-15">⚔️</div>
@@ -3623,6 +3645,37 @@ function GuruScreen({ onBack, onSelectGuru }) {
     { id: 4, name: 'Ust. Hisham', avatar: '🧔🏽', specialty: 'Arab Akademik', exp: '7 tahun', rating: 4.7, reviews: 56, langs: ['Indonesia', 'Arab', 'Inggris'], price: { grup: 55000, privat: 130000 }, online: true, badge: 'Dosen Bahasa Arab UI' },
   ];
 
+  // === COMING SOON ===
+  // Fitur Belajar dengan Ustadz lagi disiapin. Tampilkan placeholder coming soon.
+  // Booking flow asli disimpan di bawah (dead code) buat diaktifkan pas rilis.
+  return (
+    <div className="flex-1 flex flex-col px-5 py-6">
+      <div className="flex items-center gap-3 mb-6">
+        <button onClick={onBack} className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(10,77,60,0.08)' }}>
+          <ArrowLeft size={18} style={{ color: '#0a4d3c' }} />
+        </button>
+        <div>
+          <p className="text-xs tracking-widest uppercase" style={{ color: '#8b6b3d' }}>Marketplace</p>
+          <h2 className="text-xl font-semibold" style={{ color: '#0a4d3c', fontFamily: 'Fraunces, serif' }}>Belajar dengan Ustadz</h2>
+        </div>
+      </div>
+      <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
+        <div className="w-24 h-24 rounded-3xl flex items-center justify-center mb-5" style={{ background: 'linear-gradient(135deg, #7a3d2a, #a05536)' }}>
+          <span className="text-5xl" style={{ fontFamily: 'Amiri, serif', color: '#f3ebd9' }}>ع</span>
+        </div>
+        <p className="text-xs tracking-widest uppercase mb-2" style={{ color: '#c9a961' }}>Segera Hadir</p>
+        <h3 className="text-2xl mb-3" style={{ fontFamily: 'Fraunces, serif', fontWeight: 600, color: '#0a4d3c' }}>Belajar dengan Ustadz</h3>
+        <p className="text-sm leading-relaxed mb-6" style={{ color: '#8b6b3d', maxWidth: 300 }}>
+          Lagi kami siapkan: kelas grup & privat 1-on-1 dengan ustadz asli — lulusan Al-Azhar, Madinah, & mukim di Saudi. Trial gratis 15 menit pas rilis nanti, in syaa Allah.
+        </p>
+        <div className="rounded-2xl px-5 py-3" style={{ background: 'rgba(10,77,60,0.06)' }}>
+          <p className="text-xs" style={{ color: '#3d2817' }}>📿 Kami kabari begitu fiturnya dibuka.</p>
+        </div>
+      </div>
+    </div>
+  );
+
+  // eslint-disable-next-line no-unreachable
   return (
     <div className="flex-1 flex flex-col px-5 py-6">
       <div className="flex items-center gap-3 mb-6">
