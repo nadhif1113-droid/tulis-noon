@@ -44,12 +44,14 @@ export default function LoginPage() {
   }
 
   function getErrorMessage(error) {
+    if (!error) return 'Login gagal, coba lagi';
     if (error.includes('user-not-found')) return 'Email belum terdaftar';
     if (error.includes('wrong-password')) return 'Password salah';
     if (error.includes('invalid-email')) return 'Email tidak valid';
     if (error.includes('too-many-requests')) return 'Terlalu banyak percobaan, coba lagi nanti';
     if (error.includes('popup-closed')) return 'Login dibatalkan';
-    return 'Login gagal, coba lagi';
+    // Tampilkan error asli (buat debug Google Sign-In native) — bisa di-rapihin nanti
+    return 'Login gagal: ' + error;
   }
 
   return (
