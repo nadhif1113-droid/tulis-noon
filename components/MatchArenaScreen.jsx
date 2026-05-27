@@ -12,6 +12,9 @@ import {
   BOTS,
   TIER_CONFIG,
   pickBotForUser,
+  pickBotForMatchLevel,
+  getMatchLevelForXp,
+  MATCH_LEVELS,
   canMatchHuman,
   userToOpponent,
   simulateBotAnswer,
@@ -25,6 +28,8 @@ import { generateMatchRound } from '@/data/match-questions';
 export default function MatchArenaScreen({
   lives = 10,
   matchesPlayed = 0,
+  xp = 0,
+  winStreak = 0,
   currentUserId,
   userName,
   onNoLives,
@@ -37,13 +42,13 @@ export default function MatchArenaScreen({
   const [matchResult, setMatchResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Pick bot opponent
+  // Pick bot opponent — sesuai level XP pemain + win-streak (adaptif)
   const handlePickBot = () => {
     if (lives <= 0) {
       if (onNoLives) onNoLives();
       return;
     }
-    const bot = pickBotForUser(matchesPlayed);
+    const { bot } = pickBotForMatchLevel(xp, winStreak);
     setOpponent({ ...bot, isHuman: false });
     setView('reveal');
   };
@@ -68,7 +73,7 @@ export default function MatchArenaScreen({
 
       if (candidates.length === 0) {
         // Fallback: pick bot kalau ga ada user lain
-        const bot = pickBotForUser(matchesPlayed);
+        const { bot } = pickBotForMatchLevel(xp, winStreak);
         setOpponent({ ...bot, isHuman: false });
       } else {
         const picked = candidates[Math.floor(Math.random() * candidates.length)];
@@ -113,7 +118,7 @@ export default function MatchArenaScreen({
   };
 
   if (view === 'lobby') {
-    return <LobbyView lives={lives} matchesPlayed={matchesPlayed} loading={loading} onBack={onBack} onHome={onHome} onPickBot={handlePickBot} onPickHuman={handlePickHuman} />;
+    return <LobbyView lives={lives} matchesPlayed={matchesPlayed} xp={xp} winStreak={winStreak} loading={loading} onBack={onBack} onHome={onHome} onPickBot={handlePickBot} onPickHuman={handlePickHuman} />;
   }
 
   if (view === 'reveal' && opponent) {
@@ -146,10 +151,12 @@ export default function MatchArenaScreen({
 // ============================================================================
 // LOBBY VIEW — pick mode: Bot or Human
 // ============================================================================
-function LobbyView({ lives, matchesPlayed, loading, onBack, onHome, onPickBot, onPickHuman }) {
+function LobbyView({ lives, matchesPlayed, xp = 0, winStreak = 0, loading, onBack, onHome, onPickBot, onPickHuman }) {
   const humanUnlocked = canMatchHuman(matchesPlayed);
   const matchesNeeded = Math.max(0, 3 - matchesPlayed);
-  const expectedTier = matchesPlayed < 3 ? 'Mudah (Lv 1-3)' : matchesPlayed < 6 ? 'Sedang (Lv 2-5)' : matchesPlayed < 11 ? 'Menengah (Lv 4-7)' : 'Sulit (Lv 5-10)';
+  const myLevel = getMatchLevelForXp(xp);
+  const bumped = winStreak >= 2;
+  const expectedTier = `${myLevel.emoji} ${myLevel.label}${bumped ? ' → naik (menang beruntun!)' : ''}`;
 
   return (
     <div className="flex-1 flex flex-col px-5 py-6">
@@ -182,6 +189,32 @@ function LobbyView({ lives, matchesPlayed, loading, onBack, onHome, onPickBot, o
           <Trophy size={12} />
           <span>{matchesPlayed} match dimainkan · Tier saat ini: {expectedTier}</span>
         </div>
+      </div>
+
+      {/* Strip 4 level — highlight level pemain saat ini */}
+      <div className="rounded-2xl p-3 mb-3" style={{ background: 'white', border: '1px solid rgba(10,77,60,0.08)' }}>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-[11px] font-semibold" style={{ color: '#0a4d3c' }}>4 Level Match (ikut XP-mu)</p>
+          {winStreak >= 1 && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(224,122,63,0.15)', color: '#a05536' }}>
+              🔥 Menang {winStreak}x beruntun
+            </span>
+          )}
+        </div>
+        <div className="grid grid-cols-4 gap-1.5">
+          {MATCH_LEVELS.map((l) => {
+            const active = l.idx === myLevel.idx;
+            return (
+              <div key={l.id} className="rounded-xl p-2 text-center" style={{ background: active ? l.bgGradient : 'rgba(10,77,60,0.04)', border: active ? 'none' : '1px solid rgba(10,77,60,0.06)' }}>
+                <div className="text-base leading-none mb-1">{l.emoji}</div>
+                <p className="text-[10px] font-bold leading-tight" style={{ color: active ? '#fff' : '#8b6b3d' }}>{l.label}</p>
+              </div>
+            );
+          })}
+        </div>
+        {bumped && (
+          <p className="text-[10px] mt-2 text-center" style={{ color: '#a05536' }}>Lawan dinaikkan 1 level karena kamu menang 2x beruntun 💪</p>
+        )}
       </div>
 
       <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#8b6b3d' }}>Pilih Mode Lawan</p>
@@ -360,7 +393,7 @@ function RevealView({ opponent, userName, onStart, onReroll, onBack }) {
 // PLAYING VIEW — gameplay 5 ronde race
 // ============================================================================
 function PlayingView({ opponent, userName, onComplete, onQuit }) {
-  const [questions] = useState(() => generateMatchRound(ROUNDS_PER_MATCH));
+  const [questions] = useState(() => generateMatchRound(ROUNDS_PER_MATCH, opponent?.matchLevel?.qLevel || 1));
   const [round, setRound] = useState(0);
   const [userScore, setUserScore] = useState(0);
   const [botScore, setBotScore] = useState(0);

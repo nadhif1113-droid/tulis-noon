@@ -912,6 +912,8 @@ export default function TulisNoonApp() {
         {screen === 'match' && <MatchArenaScreen
           lives={authProfile?.lives ?? 10}
           matchesPlayed={authProfile?.matchesPlayed || 0}
+          xp={xp}
+          winStreak={authProfile?.matchWinStreak || 0}
           currentUserId={user?.uid}
           userName={userName}
           onNoLives={() => setShowLivesModal(true)}
@@ -929,6 +931,9 @@ export default function TulisNoonApp() {
             updates.matchesPlayed = (authProfile?.matchesPlayed || 0) + 1;
             if (result === 'win') {
               updates.matchesWon = (authProfile?.matchesWon || 0) + 1;
+              updates.matchWinStreak = (authProfile?.matchWinStreak || 0) + 1; // menang berturut → lawan makin sulit
+            } else {
+              updates.matchWinStreak = 0; // reset streak kalau kalah/seri
             }
             if (Object.keys(updates).length > 0) {
               updateUserProfile(updates).catch((err) =>
