@@ -8,6 +8,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Home, Mic, MicOff, Send, Volume2, Sparkles, Loader2, X, Coins, MessageCircle, Lightbulb, Copy, Check, Info, HelpCircle } from 'lucide-react';
+import { speakArabic as ttsSpeakArabic } from '@/lib/tts';
 
 const INTRO_STORAGE_KEY = 'tanyaCepatIntroSeen_v1';
 
@@ -114,14 +115,10 @@ export default function TanyaCepatScreen({
     setIsListening(false);
   };
 
-  // TTS Arabic
+  // TTS Arabic — server-side (Google Cloud TTS) + fallback Web Speech.
+  // Jamin suara Arab keluar di semua device (Android sering gak punya voice Arab).
   const speakArabic = (text) => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'ar-SA';
-    u.rate = 0.8;
-    window.speechSynthesis.speak(u);
+    ttsSpeakArabic(text, { voice: 'male', rate: 0.85 });
   };
 
   const copyToClipboard = async (text, idx) => {
