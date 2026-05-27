@@ -2173,17 +2173,14 @@ function SosialTab({ achievements, userName, currentUserId, userProfile, onOpenM
       if (cancelled) return;
       setLeaderboard(list);
       setLeaderboardLoading(false);
-      // Global: selalu hitung peringkat (buat deteksi naik peringkat),
-      // tapi baris "peringkat kamu" cuma tampil kalau gak masuk top 5.
-      if (lbScope === 'global') {
-        const idx = list.findIndex((u) => u.id === currentUserId);
-        const rank = idx >= 0 ? idx + 1 : await getUserGlobalRank(myXp);
-        if (!cancelled) {
-          setMyRank(idx >= 0 && idx < 5 ? null : rank);
-          if (rank && onRankComputed) onRankComputed(rank);
-        }
-      } else {
-        setMyRank(null);
+      // Semua scope: top 5 + baris "peringkat kamu" kalau user gak masuk top 5.
+      const idx = list.findIndex((u) => u.id === currentUserId);
+      let rank = idx >= 0 ? idx + 1 : null;
+      if (rank == null && lbScope === 'global') rank = await getUserGlobalRank(myXp); // global bisa di luar top 20
+      if (!cancelled) {
+        setMyRank(idx >= 0 && idx < 5 ? null : rank);
+        // Deteksi naik peringkat global aja
+        if (lbScope === 'global' && rank && onRankComputed) onRankComputed(rank);
       }
     }).catch(() => { if (!cancelled) setLeaderboardLoading(false); });
     return () => { cancelled = true; };
@@ -2282,8 +2279,8 @@ function SosialTab({ achievements, userName, currentUserId, userProfile, onOpenM
           <p className="text-xs text-center py-4" style={{ color: '#8b6b3d' }}>Belum ada user di peringkat.</p>
         ) : (
           <div className="space-y-1.5">
-            {/* Global: top 5 aja. Scope lain: tampilkan semua (max 20). */}
-            {(lbScope === 'global' ? leaderboard.slice(0, 5) : leaderboard).map((u, i) => {
+            {/* Semua scope: top 5 aja biar ringkas. */}
+            {leaderboard.slice(0, 5).map((u, i) => {
               const isMe = u.id === currentUserId;
               const medalColor = i === 0 ? '#c9a961' : i === 1 ? '#a8a8a8' : i === 2 ? '#cd7f32' : '#8b6b3d';
               const medalEmoji = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : null;
@@ -2305,8 +2302,8 @@ function SosialTab({ achievements, userName, currentUserId, userProfile, onOpenM
               );
             })}
 
-            {/* Baris "peringkat kamu" — global, kalau user gak masuk top 5 */}
-            {lbScope === 'global' && myRank && (
+            {/* Baris "peringkat kamu" — kalau user gak masuk top 5 */}
+            {myRank && (
               <div className="flex items-center gap-3 px-2 py-2 rounded-xl mt-1" style={{ background: 'rgba(10,77,60,0.06)', border: '1.5px solid rgba(10,77,60,0.2)' }}>
                 <span className="text-xs font-bold w-7 text-center flex-shrink-0" style={{ color: '#0a4d3c' }}>#{myRank}</span>
                 <p className="flex-1 min-w-0 text-sm font-medium truncate" style={{ color: '#1a1a1a' }}>
