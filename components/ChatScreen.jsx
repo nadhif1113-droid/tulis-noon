@@ -8,7 +8,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Home, Send, Loader2, AlertCircle, Info } from 'lucide-react';
-import { dmPairId, sendDmMessage, listenDmMessages, validateArabicText } from '@/lib/social';
+import { dmPairId, sendDmMessage, listenDmMessages, validateArabicText, markDmRead } from '@/lib/social';
 
 // Hanya izinkan: huruf Arab, spasi, angka (latin/arab), tanda baca umum. Sisanya dibuang.
 const ALLOWED_RE = /[^؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿\s0-9٠-٩.,!?؟،؛:"'()\-]/g;
@@ -37,12 +37,17 @@ export default function ChatScreen({ userId, userProfile, friend, onBack, onHome
   const [showRules, setShowRules] = useState(true);
   const scrollRef = useRef(null);
 
-  // Listen pesan real-time
+  // Listen pesan real-time. Tiap ada update & layar kebuka → tandai sudah dibaca
+  // (reset badge unread di tab Sosial).
   useEffect(() => {
     if (!pairId) return;
-    const unsub = listenDmMessages(pairId, (msgs) => setMessages(msgs));
+    markDmRead(pairId, userId);
+    const unsub = listenDmMessages(pairId, (msgs) => {
+      setMessages(msgs);
+      markDmRead(pairId, userId);
+    });
     return () => { try { unsub && unsub(); } catch (e) {} };
-  }, [pairId]);
+  }, [pairId, userId]);
 
   // Auto-scroll ke bawah saat ada pesan baru
   useEffect(() => {

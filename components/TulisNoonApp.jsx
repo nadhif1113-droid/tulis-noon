@@ -28,7 +28,7 @@ import FriendsScreen from '@/components/FriendsScreen';
 import CommunityScreen from '@/components/CommunityScreen';
 import ChatScreen from '@/components/ChatScreen';
 import { speakArabic as ttsSpeakArabic } from '@/lib/tts';
-import { postActivity, getCommunityFeed, getLeaderboard, getUserGlobalRank, updatePresence } from '@/lib/social';
+import { postActivity, getCommunityFeed, getLeaderboard, getUserGlobalRank, updatePresence, listenDmThreads, getFriends } from '@/lib/social';
 import { LEARNING_UMRAH } from '@/data/learning-umrah';
 import { LEARNING_PELAJAR } from '@/data/learning-pelajar';
 import { LEARNING_PROFESIONAL } from '@/data/learning-profesional';
@@ -61,6 +61,8 @@ export default function TulisNoonApp() {
   const [selectedChallenge, setSelectedChallenge] = useState(null);
   const [challengeOpponent, setChallengeOpponent] = useState(null); // teman yg ditantang match
   const [chatFriend, setChatFriend] = useState(null); // teman yg lagi di-chat
+  const [dmThreads, setDmThreads] = useState([]); // daftar chat (inbox) real-time
+  const unreadChats = dmThreads.filter((t) => t.unread).length; // jumlah chat belum dibaca
   // Level dalam scenario yang dipilih (1-100)
   const [selectedLevel, setSelectedLevel] = useState(1);
   const [progress, setProgress] = useState({ umrah: 1, profesi: 0, beasiswa: 0 });
@@ -408,6 +410,13 @@ export default function TulisNoonApp() {
     };
   }, [user?.uid]);
 
+  // Listen daftar chat (inbox) real-time → buat badge unread di tab Sosial + inbox.
+  useEffect(() => {
+    if (!user?.uid) { setDmThreads([]); return; }
+    const unsub = listenDmThreads(user.uid, (threads) => setDmThreads(threads));
+    return () => { try { unsub && unsub(); } catch (e) {} };
+  }, [user?.uid]);
+
   // Log 1 aktivitas: tampil instan di feed lokal + persist ke Firestore (community).
   // community=false → cuma lokal (mis. warning koin kurang, ga usah disebar).
   const logCommunity = (item, community = true) => {
@@ -610,10 +619,10 @@ export default function TulisNoonApp() {
                 setScreen('game');
               }} onOpenChallenge={(scenario) => { setSelectedChallenge(scenario || getTodayChallenge()); setScreen('challenge-levels'); }} onOpenGuru={() => setScreen('guru')} achievements={achievements} onSeeAllActivity={() => setTab('sosial')} featuredChallenge={featuredChallenge} />}
               {tab === 'belajar' && <BelajarTab onSelectPath={(p) => { setSelectedPath(p); setScreen('lessons'); }} onOpenGuru={() => setScreen('guru')} progress={progress} />}
-              {tab === 'sosial' && <SosialTab achievements={achievements} userName={userName} currentUserId={user?.uid} userProfile={authProfile} onOpenMatch={() => setScreen('match')} onOpenFriends={() => setScreen('friends')} onOpenCommunity={() => setScreen('community')} onRankComputed={handleRankComputed} />}
+              {tab === 'sosial' && <SosialTab achievements={achievements} userName={userName} currentUserId={user?.uid} userProfile={authProfile} dmThreads={dmThreads} onOpenChat={(friend) => { setChatFriend(friend); setScreen('chat'); }} onOpenMatch={() => setScreen('match')} onOpenFriends={() => setScreen('friends')} onOpenCommunity={() => setScreen('community')} onRankComputed={handleRankComputed} />}
               {tab === 'profil' && <ProfilTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} progress={progress} onOpenPremium={() => setScreen('premium')} />}
             </div>
-            <BottomNav active={tab} onChange={setTab} router={router} />
+            <BottomNav active={tab} onChange={setTab} router={router} sosialBadge={unreadChats} />
             {/* Floating Tanya Cepat — cuma muncul kalau user di Saudi/Timur Tengah */}
             {shouldShowTanyaCepat(authProfile) && (
               <TanyaCepatFAB
@@ -2185,15 +2194,29 @@ function BelajarTab({ onSelectPath, onOpenGuru, progress }) {
 }
 
 // ============ SOSIAL TAB ============
-function SosialTab({ achievements, userName, currentUserId, userProfile, onOpenMatch, onOpenFriends, onOpenCommunity, onRankComputed }) {
+function SosialTab({ achievements, userName, currentUserId, userProfile, dmThreads = [], onOpenChat, onOpenMatch, onOpenFriends, onOpenCommunity, onRankComputed }) {
   const [leaderboard, setLeaderboard] = useState([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
   const [lbScope, setLbScope] = useState('global'); // global | friends | regional
   const [myRank, setMyRank] = useState(null); // peringkat global user
+  const [friendMap, setFriendMap] = useState({}); // uid -> profil teman (buat nama/avatar di inbox)
 
   const myCountry = userProfile?.location?.countryCode || null;
   const myFriends = userProfile?.friends || [];
   const myXp = userProfile?.xp || 0;
+
+  // Ambil profil teman sekali → buat resolve nama/avatar di daftar chat.
+  useEffect(() => {
+    if (!currentUserId) return;
+    let cancelled = false;
+    getFriends(currentUserId).then((list) => {
+      if (cancelled) return;
+      const map = {};
+      (list || []).forEach((f) => { if (f?.uid) map[f.uid] = f; });
+      setFriendMap(map);
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [currentUserId]);
 
   // Fetch leaderboard sesuai scope
   useEffect(() => {
@@ -2256,6 +2279,50 @@ function SosialTab({ achievements, userName, currentUserId, userProfile, onOpenM
           <span className="text-xs font-semibold" style={{ color: '#8b6b3d' }}>Grup</span>
         </div>
       </div>
+
+      {/* Daftar chat terakhir (inbox) — cuma muncul kalau udah ada percakapan */}
+      {dmThreads.length > 0 && (
+        <div className="rounded-2xl p-3 mb-4" style={{ background: 'white', border: '1px solid rgba(10,77,60,0.08)' }}>
+          <div className="flex items-center gap-2 px-1 mb-2">
+            <MessageCircle size={15} style={{ color: '#0a4d3c' }} />
+            <p className="text-sm font-semibold" style={{ color: '#0a4d3c' }}>Pesan</p>
+          </div>
+          <div className="space-y-1">
+            {dmThreads.slice(0, 6).map((t) => {
+              const f = friendMap[t.otherId];
+              const name = f?.displayName || 'Teman';
+              const emoji = f?.avatarEmoji || null;
+              const mine = t.lastSenderId === currentUserId;
+              return (
+                <button
+                  key={t.pairId}
+                  onClick={() => onOpenChat?.(f || { uid: t.otherId, displayName: name, avatarEmoji: emoji })}
+                  className="w-full flex items-center gap-3 px-1.5 py-2 rounded-xl active:scale-[0.98] transition-transform text-left"
+                >
+                  <div className="relative flex-shrink-0">
+                    <div className="rounded-full flex items-center justify-center overflow-hidden" style={{ width: 40, height: 40, background: emoji ? 'rgba(201,169,97,0.15)' : 'linear-gradient(135deg, #0a4d3c, #1a6b56)' }}>
+                      {emoji ? <span style={{ fontSize: 22 }}>{emoji}</span> : <span className="text-white font-bold" style={{ fontSize: 17 }}>{name[0].toUpperCase()}</span>}
+                    </div>
+                    {f?.online && <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2" style={{ background: '#22c55e', borderColor: 'white' }} />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-semibold text-sm truncate" style={{ color: '#0a4d3c' }}>{name}</p>
+                      <span className="text-[10px] flex-shrink-0" style={{ color: '#8b6b3d' }}>{t.time}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs truncate flex-1" dir="rtl" style={{ fontFamily: 'Amiri, serif', color: t.unread ? '#1a1a1a' : '#8b6b3d', fontWeight: t.unread ? 600 : 400 }}>
+                        {mine ? 'أنت: ' : ''}{t.lastText}
+                      </p>
+                      {t.unread && <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: '#e23b3b' }} />}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Match Arena CTA — entry point ke game competitive */}
       <button
@@ -2459,7 +2526,7 @@ function ProfilTab({ userName, userProfile, xp, streak, progress, onOpenPremium 
 }
 
 // ============ BOTTOM NAV ============
-function BottomNav({ active, onChange, router }) {
+function BottomNav({ active, onChange, router, sosialBadge = 0 }) {
   const tabs = [
     { id: 'home', l: 'Beranda', icon: Home },
     { id: 'belajar', l: 'Belajar', icon: BookOpen },
@@ -2472,13 +2539,22 @@ function BottomNav({ active, onChange, router }) {
         {tabs.map((t) => {
           const Icon = t.icon;
           const isActive = active === t.id;
+          const badge = t.id === 'sosial' ? sosialBadge : 0;
           return (
             <button key={t.id} onClick={() => {
               // FIX BUG back-button HP: pakai router.replace biar /profile gak nimpa history.
               // Tadinya pakai push → user buka game lalu HW back → balik ke /profile, bukan ke home.
               if(t.id === 'profil') { router?.replace('/profile'); } else { onChange(t.id); }
             }} className="flex flex-col items-center justify-center py-2 px-1">
-              <Icon size={22} style={{ color: isActive ? '#0a4d3c' : '#8b6b3d' }} fill={isActive ? '#0a4d3c' : 'transparent'} strokeWidth={isActive ? 2 : 1.5} />
+              <div className="relative">
+                <Icon size={22} style={{ color: isActive ? '#0a4d3c' : '#8b6b3d' }} fill={isActive ? '#0a4d3c' : 'transparent'} strokeWidth={isActive ? 2 : 1.5} />
+                {badge > 0 && (
+                  <span className="absolute flex items-center justify-center text-white font-bold rounded-full"
+                    style={{ top: -6, right: -10, minWidth: 17, height: 17, padding: '0 4px', fontSize: 10, lineHeight: '17px', background: '#e23b3b', border: '1.5px solid #faf6ee' }}>
+                    {badge > 9 ? '9+' : badge}
+                  </span>
+                )}
+              </div>
               <span className="text-[10px] mt-1 font-medium" style={{ color: isActive ? '#0a4d3c' : '#8b6b3d' }}>{t.l}</span>
             </button>
           );
