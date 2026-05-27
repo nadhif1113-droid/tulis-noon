@@ -2199,49 +2199,28 @@ function SosialTab({ achievements, userName, currentUserId, userProfile, onOpenM
         </div>
       </div>
 
-      {/* Teman — entry point ke FriendsScreen */}
-      <button
-        onClick={onOpenFriends}
-        className="w-full text-left rounded-2xl p-4 mt-4 mb-3 flex items-center gap-3 transition-transform active:scale-[0.98]"
-        style={{ background: 'white', border: '1px solid rgba(10,77,60,0.1)' }}
-      >
-        <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(10,77,60,0.08)' }}>
-          <Users size={20} style={{ color: '#0a4d3c' }} />
-        </div>
-        <div className="flex-1">
-          <h3 className="font-semibold text-sm" style={{ color: '#0a4d3c' }}>Teman</h3>
-          <p className="text-xs" style={{ color: '#8b6b3d' }}>Add teman pakai kode & belajar bareng</p>
-        </div>
-        <ArrowRight size={16} style={{ color: '#8b6b3d' }} />
-      </button>
-
-      {/* Komunitas — feed posting/like/komentar */}
-      <button
-        onClick={onOpenCommunity}
-        className="w-full text-left rounded-2xl p-4 mb-3 flex items-center gap-3 transition-transform active:scale-[0.98]"
-        style={{ background: 'white', border: '1px solid rgba(10,77,60,0.1)' }}
-      >
-        <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(201,169,97,0.15)' }}>
-          <MessageCircle size={20} style={{ color: '#c9a961' }} />
-        </div>
-        <div className="flex-1">
-          <h3 className="font-semibold text-sm" style={{ color: '#0a4d3c' }}>Komunitas</h3>
-          <p className="text-xs" style={{ color: '#8b6b3d' }}>Cerita, tanya, & kasih semangat ke jamaah lain</p>
-        </div>
-        <ArrowRight size={16} style={{ color: '#8b6b3d' }} />
-      </button>
-
-      {/* Grup Belajar — COMING SOON (teaser) */}
-      <div className="w-full text-left rounded-2xl p-4 mb-3 flex items-center gap-3 opacity-90" style={{ background: 'white', border: '1px dashed rgba(10,77,60,0.18)' }}>
-        <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(10,77,60,0.06)' }}>
-          <Users size={20} style={{ color: '#8b6b3d' }} />
-        </div>
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-sm" style={{ color: '#0a4d3c' }}>Grup Belajar</h3>
-            <span className="text-[9px] tracking-wider uppercase px-1.5 py-0.5 rounded-full font-bold" style={{ background: 'rgba(201,169,97,0.18)', color: '#a05536' }}>Segera</span>
+      {/* Entri sosial — compact horizontal (3 kolom) biar hemat ruang & leaderboard naik */}
+      <div className="grid grid-cols-3 gap-2 mt-4 mb-4">
+        <button onClick={onOpenFriends} className="rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 active:scale-95 transition-transform" style={{ background: 'white', border: '1px solid rgba(10,77,60,0.1)' }}>
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(10,77,60,0.08)' }}>
+            <Users size={19} style={{ color: '#0a4d3c' }} />
           </div>
-          <p className="text-xs" style={{ color: '#8b6b3d' }}>Belajar bareng rombongan umrah & leaderboard grup</p>
+          <span className="text-xs font-semibold" style={{ color: '#0a4d3c' }}>Teman</span>
+        </button>
+
+        <button onClick={onOpenCommunity} className="rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 active:scale-95 transition-transform" style={{ background: 'white', border: '1px solid rgba(10,77,60,0.1)' }}>
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(201,169,97,0.15)' }}>
+            <MessageCircle size={19} style={{ color: '#c9a961' }} />
+          </div>
+          <span className="text-xs font-semibold" style={{ color: '#0a4d3c' }}>Komunitas</span>
+        </button>
+
+        <div className="rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 relative" style={{ background: 'white', border: '1px dashed rgba(10,77,60,0.18)' }}>
+          <span className="absolute top-1 right-1 text-[8px] tracking-wide uppercase px-1 py-0.5 rounded-full font-bold" style={{ background: 'rgba(201,169,97,0.2)', color: '#a05536' }}>Soon</span>
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(10,77,60,0.06)' }}>
+            <Users size={19} style={{ color: '#8b6b3d' }} />
+          </div>
+          <span className="text-xs font-semibold" style={{ color: '#8b6b3d' }}>Grup</span>
         </div>
       </div>
 
