@@ -24,6 +24,7 @@ import TanyaCepatFAB from '@/components/TanyaCepatFAB';
 import LessonDetailScreen from '@/components/LessonDetailScreen';
 import PerkenalanContextPicker from '@/components/PerkenalanContextPicker';
 import BrandLoader from '@/components/BrandLoader';
+import { speakArabic as ttsSpeakArabic } from '@/lib/tts';
 import { LEARNING_UMRAH } from '@/data/learning-umrah';
 import { LEARNING_PELAJAR } from '@/data/learning-pelajar';
 import { LEARNING_PROFESIONAL } from '@/data/learning-profesional';
@@ -2433,14 +2434,7 @@ function IntroStep({ step, onNext }) {
 }
 
 function PhraseStep({ step, onNext }) {
-  const speak = () => {
-    if ('speechSynthesis' in window) {
-      const u = new SpeechSynthesisUtterance(step.arabic);
-      u.lang = 'ar-SA';
-      u.rate = 0.8;
-      window.speechSynthesis.speak(u);
-    }
-  };
+  const speak = () => { ttsSpeakArabic(step.arabic, { rate: 0.85 }); };
   useEffect(() => { const t = setTimeout(speak, 400); return () => clearTimeout(t); }, []);
 
   return (
@@ -2468,13 +2462,7 @@ function SpeakStep({ step, onNext }) {
   const [result, setResult] = useState(null);
   const [transcript, setTranscript] = useState('');
 
-  const speak = () => {
-    if ('speechSynthesis' in window) {
-      const u = new SpeechSynthesisUtterance(step.arabic);
-      u.lang = 'ar-SA'; u.rate = 0.7;
-      window.speechSynthesis.speak(u);
-    }
-  };
+  const speak = () => { ttsSpeakArabic(step.arabic, { rate: 0.8 }); };
 
   const startListening = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -2712,13 +2700,7 @@ function VideoQuizGame({ onBack, onComplete }) {
   ];
 
   const current = scenes[scene];
-  const playAudio = () => {
-    if ('speechSynthesis' in window) {
-      const u = new SpeechSynthesisUtterance(current.audio);
-      u.lang = 'ar-SA'; u.rate = 0.8;
-      window.speechSynthesis.speak(u);
-    }
-  };
+  const playAudio = () => { ttsSpeakArabic(current.audio, { rate: 0.85 }); };
 
   useEffect(() => { const t = setTimeout(playAudio, 600); return () => clearTimeout(t); }, [scene]);
 

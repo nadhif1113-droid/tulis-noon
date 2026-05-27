@@ -12,6 +12,9 @@ import BrandLoader from '../../components/BrandLoader';
 import { isInMiddleEast, isInIndonesia, getUserTimezone } from '../../lib/geo-detect';
 import { sendTestNotification, getPendingPrayerNotifsCount } from '../../lib/local-prayer-notifications';
 
+// Debug-only: tombol test notif. Set true kalau mau debug notif sholat di dev.
+const SHOW_NOTIF_DEBUG = false;
+
 export default function ProfilePage() {
   const router = useRouter();
   const { user, userProfile, loading, signOut, updateUserProfile } = useAuth();
@@ -232,7 +235,8 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Notification Test (debug section) */}
+        {/* Notification Test (debug section) — disembunyikan di production */}
+        {SHOW_NOTIF_DEBUG && (
         <div className="px-5 mb-4">
           <div className="rounded-2xl p-4" style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.08)' }}>
             <p className="text-[10px] tracking-widest uppercase font-bold mb-2" style={{ color: '#c9a961' }}>🔔 Notifikasi Sholat</p>
@@ -265,6 +269,7 @@ export default function ProfilePage() {
             </button>
           </div>
         </div>
+        )}
 
         {/* Lokasi override — manual toggle untuk Tanya Cepat */}
         <div className="px-5 mb-4">

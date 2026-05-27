@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, ArrowRight, Home, Lock, Sparkles, Star, Trophy, RefreshCw, Check, X, Volume2 } from 'lucide-react';
 import { TULIS_ARAB_PHASES, buildLetterChoices } from '@/data/tulis-arab-levels';
+import { speakArabic as ttsSpeakArabic } from '@/lib/tts';
 
 // ============================================================================
 // MAIN ENTRY — manages internal flow (phases / levels / play / result)
@@ -328,35 +329,18 @@ function PlayView({ phase, level, lives = 10, onNoLives, onBack, onComplete }) {
   // Audio TTS — pakai Web Speech API kalau support (works on iOS Safari for Arabic).
   // Kasih callback `onEnd` supaya bisa chain action setelah audio selesai
   // (mis. lanjut ke soal berikut setelah putar suara huruf benar).
+  // Server-side TTS (Google Cloud TTS) + fallback Web Speech.
+  // Tetep ada safety net: kalau audio gagal/lama, flow game lanjut otomatis.
   const speakArabic = (text, onEnd) => {
-    if (typeof window === 'undefined') {
-      if (onEnd) setTimeout(onEnd, 800);
-      return;
-    }
-    const synth = window.speechSynthesis;
-    if (!synth) {
-      // Browser ga support TTS — fallback delay supaya flow tetep lanjut
-      if (onEnd) setTimeout(onEnd, 800);
-      return;
-    }
-    synth.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = 'ar-SA';
-    utter.rate = 0.7;
-    // Safety net: kalau onend ga ke-trigger (TTS error/no voice installed),
-    // tetep panggil onEnd setelah max 2.5 detik biar flow ga stuck.
     let fired = false;
     const safeOnEnd = () => {
       if (fired) return;
       fired = true;
       if (onEnd) onEnd();
     };
-    if (onEnd) {
-      utter.onend = safeOnEnd;
-      utter.onerror = safeOnEnd;
-      setTimeout(safeOnEnd, 2500);
-    }
-    synth.speak(utter);
+    ttsSpeakArabic(text, { rate: 0.75, onEnd: safeOnEnd, onError: safeOnEnd });
+    // Safety net: kalau audio ga selesai dalam 5 detik, lanjutkan flow biar gak stuck.
+    if (onEnd) setTimeout(safeOnEnd, 5000);
   };
 
   if (stage === 'intro') {

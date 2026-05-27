@@ -7,6 +7,7 @@
 import { useState, useRef } from 'react';
 import { ArrowLeft, ArrowRight, Home, Volume2, Sparkles, BookOpen, MessageCircle, ChevronRight, Star, Lock, Coins, X } from 'lucide-react';
 import { isConversationFree, isConversationUnlocked, getPricing } from '@/lib/learning-pricing';
+import { speakArabic as ttsSpeakArabic } from '@/lib/tts';
 
 export default function LessonDetailScreen({ module, userProfile, onBack, onHome, onComplete, onUnlockConversation }) {
   const [view, setView] = useState('overview'); // overview | vocab | conversation
@@ -14,13 +15,9 @@ export default function LessonDetailScreen({ module, userProfile, onBack, onHome
   const [unlockTargetConv, setUnlockTargetConv] = useState(null);
   const pricing = getPricing(module?.pathId);
 
+  // TTS Arab — server-side (Google Cloud TTS) + fallback Web Speech.
   const speakArabic = (text) => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'ar-SA';
-    u.rate = 0.8;
-    window.speechSynthesis.speak(u);
+    ttsSpeakArabic(text, { rate: 0.85 });
   };
 
   if (!module) return null;

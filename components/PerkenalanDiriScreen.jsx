@@ -8,6 +8,7 @@
 
 import { useState, useRef } from 'react';
 import { ArrowLeft, ArrowRight, Home, Volume2, Sparkles, Check, X, Lock, Coins, ChevronRight, BookOpen, Star } from 'lucide-react';
+import { speakArabic as ttsSpeakArabic } from '@/lib/tts';
 import {
   PERKENALAN_MATERI,
   PERKENALAN_MATERI_COST,
@@ -276,13 +277,9 @@ function ReaderView({ materi, onBack, onDone }) {
   const page = pages[pageIdx];
   const isLast = pageIdx === pages.length - 1;
 
+  // TTS Arab — server-side (Google Cloud TTS) + fallback Web Speech.
   const speakArabic = (text) => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'ar-SA';
-    u.rate = 0.75;
-    window.speechSynthesis.speak(u);
+    ttsSpeakArabic(text, { rate: 0.8 });
   };
 
   const next = () => { if (isLast) onDone(); else setPageIdx(pageIdx + 1); };

@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, ArrowRight, Home, Sparkles, Star, RefreshCw, Volume2, Check, X, ChevronRight } from 'lucide-react';
 import { TEBAK_GAMBAR_LEVELS, generateQuestions } from '@/data/tebak-gambar-levels';
+import { speakArabic as ttsSpeakArabic } from '@/lib/tts';
 
 export default function TebakGambarScreen({ lives = 10, onNoLives, onBack, onHome, onComplete }) {
   const [view, setView] = useState('list'); // list | play | result
@@ -172,16 +173,10 @@ function PlayView({ level, onBack, onComplete }) {
 
   const current = questions[qIdx];
 
-  // TTS — putar pengucapan Arab pas user pilih (kalau benar)
+  // TTS — putar pengucapan Arab pas user pilih (kalau benar).
+  // Server-side (Google Cloud TTS) + fallback Web Speech.
   const speakArabic = (text) => {
-    if (typeof window === 'undefined') return;
-    const synth = window.speechSynthesis;
-    if (!synth) return;
-    synth.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = 'ar-SA';
-    utter.rate = 0.75;
-    synth.speak(utter);
+    ttsSpeakArabic(text, { rate: 0.8 });
   };
 
   // FIX BUG: score state pakai functional update, tapi setTimeout closure

@@ -7,6 +7,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, ArrowRight, Home, Volume2, Sparkles, Star, ChevronRight, BookOpen, RefreshCw, Check, X } from 'lucide-react';
 import { CERITA_STORIES } from '@/data/cerita-stories';
+import { speakArabic as ttsSpeakArabic } from '@/lib/tts';
 
 export default function CeritaScreen({ lives = 10, onNoLives, onBack, onHome, onComplete }) {
   const [view, setView] = useState('list'); // list | reader | quiz | result
@@ -183,16 +184,9 @@ function ReaderView({ story, onBack, onDone }) {
   const page = story.pages[pageIdx];
   const isLastPage = pageIdx === story.pages.length - 1;
 
-  // TTS untuk Arabic vocab/dialog
+  // TTS untuk Arabic vocab/dialog — server-side (Google Cloud TTS) + fallback Web Speech.
   const speakArabic = (text) => {
-    if (typeof window === 'undefined') return;
-    const synth = window.speechSynthesis;
-    if (!synth) return;
-    synth.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = 'ar-SA';
-    utter.rate = 0.75;
-    synth.speak(utter);
+    ttsSpeakArabic(text, { rate: 0.8 });
   };
 
   const next = () => {
