@@ -26,6 +26,7 @@ import PerkenalanContextPicker from '@/components/PerkenalanContextPicker';
 import BrandLoader from '@/components/BrandLoader';
 import FriendsScreen from '@/components/FriendsScreen';
 import CommunityScreen from '@/components/CommunityScreen';
+import ChatScreen from '@/components/ChatScreen';
 import { speakArabic as ttsSpeakArabic } from '@/lib/tts';
 import { postActivity, getCommunityFeed, getLeaderboard, getUserGlobalRank, updatePresence } from '@/lib/social';
 import { LEARNING_UMRAH } from '@/data/learning-umrah';
@@ -59,6 +60,7 @@ export default function TulisNoonApp() {
   // Challenge scenario yang lagi dimainin. Default ke "Tantangan Hari Ini" (rotasi by tanggal).
   const [selectedChallenge, setSelectedChallenge] = useState(null);
   const [challengeOpponent, setChallengeOpponent] = useState(null); // teman yg ditantang match
+  const [chatFriend, setChatFriend] = useState(null); // teman yg lagi di-chat
   // Level dalam scenario yang dipilih (1-100)
   const [selectedLevel, setSelectedLevel] = useState(1);
   const [progress, setProgress] = useState({ umrah: 1, profesi: 0, beasiswa: 0 });
@@ -238,6 +240,7 @@ export default function TulisNoonApp() {
           if (s === 'roleplay-list') { setScreen('main'); return true; }
           if (s === 'match') { setScreen('main'); return true; }
           if (s === 'friends') { setScreen('main'); return true; }
+          if (s === 'chat') { setScreen('friends'); return true; }
           if (s === 'community') { setScreen('main'); return true; }
           if (s === 'guru') { setScreen('main'); return true; }
           if (s === 'premium') { setScreen('main'); return true; }
@@ -990,8 +993,9 @@ export default function TulisNoonApp() {
           onBack={() => setScreen('main')}
           onHome={() => { setTab('home'); setScreen('main'); }}
           onChallengeFriend={(friend) => { setChallengeOpponent(friend); setScreen('match'); }}
-          onOpenChat={(friend) => { logCommunity({ type: 'info', text: `mau chat ${friend.displayName}`, emoji: '💬' }, false); alert('Chat teman segera hadir! 💬 Untuk sekarang, tantang dia main Match dulu ya.'); }}
+          onOpenChat={(friend) => { setChatFriend(friend); setScreen('chat'); }}
         />}
+        {screen === 'chat' && <ChatScreen userId={user?.uid} userProfile={authProfile} friend={chatFriend} onBack={() => { setChatFriend(null); setScreen('friends'); }} onHome={() => { setChatFriend(null); setTab('home'); setScreen('main'); }} />}
         {screen === 'community' && <CommunityScreen userId={user?.uid} userProfile={authProfile} onBack={() => setScreen('main')} onHome={() => { setTab('home'); setScreen('main'); }} />}
         {screen === 'guru' && <GuruScreen onBack={() => setScreen('main')} onSelectGuru={(g) => { setSelectedGuru(g); setScreen('guru-detail'); }} />}
         {screen === 'guru-detail' && <GuruDetailScreen guru={selectedGuru} onBack={() => setScreen('guru')} />}
