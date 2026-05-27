@@ -30,6 +30,7 @@ export default function MatchArenaScreen({
   matchesPlayed = 0,
   xp = 0,
   winStreak = 0,
+  presetOpponent = null,
   currentUserId,
   userName,
   onNoLives,
@@ -41,6 +42,24 @@ export default function MatchArenaScreen({
   const [opponent, setOpponent] = useState(null);
   const [matchResult, setMatchResult] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // Tantang teman langsung — lewat lobby, ke reveal pakai data teman sbg lawan.
+  useEffect(() => {
+    if (presetOpponent && view === 'lobby') {
+      if (lives <= 0) { if (onNoLives) onNoLives(); return; }
+      const opp = userToOpponent({
+        id: presetOpponent.uid,
+        uid: presetOpponent.uid,
+        displayName: presetOpponent.displayName,
+        photoURL: presetOpponent.photoURL,
+        xp: presetOpponent.xp || 0,
+        level: presetOpponent.level || 1,
+      });
+      setOpponent({ ...opp, avatarEmoji: presetOpponent.avatarEmoji || null, matchLevel: getMatchLevelForXp(xp) });
+      setView('reveal');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [presetOpponent]);
 
   // Pick bot opponent — sesuai level XP pemain + win-streak (adaptif)
   const handlePickBot = () => {

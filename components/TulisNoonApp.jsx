@@ -58,6 +58,7 @@ export default function TulisNoonApp() {
   const [selectedGuru, setSelectedGuru] = useState(null);
   // Challenge scenario yang lagi dimainin. Default ke "Tantangan Hari Ini" (rotasi by tanggal).
   const [selectedChallenge, setSelectedChallenge] = useState(null);
+  const [challengeOpponent, setChallengeOpponent] = useState(null); // teman yg ditantang match
   // Level dalam scenario yang dipilih (1-100)
   const [selectedLevel, setSelectedLevel] = useState(1);
   const [progress, setProgress] = useState({ umrah: 1, profesi: 0, beasiswa: 0 });
@@ -914,10 +915,11 @@ export default function TulisNoonApp() {
           matchesPlayed={authProfile?.matchesPlayed || 0}
           xp={xp}
           winStreak={authProfile?.matchWinStreak || 0}
+          presetOpponent={challengeOpponent}
           currentUserId={user?.uid}
           userName={userName}
           onNoLives={() => setShowLivesModal(true)}
-          onBack={() => { setTab('sosial'); setScreen('main'); }}
+          onBack={() => { setChallengeOpponent(null); setTab('sosial'); setScreen('main'); }}
           onHome={() => { setTab('home'); setScreen('main'); }}
           onComplete={({ earned, coinEarned, result, userScore, botScore, opponentName, opponentLevel, isHuman }) => {
             // Award XP + koin
@@ -964,7 +966,14 @@ export default function TulisNoonApp() {
           onUpgrade={() => setScreen('premium')}
         />}
 
-        {screen === 'friends' && <FriendsScreen userId={user?.uid} userProfile={authProfile} onBack={() => setScreen('main')} onHome={() => { setTab('home'); setScreen('main'); }} />}
+        {screen === 'friends' && <FriendsScreen
+          userId={user?.uid}
+          userProfile={authProfile}
+          onBack={() => setScreen('main')}
+          onHome={() => { setTab('home'); setScreen('main'); }}
+          onChallengeFriend={(friend) => { setChallengeOpponent(friend); setScreen('match'); }}
+          onOpenChat={(friend) => { logCommunity({ type: 'info', text: `mau chat ${friend.displayName}`, emoji: '💬' }, false); alert('Chat teman segera hadir! 💬 Untuk sekarang, tantang dia main Match dulu ya.'); }}
+        />}
         {screen === 'community' && <CommunityScreen userId={user?.uid} userProfile={authProfile} onBack={() => setScreen('main')} onHome={() => { setTab('home'); setScreen('main'); }} />}
         {screen === 'guru' && <GuruScreen onBack={() => setScreen('main')} onSelectGuru={(g) => { setSelectedGuru(g); setScreen('guru-detail'); }} />}
         {screen === 'guru-detail' && <GuruDetailScreen guru={selectedGuru} onBack={() => setScreen('guru')} />}

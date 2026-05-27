@@ -4,12 +4,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Home, UserPlus, Copy, Check, Users, Trophy, Flame, X, Loader2 } from 'lucide-react';
+import { ArrowLeft, Home, UserPlus, Copy, Check, Users, Trophy, Flame, X, Loader2, Swords, MessageCircle } from 'lucide-react';
 import { ensureFriendCode, addFriendByCode, getFriends, removeFriend } from '@/lib/social';
 
 const FLAGS = { SA: '🇸🇦', AE: '🇦🇪', QA: '🇶🇦', KW: '🇰🇼', BH: '🇧🇭', OM: '🇴🇲', JO: '🇯🇴', EG: '🇪🇬', YE: '🇾🇪', ID: '🇮🇩', MY: '🇲🇾', SG: '🇸🇬', BN: '🇧🇳' };
 
-export default function FriendsScreen({ userId, userProfile, onBack, onHome }) {
+export default function FriendsScreen({ userId, userProfile, onBack, onHome, onChallengeFriend, onOpenChat }) {
   const [myCode, setMyCode] = useState(userProfile?.friendCode || null);
   const [friends, setFriends] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,6 +17,7 @@ export default function FriendsScreen({ userId, userProfile, onBack, onHome }) {
   const [adding, setAdding] = useState(false);
   const [msg, setMsg] = useState(null); // { type: 'ok'|'err', text }
   const [copied, setCopied] = useState(false);
+  const [justAdded, setJustAdded] = useState(null); // friend yg baru di-add → tampil prompt CTA
 
   useEffect(() => {
     (async () => {
@@ -66,8 +67,9 @@ export default function FriendsScreen({ userId, userProfile, onBack, onHome }) {
     setMsg(null);
     const res = await addFriendByCode(userId, code);
     if (res.success) {
-      setMsg({ type: 'ok', text: `${res.friend.displayName} ditambahkan sebagai teman! 🎉` });
+      setMsg(null);
       setCodeInput('');
+      setJustAdded(res.friend); // tampilkan prompt CTA (Tantang / Chat)
       // refresh list
       const list = await getFriends(userId);
       setFriends(list);
@@ -143,6 +145,25 @@ export default function FriendsScreen({ userId, userProfile, onBack, onHome }) {
         )}
       </div>
 
+      {/* Prompt CTA setelah berhasil add teman — ajak langsung Tantang / Chat */}
+      {justAdded && (
+        <div className="rounded-2xl p-4 mb-4 relative" style={{ background: 'linear-gradient(135deg, #0a4d3c, #1a6b56)' }}>
+          <button onClick={() => setJustAdded(null)} className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.18)' }}>
+            <X size={12} color="white" />
+          </button>
+          <p className="text-sm font-semibold text-white mb-0.5">🎉 {justAdded.displayName} jadi temanmu!</p>
+          <p className="text-xs text-white opacity-85 mb-3">Langsung tantang dia atau sapa lewat chat?</p>
+          <div className="flex gap-2">
+            <button onClick={() => { onChallengeFriend?.(justAdded); setJustAdded(null); }} className="flex-1 py-2.5 rounded-xl flex items-center justify-center gap-1.5 text-sm font-bold" style={{ background: 'white', color: '#a05536' }}>
+              <Swords size={15} /> Tantang Match
+            </button>
+            <button onClick={() => { onOpenChat?.(justAdded); setJustAdded(null); }} className="flex-1 py-2.5 rounded-xl flex items-center justify-center gap-1.5 text-sm font-bold" style={{ background: 'rgba(255,255,255,0.2)', color: 'white' }}>
+              <MessageCircle size={15} /> Chat
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Daftar teman */}
       <div className="flex items-center gap-2 mb-3 mt-1">
         <Users size={16} style={{ color: '#8b6b3d' }} />
@@ -164,23 +185,34 @@ export default function FriendsScreen({ userId, userProfile, onBack, onHome }) {
       ) : (
         <div className="space-y-2">
           {friends.map((f, i) => (
-            <div key={f.uid} className="flex items-center gap-3 p-3 rounded-2xl" style={{ background: 'white', border: '1px solid rgba(10,77,60,0.08)' }}>
-              <div className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: f.avatarEmoji ? 'rgba(201,169,97,0.15)' : 'linear-gradient(135deg, #0a4d3c, #1a6b56)' }}>
-                {f.avatarEmoji ? <span className="text-xl">{f.avatarEmoji}</span> : f.photoURL ? <img src={f.photoURL} alt="" className="w-full h-full object-cover" /> : <span className="text-white font-bold">{(f.displayName || '?')[0].toUpperCase()}</span>}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm truncate" style={{ color: '#1a1a1a' }}>
-                  {FLAGS[f.countryCode] ? FLAGS[f.countryCode] + ' ' : ''}{f.displayName}
-                </p>
-                <div className="flex items-center gap-3 text-xs" style={{ color: '#8b6b3d' }}>
-                  <span className="flex items-center gap-1"><Trophy size={11} style={{ color: '#c9a961' }} /> {f.xp} XP</span>
-                  <span>Lv {f.level}</span>
-                  {f.streak > 0 && <span className="flex items-center gap-1"><Flame size={11} style={{ color: '#e07a3f' }} /> {f.streak}</span>}
+            <div key={f.uid} className="p-3 rounded-2xl" style={{ background: 'white', border: '1px solid rgba(10,77,60,0.08)' }}>
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: f.avatarEmoji ? 'rgba(201,169,97,0.15)' : 'linear-gradient(135deg, #0a4d3c, #1a6b56)' }}>
+                  {f.avatarEmoji ? <span className="text-xl">{f.avatarEmoji}</span> : f.photoURL ? <img src={f.photoURL} alt="" className="w-full h-full object-cover" /> : <span className="text-white font-bold">{(f.displayName || '?')[0].toUpperCase()}</span>}
                 </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm truncate" style={{ color: '#1a1a1a' }}>
+                    {FLAGS[f.countryCode] ? FLAGS[f.countryCode] + ' ' : ''}{f.displayName}
+                  </p>
+                  <div className="flex items-center gap-3 text-xs" style={{ color: '#8b6b3d' }}>
+                    <span className="flex items-center gap-1"><Trophy size={11} style={{ color: '#c9a961' }} /> {f.xp} XP</span>
+                    <span>Lv {f.level}</span>
+                    {f.streak > 0 && <span className="flex items-center gap-1"><Flame size={11} style={{ color: '#e07a3f' }} /> {f.streak}</span>}
+                  </div>
+                </div>
+                <button onClick={() => handleRemove(f.uid, f.displayName)} className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(192,57,43,0.06)' }}>
+                  <X size={13} style={{ color: '#c0392b' }} />
+                </button>
               </div>
-              <button onClick={() => handleRemove(f.uid, f.displayName)} className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(192,57,43,0.08)' }}>
-                <X size={14} style={{ color: '#c0392b' }} />
-              </button>
+              {/* Aksi: Tantang Match + Chat */}
+              <div className="flex gap-2 mt-2.5">
+                <button onClick={() => onChallengeFriend?.(f)} className="flex-1 py-2 rounded-xl flex items-center justify-center gap-1.5 text-xs font-semibold text-white active:scale-95 transition-transform" style={{ background: 'linear-gradient(135deg, #a05536, #c46a3f)' }}>
+                  <Swords size={14} /> Tantang
+                </button>
+                <button onClick={() => onOpenChat?.(f)} className="flex-1 py-2 rounded-xl flex items-center justify-center gap-1.5 text-xs font-semibold active:scale-95 transition-transform" style={{ background: 'rgba(10,77,60,0.08)', color: '#0a4d3c' }}>
+                  <MessageCircle size={14} /> Chat
+                </button>
+              </div>
             </div>
           ))}
         </div>
