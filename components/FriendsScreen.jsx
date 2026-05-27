@@ -20,18 +20,22 @@ export default function FriendsScreen({ userId, userProfile, onBack, onHome }) {
 
   useEffect(() => {
     (async () => {
+      if (!userId) { setLoading(false); setMsg({ type: 'err', text: 'Belum login (userId kosong)' }); return; }
       try {
-        if (userId) {
-          const code = await ensureFriendCode(userId);
-          setMyCode(code);
-          const list = await getFriends(userId);
-          setFriends(list);
-        }
+        const code = await ensureFriendCode(userId);
+        setMyCode(code);
       } catch (e) {
-        console.error('Friends load error:', e);
-      } finally {
-        setLoading(false);
+        console.error('ensureFriendCode error:', e);
+        setMsg({ type: 'err', text: 'Kode gagal dibuat: ' + (e?.code || e?.message || e) });
       }
+      try {
+        const list = await getFriends(userId);
+        setFriends(list);
+      } catch (e) {
+        console.error('getFriends error:', e);
+        setMsg({ type: 'err', text: 'Baca teman gagal: ' + (e?.code || e?.message || e) });
+      }
+      setLoading(false);
     })();
   }, [userId]);
 
