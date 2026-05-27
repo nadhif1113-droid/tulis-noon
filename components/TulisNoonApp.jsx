@@ -27,6 +27,7 @@ import BrandLoader from '@/components/BrandLoader';
 import FriendsScreen from '@/components/FriendsScreen';
 import CommunityScreen from '@/components/CommunityScreen';
 import ChatScreen from '@/components/ChatScreen';
+import NgomongScreen from '@/components/NgomongScreen';
 import { speakArabic as ttsSpeakArabic } from '@/lib/tts';
 import { postActivity, getCommunityFeed, getLeaderboard, getUserGlobalRank, updatePresence, listenDmThreads, getFriends } from '@/lib/social';
 import { LEARNING_UMRAH } from '@/data/learning-umrah';
@@ -38,6 +39,7 @@ import { setupNativeBackButton, hideSplashScreen, setStatusBarStyle, isNative, s
 import { schedulePrayerNotifications } from '@/lib/local-prayer-notifications';
 import { detectLocation } from '@/lib/location-detector';
 import { PERKENALAN_MATERI_COST, PERKENALAN_BUNDLE_COST } from '@/data/perkenalan-diri-materi';
+import { NGOMONG_SESSION_COST } from '@/data/ngomong-materi';
 import { PREMIUM_UNLOCK_COST } from '@/lib/hafalan-tier';
 import { checkLivesRefresh } from '@/lib/lives-system';
 import { calculateStreakUpdate, getStreakMilestoneReward } from '@/lib/streak-system';
@@ -238,6 +240,7 @@ export default function TulisNoonApp() {
           if (s === 'challenge') { setScreen('challenge-levels'); return true; }
           if (s === 'challenge-levels') { setScreen('main'); return true; }
           if (s === 'game') { setScreen('main'); return true; }
+          if (s === 'ngomong') { setScreen('main'); return true; }
           if (s === 'roleplay') { setScreen('roleplay-list'); return true; }
           if (s === 'roleplay-list') { setScreen('main'); return true; }
           if (s === 'match') { setScreen('main'); return true; }
@@ -601,6 +604,10 @@ export default function TulisNoonApp() {
                 // Game lain (image-quiz, video-quiz, story) tetap ke GameScreen placeholder.
                 if (g.id === 'chat-roleplay') {
                   setScreen('roleplay-list');
+                  return;
+                }
+                if (g.id === 'ngomong') {
+                  setScreen('ngomong');
                   return;
                 }
                 if (g.id === 'tulis-arab') {
@@ -994,6 +1001,30 @@ export default function TulisNoonApp() {
             deductLifeIfLost(score === totalQuestions);
           }}
           onUpgrade={() => setScreen('premium')}
+        />}
+
+        {screen === 'ngomong' && <NgomongScreen
+          coins={authProfile?.coins || 0}
+          unlocked={authProfile?.unlockedNgomong || []}
+          onUnlockMateri={async (materiId) => {
+            const cur = authProfile?.coins || 0;
+            if (cur < NGOMONG_SESSION_COST) return false;
+            const arr = authProfile?.unlockedNgomong || [];
+            if (arr.includes(materiId)) return true;
+            try {
+              await updateUserProfile({ coins: cur - NGOMONG_SESSION_COST, unlockedNgomong: [...arr, materiId] });
+              return true;
+            } catch (e) { return false; }
+          }}
+          onUpgrade={() => setScreen('premium')}
+          onBack={() => setScreen('main')}
+          onHome={() => { setTab('home'); setScreen('main'); }}
+          onComplete={(earned) => {
+            if (earned > 0) {
+              awardXp(earned);
+              logCommunity({ type: 'ngomong', text: `Latihan bicara — pengucapan benar (+${earned} XP)`, emoji: '🗣️' });
+            }
+          }}
         />}
 
         {screen === 'friends' && <FriendsScreen
@@ -1987,6 +2018,17 @@ function HomeTab({ userName, userProfile, location, xp, streak, coins, lives, ma
               family: 'Bisa nulis nama',
               history: 'Huruf hijaiyah',
               tech: 'Belajar dari nol',
+            },
+          },
+          {
+            id: 'ngomong', t: 'Belajar Ngomong', d: 'Latihan Bicara',
+            icon: Mic, color: '#a05536', bg: 'rgba(160,85,54,0.12)',
+            interests: ['travel', 'religion', 'business', 'family'],
+            personalizedDesc: {
+              travel: 'Ucapkan barang umrah',
+              religion: 'Latih lidah bicara Arab',
+              business: 'Ngomong nama barang',
+              family: 'Sebut benda sehari-hari',
             },
           },
           {
