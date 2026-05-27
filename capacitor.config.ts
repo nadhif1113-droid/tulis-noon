@@ -66,6 +66,13 @@ const config: CapacitorConfig = {
       // Saat back button native ditekan, biarkan WebView handle history dulu
       // (jadi user gak langsung exit app pas tekan back dari game).
     },
+    FirebaseAuthentication: {
+      // skipNativeAuth: plugin cuma lakukan OAuth dance (native Google picker),
+      // lalu KITA yang sign-in ke Firebase JS SDK pakai credential-nya.
+      // Ini bikin onAuthStateChanged (JS) + Firestore (JS SDK) tetap jalan normal.
+      skipNativeAuth: true,
+      providers: ['google.com'],
+    },
   },
 };
 
