@@ -18,7 +18,7 @@ export default function Home() {
     // Kalau belum login, redirect ke /login
     if (!loading && !user) {
       console.log('📍 Redirecting to /login (no user)');
-      router.push('/login');
+      router.replace('/login');
     } else if (!loading && user) {
       console.log('✅ User logged in, rendering app');
     }

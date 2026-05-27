@@ -22,7 +22,7 @@ export default function LoginPage() {
     const result = await signIn(email, password);
 
     if (result.success) {
-      router.push('/');
+      router.replace('/');
     } else {
       setError(getErrorMessage(result.error));
     }
@@ -36,7 +36,7 @@ export default function LoginPage() {
     const result = await signInWithGoogle();
 
     if (result.success) {
-      router.push('/');
+      router.replace('/');
     } else {
       setError(getErrorMessage(result.error));
     }

@@ -218,8 +218,17 @@ export default function TulisNoonApp() {
           if (s === 'match') { setScreen('main'); return true; }
           if (s === 'guru') { setScreen('main'); return true; }
           if (s === 'premium') { setScreen('main'); return true; }
-          // Di 'main' → let default handle (exit app)
-          return false;
+          // Di 'main': kalau lagi di tab selain home, balik ke home dulu (jangan exit/history).
+          const { tab: t } = navStateRef.current;
+          if (t && t !== 'home') { setTab('home'); return true; }
+          // Udah di home → exit app (JANGAN window.history.back, biar gak balik ke /login).
+          (async () => {
+            try {
+              const { App } = await import('@capacitor/app');
+              await App.exitApp();
+            } catch (e) {}
+          })();
+          return true;
         },
       });
     })();

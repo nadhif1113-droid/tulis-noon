@@ -40,7 +40,7 @@ export default function RegisterPage() {
     const result = await signUp(email, password, name);
 
     if (result.success) {
-      router.push('/');
+      router.replace('/');
     } else {
       setError(getErrorMessage(result.error));
     }
@@ -54,7 +54,7 @@ export default function RegisterPage() {
     const result = await signInWithGoogle();
 
     if (result.success) {
-      router.push('/');
+      router.replace('/');
     } else {
       setError(getErrorMessage(result.error));
     }
