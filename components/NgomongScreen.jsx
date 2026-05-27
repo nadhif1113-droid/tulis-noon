@@ -118,8 +118,11 @@ export default function NgomongScreen({ coins = 0, unlocked = [], onUnlockMateri
 function MateriSession({ materi, isUnlocked, coins, onUnlock, onUpgrade, onExit, onFinish, onHome }) {
   const items = materi.items;
   const isKalimat = materi.level === 'kalimat';
+  const isCerita = materi.level === 'cerita';
+  const hasArrange = isKalimat || isCerita; // level yg pakai fase susun dulu
+  const unitLabel = isCerita ? 'cerita' : isKalimat ? 'kalimat' : 'kata';
   const [idx, setIdx] = useState(0);
-  const [phase, setPhase] = useState(isKalimat ? 'arrange' : 'speak'); // arrange → speak
+  const [phase, setPhase] = useState(hasArrange ? 'arrange' : 'speak'); // arrange → speak
   const [recognized, setRecognized] = useState(null);
   const [isListening, setIsListening] = useState(false);
   const [interim, setInterim] = useState('');
@@ -142,9 +145,12 @@ function MateriSession({ materi, isUnlocked, coins, onUnlock, onUpgrade, onExit,
   // Reset per kata/kalimat
   useEffect(() => {
     if (isDone || showPaywall || !current) return;
-    if (isKalimat) {
+    if (hasArrange) {
       setPhase('arrange');
-      setShuffled(shuffle(current.tokens).map((tok, i) => ({ tok, i })));
+      const units = isCerita
+        ? current.sentences.map((s) => ({ key: s.ar, display: s.ar, sub: s.id }))
+        : current.tokens.map((tok) => ({ key: tok, display: tok, sub: null }));
+      setShuffled(shuffle(units).map((u, i) => ({ ...u, i })));
       setBuilt([]);
       setArrangeResult(null);
     } else {
@@ -211,9 +217,10 @@ function MateriSession({ materi, isUnlocked, coins, onUnlock, onUpgrade, onExit,
   // Arrange handlers
   const addToken = (sIdx) => { if (!built.includes(sIdx)) setBuilt((b) => [...b, sIdx]); setArrangeResult(null); };
   const removeToken = (sIdx) => { setBuilt((b) => b.filter((x) => x !== sIdx)); setArrangeResult(null); };
+  const correctKeys = isCerita ? current?.sentences?.map((s) => s.ar) || [] : current?.tokens || [];
   const checkArrange = () => {
-    const builtTokens = built.map((i) => shuffled[i].tok);
-    const ok = builtTokens.length === current.tokens.length && builtTokens.every((t, i) => t === current.tokens[i]);
+    const builtKeys = built.map((i) => shuffled[i].key);
+    const ok = builtKeys.length === correctKeys.length && builtKeys.every((t, i) => t === correctKeys[i]);
     setArrangeResult(ok);
   };
 
@@ -249,7 +256,7 @@ function MateriSession({ materi, isUnlocked, coins, onUnlock, onUpgrade, onExit,
   if (showPaywall) {
     const remaining = items.length - freeLimit;
     const enough = coins >= NGOMONG_SESSION_COST;
-    const unit = isKalimat ? 'kalimat' : 'kata';
+    const unit = unitLabel;
     return (
       <div className="flex-1 flex flex-col" style={{ height: '100%' }}>
         <SessionHeader title={materi.title} onExit={onExit} onHome={onHome} />
@@ -280,9 +287,83 @@ function MateriSession({ materi, isUnlocked, coins, onUnlock, onUpgrade, onExit,
 
   const progressTotal = isUnlocked ? items.length : Math.min(freeLimit, items.length);
 
-  // ---- FASE SUSUN (kalimat) ----
-  if (isKalimat && phase === 'arrange') {
-    const builtTokens = built.map((i) => shuffled[i].tok);
+  // ---- FASE SUSUN (kalimat & cerita) ----
+  if (hasArrange && phase === 'arrange') {
+    const arrangeBtns = (
+      arrangeResult ? (
+        <button onClick={() => setPhase('speak')} className="w-full max-w-xs py-3.5 rounded-2xl text-white font-bold flex items-center justify-center gap-1.5" style={{ background: '#16a34a' }}>
+          {isCerita ? 'Lanjut: narasikan' : 'Lanjut: ucapkan'} <ChevronRight size={16} />
+        </button>
+      ) : (
+        <div className="flex items-center gap-2 w-full max-w-xs">
+          {built.length > 0 && (
+            <button onClick={() => { setBuilt([]); setArrangeResult(null); }} className="flex-1 py-3 rounded-2xl font-semibold flex items-center justify-center gap-1.5" style={{ background: 'rgba(10,77,60,0.08)', color: '#0a4d3c' }}>
+              <RotateCcw size={15} /> Reset
+            </button>
+          )}
+          <button onClick={checkArrange} disabled={built.length !== correctKeys.length} className="flex-1 py-3 rounded-2xl text-white font-bold disabled:opacity-40" style={{ background: '#0a4d3c' }}>Cek susunan</button>
+        </div>
+      )
+    );
+    const errBox = arrangeResult === false && (
+      <div className="w-full max-w-xs rounded-xl p-2.5 mb-3 flex items-center justify-center gap-2" style={{ background: 'rgba(192,57,43,0.07)' }}>
+        <X size={15} style={{ color: '#c0392b' }} />
+        <p className="text-xs font-semibold" style={{ color: '#c0392b' }}>Urutannya belum tepat, coba lagi</p>
+      </div>
+    );
+
+    // CERITA: urutkan kartu kalimat (vertikal, bernomor)
+    if (isCerita) {
+      const borderColor = arrangeResult === false ? '1.5px solid #c0392b' : (arrangeResult ? '1.5px solid #16a34a' : '1.5px dashed rgba(10,77,60,0.2)');
+      return (
+        <div className="flex-1 flex flex-col overflow-y-auto" style={{ height: '100%' }}>
+          <SessionHeader title={materi.title} onExit={onExit} onHome={onHome} />
+          <ProgressBar idx={idx} total={progressTotal} correct={correct} unit="cerita" />
+          <div className="px-5 py-4">
+            <p className="text-xs mb-1" style={{ color: '#8b6b3d' }}>Urutkan jadi cerita yang runtut:</p>
+            <p className="text-sm font-bold mb-3" style={{ color: '#0a4d3c' }}>{current.title}</p>
+
+            {/* Susunan cerita (bernomor) */}
+            <div className="rounded-2xl p-2 mb-3" style={{ background: 'white', border: borderColor }}>
+              {built.length === 0 ? (
+                <p className="text-xs text-center py-4" style={{ color: '#b8a888' }}>Tap kalimat di bawah, urutkan dari atas</p>
+              ) : built.map((sIdx, order) => (
+                <button key={sIdx} onClick={() => removeToken(sIdx)} className="w-full flex items-center gap-2 p-2.5 rounded-xl mb-1 text-right" style={{ background: 'rgba(10,77,60,0.06)' }}>
+                  <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0" style={{ background: '#0a4d3c', color: 'white' }}>{order + 1}</span>
+                  <div className="flex-1">
+                    <p className="text-base" dir="rtl" style={{ fontFamily: 'Amiri, serif', color: '#0a4d3c' }}>{shuffled[sIdx].display}</p>
+                    <p className="text-[11px]" style={{ color: '#8b6b3d' }}>{shuffled[sIdx].sub}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Bank kalimat */}
+            <p className="text-[11px] uppercase tracking-wide mb-2" style={{ color: '#8b6b3d' }}>Pilihan kalimat</p>
+            <div className="space-y-1.5 mb-4">
+              {shuffled.map((s, sIdx) => {
+                const used = built.includes(sIdx);
+                if (used) return null;
+                return (
+                  <button key={sIdx} onClick={() => addToken(sIdx)} className="w-full p-2.5 rounded-xl text-right" style={{ background: 'white', border: '1px solid rgba(10,77,60,0.12)' }}>
+                    <p className="text-base" dir="rtl" style={{ fontFamily: 'Amiri, serif', color: '#0a4d3c' }}>{s.display}</p>
+                    <p className="text-[11px]" style={{ color: '#8b6b3d' }}>{s.sub}</p>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex flex-col items-center">
+              {errBox}
+              {arrangeBtns}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // KALIMAT: susun chip kata (wrap)
+    const builtTokens = built.map((i) => shuffled[i].display);
     return (
       <div className="flex-1 flex flex-col" style={{ height: '100%' }}>
         <SessionHeader title={materi.title} onExit={onExit} onHome={onHome} />
@@ -291,46 +372,25 @@ function MateriSession({ materi, isUnlocked, coins, onUnlock, onUpgrade, onExit,
           <p className="text-xs mb-1" style={{ color: '#8b6b3d' }}>Susun jadi kalimat Arab yang benar:</p>
           <p className="text-base font-semibold mb-5" style={{ color: '#0a4d3c' }}>"{current.id}"</p>
 
-          {/* Area susunan */}
           <div className="w-full min-h-[64px] rounded-2xl p-3 mb-4 flex flex-wrap gap-2 items-center justify-center" dir="rtl" style={{ background: 'white', border: arrangeResult === false ? '1.5px solid #c0392b' : (arrangeResult ? '1.5px solid #16a34a' : '1.5px dashed rgba(10,77,60,0.2)') }}>
             {builtTokens.length === 0 ? (
               <span className="text-xs" dir="ltr" style={{ color: '#b8a888' }}>Tap kata di bawah untuk menyusun</span>
             ) : built.map((sIdx) => (
-              <button key={sIdx} onClick={() => removeToken(sIdx)} className="px-3 py-1.5 rounded-xl text-lg" style={{ fontFamily: 'Amiri, serif', background: 'rgba(10,77,60,0.1)', color: '#0a4d3c' }}>{shuffled[sIdx].tok}</button>
+              <button key={sIdx} onClick={() => removeToken(sIdx)} className="px-3 py-1.5 rounded-xl text-lg" style={{ fontFamily: 'Amiri, serif', background: 'rgba(10,77,60,0.1)', color: '#0a4d3c' }}>{shuffled[sIdx].display}</button>
             ))}
           </div>
 
-          {/* Bank kata */}
           <div className="w-full flex flex-wrap gap-2 items-center justify-center mb-5" dir="rtl">
             {shuffled.map((s, sIdx) => {
               const used = built.includes(sIdx);
               return (
-                <button key={sIdx} disabled={used} onClick={() => addToken(sIdx)} className="px-3.5 py-2 rounded-xl text-xl transition-opacity" style={{ fontFamily: 'Amiri, serif', background: used ? 'rgba(10,77,60,0.04)' : 'white', color: used ? '#cdc4b4' : '#0a4d3c', border: '1px solid rgba(10,77,60,0.12)', opacity: used ? 0.4 : 1 }}>{s.tok}</button>
+                <button key={sIdx} disabled={used} onClick={() => addToken(sIdx)} className="px-3.5 py-2 rounded-xl text-xl transition-opacity" style={{ fontFamily: 'Amiri, serif', background: used ? 'rgba(10,77,60,0.04)' : 'white', color: used ? '#cdc4b4' : '#0a4d3c', border: '1px solid rgba(10,77,60,0.12)', opacity: used ? 0.4 : 1 }}>{s.display}</button>
               );
             })}
           </div>
 
-          {arrangeResult === false && (
-            <div className="w-full max-w-xs rounded-xl p-2.5 mb-3 flex items-center justify-center gap-2" style={{ background: 'rgba(192,57,43,0.07)' }}>
-              <X size={15} style={{ color: '#c0392b' }} />
-              <p className="text-xs font-semibold" style={{ color: '#c0392b' }}>Urutannya belum tepat, coba lagi</p>
-            </div>
-          )}
-
-          {arrangeResult ? (
-            <button onClick={() => setPhase('speak')} className="w-full max-w-xs py-3.5 rounded-2xl text-white font-bold flex items-center justify-center gap-1.5" style={{ background: '#16a34a' }}>
-              Lanjut: ucapkan <ChevronRight size={16} />
-            </button>
-          ) : (
-            <div className="flex items-center gap-2 w-full max-w-xs">
-              {built.length > 0 && (
-                <button onClick={() => { setBuilt([]); setArrangeResult(null); }} className="flex-1 py-3 rounded-2xl font-semibold flex items-center justify-center gap-1.5" style={{ background: 'rgba(10,77,60,0.08)', color: '#0a4d3c' }}>
-                  <RotateCcw size={15} /> Reset
-                </button>
-              )}
-              <button onClick={checkArrange} disabled={built.length !== current.tokens.length} className="flex-1 py-3 rounded-2xl text-white font-bold disabled:opacity-40" style={{ background: '#0a4d3c' }}>Cek susunan</button>
-            </div>
-          )}
+          {errBox}
+          {arrangeBtns}
         </div>
       </div>
     );
@@ -340,12 +400,12 @@ function MateriSession({ materi, isUnlocked, coins, onUnlock, onUpgrade, onExit,
   return (
     <div className="flex-1 flex flex-col" style={{ height: '100%' }}>
       <SessionHeader title={materi.title} onExit={onExit} onHome={onHome} />
-      <ProgressBar idx={idx} total={progressTotal} correct={correct} unit={isKalimat ? 'kalimat' : 'kata'} />
+      <ProgressBar idx={idx} total={progressTotal} correct={correct} unit={unitLabel} />
 
-      <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
-        {!isKalimat && <div className="text-6xl mb-3">{current.emoji}</div>}
-        <p className="text-xs mb-3" style={{ color: '#8b6b3d' }}>Ucapkan dalam bahasa Arab:</p>
-        <p className={isKalimat ? 'text-3xl mb-2 leading-relaxed' : 'text-5xl mb-1'} dir="rtl" style={{ fontFamily: 'Amiri, serif', color: '#0a4d3c' }}>{current.ar}</p>
+      <div className="flex-1 flex flex-col items-center justify-center px-6 text-center overflow-y-auto py-4">
+        {!hasArrange && <div className="text-6xl mb-3">{current.emoji}</div>}
+        <p className="text-xs mb-3" style={{ color: '#8b6b3d' }}>{isCerita ? 'Narasikan ceritamu:' : 'Ucapkan dalam bahasa Arab:'}</p>
+        <p className={isCerita ? 'text-2xl mb-2 leading-loose' : isKalimat ? 'text-3xl mb-2 leading-relaxed' : 'text-5xl mb-1'} dir="rtl" style={{ fontFamily: 'Amiri, serif', color: '#0a4d3c' }}>{current.ar}</p>
         <p className="text-sm italic mb-1" style={{ color: '#a87f47' }}>{current.latin}</p>
         <p className="text-sm mb-5" style={{ color: '#3d2817' }}>"{current.id}"</p>
 

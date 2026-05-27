@@ -14,7 +14,7 @@ export const NGOMONG_SESSION_COST = 5; // koin untuk buka sesi lanjutan
 export const NGOMONG_LEVELS = [
   { id: 'kata', label: 'Kata', emoji: '🔤', desc: 'Ucapkan nama barang sehari-hari' },
   { id: 'kalimat', label: 'Susun Kalimat', emoji: '📝', desc: 'Rangkai kata jadi kalimat utuh' },
-  { id: 'cerita', label: 'Susun Cerita', emoji: '📖', desc: 'Ceritakan kegiatan harianmu', comingSoon: true },
+  { id: 'cerita', label: 'Susun Cerita', emoji: '📖', desc: 'Ceritakan kegiatan harianmu' },
 ];
 
 // LEVEL 1 — KATA. Tiap materi punya items: { ar (berharakat), latin, id, emoji }.
@@ -162,8 +162,133 @@ export const NGOMONG_KALIMAT = [
   },
 ];
 
-// Gabungan semua materi (kata + kalimat) untuk lookup.
-const ALL_NGOMONG = [...NGOMONG_MATERI, ...NGOMONG_KALIMAT];
+// LEVEL 3 — CERITA. Tiap item = cerita pendek (3 kalimat). Latihan: urutkan
+// kalimat jadi cerita yang runtut, lalu narasikan paragrafnya.
+//   ar = paragraf penuh (TTS + target ucapan), id = arti penuh,
+//   sentences[] = kalimat dalam urutan BENAR (buat latihan urutkan).
+export const NGOMONG_CERITA = [
+  {
+    id: 'cerita-pagi',
+    level: 'cerita',
+    title: 'Pagiku',
+    emoji: '🌅',
+    desc: 'Ceritakan kegiatan pagi harimu',
+    items: [
+      {
+        title: 'Bangun Pagi',
+        ar: 'أَسْتَيْقِظُ مُبَكِّرًا، أُصَلِّي الْفَجْرَ، ثُمَّ أَقْرَأُ الْقُرْآنَ',
+        id: 'Aku bangun pagi-pagi, salat subuh, lalu membaca Al-Quran.',
+        sentences: [
+          { ar: 'أَسْتَيْقِظُ مُبَكِّرًا', id: 'Aku bangun pagi-pagi' },
+          { ar: 'أُصَلِّي الْفَجْرَ', id: 'Aku salat subuh' },
+          { ar: 'ثُمَّ أَقْرَأُ الْقُرْآنَ', id: 'Lalu aku membaca Al-Quran' },
+        ],
+      },
+      {
+        title: 'Sarapan',
+        ar: 'أَذْهَبُ إِلَى الْمَطْبَخِ، آكُلُ الْخُبْزَ، وَأَشْرَبُ الشَّايَ',
+        id: 'Aku pergi ke dapur, makan roti, dan minum teh.',
+        sentences: [
+          { ar: 'أَذْهَبُ إِلَى الْمَطْبَخِ', id: 'Aku pergi ke dapur' },
+          { ar: 'آكُلُ الْخُبْزَ', id: 'Aku makan roti' },
+          { ar: 'وَأَشْرَبُ الشَّايَ', id: 'Dan aku minum teh' },
+        ],
+      },
+      {
+        title: 'Bersih-bersih',
+        ar: 'أَغْسِلُ الصَّحْنَ، أُرَتِّبُ الْغُرْفَةَ، ثُمَّ أَلْبَسُ مَلَابِسِي',
+        id: 'Aku mencuci piring, merapikan kamar, lalu memakai bajuku.',
+        sentences: [
+          { ar: 'أَغْسِلُ الصَّحْنَ', id: 'Aku mencuci piring' },
+          { ar: 'أُرَتِّبُ الْغُرْفَةَ', id: 'Aku merapikan kamar' },
+          { ar: 'ثُمَّ أَلْبَسُ مَلَابِسِي', id: 'Lalu aku memakai bajuku' },
+        ],
+      },
+      {
+        title: 'Berangkat',
+        ar: 'آخُذُ حَقِيبَتِي، أَفْتَحُ الْبَابَ، وَأَخْرُجُ مِنَ الْبَيْتِ',
+        id: 'Aku mengambil tasku, membuka pintu, dan keluar dari rumah.',
+        sentences: [
+          { ar: 'آخُذُ حَقِيبَتِي', id: 'Aku mengambil tasku' },
+          { ar: 'أَفْتَحُ الْبَابَ', id: 'Aku membuka pintu' },
+          { ar: 'وَأَخْرُجُ مِنَ الْبَيْتِ', id: 'Dan aku keluar dari rumah' },
+        ],
+      },
+      {
+        title: 'Di Jalan',
+        ar: 'أَرْكَبُ السَّيَّارَةَ، أَنْظُرُ مِنَ النَّافِذَةِ، ثُمَّ أَصِلُ إِلَى الْعَمَلِ',
+        id: 'Aku naik mobil, melihat dari jendela, lalu sampai di tempat kerja.',
+        sentences: [
+          { ar: 'أَرْكَبُ السَّيَّارَةَ', id: 'Aku naik mobil' },
+          { ar: 'أَنْظُرُ مِنَ النَّافِذَةِ', id: 'Aku melihat dari jendela' },
+          { ar: 'ثُمَّ أَصِلُ إِلَى الْعَمَلِ', id: 'Lalu aku sampai di tempat kerja' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'cerita-haram',
+    level: 'cerita',
+    title: 'Di Tanah Suci',
+    emoji: '🕋',
+    desc: 'Ceritakan pengalaman ibadah umrah',
+    items: [
+      {
+        title: 'Menuju Masjid',
+        ar: 'أَلْبَسُ الْإِحْرَامَ، أَذْهَبُ إِلَى الْمَسْجِدِ، ثُمَّ أَدْخُلُ الْحَرَمَ',
+        id: 'Aku memakai ihram, pergi ke masjid, lalu masuk ke Masjidil Haram.',
+        sentences: [
+          { ar: 'أَلْبَسُ الْإِحْرَامَ', id: 'Aku memakai ihram' },
+          { ar: 'أَذْهَبُ إِلَى الْمَسْجِدِ', id: 'Aku pergi ke masjid' },
+          { ar: 'ثُمَّ أَدْخُلُ الْحَرَمَ', id: 'Lalu aku masuk ke Masjidil Haram' },
+        ],
+      },
+      {
+        title: 'Melihat Kabah',
+        ar: 'أَنْظُرُ إِلَى الْكَعْبَةِ، أَرْفَعُ يَدَيَّ، وَأَدْعُو اللَّهَ',
+        id: 'Aku melihat Kabah, mengangkat kedua tanganku, dan berdoa kepada Allah.',
+        sentences: [
+          { ar: 'أَنْظُرُ إِلَى الْكَعْبَةِ', id: 'Aku melihat Kabah' },
+          { ar: 'أَرْفَعُ يَدَيَّ', id: 'Aku mengangkat kedua tanganku' },
+          { ar: 'وَأَدْعُو اللَّهَ', id: 'Dan aku berdoa kepada Allah' },
+        ],
+      },
+      {
+        title: 'Tawaf',
+        ar: 'أَطُوفُ حَوْلَ الْكَعْبَةِ، أَذْكُرُ اللَّهَ، ثُمَّ أُصَلِّي رَكْعَتَيْنِ',
+        id: 'Aku tawaf mengelilingi Kabah, berzikir kepada Allah, lalu salat dua rakaat.',
+        sentences: [
+          { ar: 'أَطُوفُ حَوْلَ الْكَعْبَةِ', id: 'Aku tawaf mengelilingi Kabah' },
+          { ar: 'أَذْكُرُ اللَّهَ', id: 'Aku berzikir kepada Allah' },
+          { ar: 'ثُمَّ أُصَلِّي رَكْعَتَيْنِ', id: 'Lalu aku salat dua rakaat' },
+        ],
+      },
+      {
+        title: 'Minum Zamzam',
+        ar: 'أَشْرَبُ مَاءَ زَمْزَمَ، أَحْمَدُ اللَّهَ، وَأَشْعُرُ بِالسَّعَادَةِ',
+        id: 'Aku minum air zamzam, memuji Allah, dan merasa bahagia.',
+        sentences: [
+          { ar: 'أَشْرَبُ مَاءَ زَمْزَمَ', id: 'Aku minum air zamzam' },
+          { ar: 'أَحْمَدُ اللَّهَ', id: 'Aku memuji Allah' },
+          { ar: 'وَأَشْعُرُ بِالسَّعَادَةِ', id: 'Dan aku merasa bahagia' },
+        ],
+      },
+      {
+        title: 'Sai',
+        ar: 'أَسْعَى بَيْنَ الصَّفَا وَالْمَرْوَةِ، أَتَذَكَّرُ هَاجَرَ، ثُمَّ أَشْكُرُ رَبِّي',
+        id: 'Aku sai antara Shafa dan Marwah, mengingat Hajar, lalu bersyukur kepada Tuhanku.',
+        sentences: [
+          { ar: 'أَسْعَى بَيْنَ الصَّفَا وَالْمَرْوَةِ', id: 'Aku sai antara Shafa dan Marwah' },
+          { ar: 'أَتَذَكَّرُ هَاجَرَ', id: 'Aku mengingat Hajar' },
+          { ar: 'ثُمَّ أَشْكُرُ رَبِّي', id: 'Lalu aku bersyukur kepada Tuhanku' },
+        ],
+      },
+    ],
+  },
+];
+
+// Gabungan semua materi (kata + kalimat + cerita) untuk lookup.
+const ALL_NGOMONG = [...NGOMONG_MATERI, ...NGOMONG_KALIMAT, ...NGOMONG_CERITA];
 
 // Helper: ambil materi by id (semua level)
 export function getNgomongMateri(id) {
