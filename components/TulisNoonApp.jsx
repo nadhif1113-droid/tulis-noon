@@ -2105,8 +2105,32 @@ function SosialTab({ achievements, userName, currentUserId, userProfile, onOpenM
             <Trophy size={16} style={{ color: '#c9a961' }} />
             <p className="text-sm font-semibold" style={{ color: '#0a4d3c' }}>Papan Peringkat</p>
           </div>
-          <span className="text-[10px] uppercase tracking-widest" style={{ color: '#8b6b3d' }}>Top 10 · XP</span>
+          <span className="text-[10px] uppercase tracking-widest" style={{ color: '#8b6b3d' }}>XP</span>
         </div>
+        {/* Scope tabs */}
+        <div className="flex gap-1.5 mb-3 p-1 rounded-xl" style={{ background: 'rgba(10,77,60,0.05)' }}>
+          {[
+            { k: 'global', label: '🌍 Global' },
+            { k: 'friends', label: '🫂 Teman' },
+            { k: 'regional', label: '📍 Daerah' },
+          ].map((t) => (
+            <button
+              key={t.k}
+              onClick={() => setLbScope(t.k)}
+              className="flex-1 py-1.5 rounded-lg text-[11px] font-semibold transition-all"
+              style={{
+                background: lbScope === t.k ? 'white' : 'transparent',
+                color: lbScope === t.k ? '#0a4d3c' : '#8b6b3d',
+                boxShadow: lbScope === t.k ? '0 1px 4px rgba(10,77,60,0.1)' : 'none',
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        {lbScope === 'regional' && !myCountry && (
+          <p className="text-[11px] text-center py-2 mb-1" style={{ color: '#8b6b3d' }}>Lokasi belum terdeteksi — aktifkan izin lokasi untuk ranking daerah.</p>
+        )}
         {leaderboardLoading ? (
           <BrandLoader inline size="sm" text="Memuat ranking..." className="py-4" />
         ) : leaderboard.length === 0 ? (
