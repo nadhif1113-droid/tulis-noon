@@ -27,7 +27,7 @@ import BrandLoader from '@/components/BrandLoader';
 import FriendsScreen from '@/components/FriendsScreen';
 import CommunityScreen from '@/components/CommunityScreen';
 import { speakArabic as ttsSpeakArabic } from '@/lib/tts';
-import { postActivity, getCommunityFeed, getLeaderboard } from '@/lib/social';
+import { postActivity, getCommunityFeed, getLeaderboard, getUserGlobalRank } from '@/lib/social';
 import { LEARNING_UMRAH } from '@/data/learning-umrah';
 import { LEARNING_PELAJAR } from '@/data/learning-pelajar';
 import { LEARNING_PROFESIONAL } from '@/data/learning-profesional';
@@ -375,11 +375,55 @@ export default function TulisNoonApp() {
     setAchievements((a) => [{ id: Date.now(), time: 'baru saja', user: userName || 'Anda', ...item }, ...a]);
     if (community && user?.uid) {
       postActivity(
-        { uid: user.uid, name: userName || authProfile?.displayName || 'Pengguna', photoURL: authProfile?.photoURL || null },
+        { uid: user.uid, name: userName || authProfile?.displayName || 'Pengguna', photoURL: authProfile?.photoURL || null, avatarEmoji: authProfile?.avatarEmoji || null },
         item
       ).catch(() => {});
     }
   };
+
+  // Deteksi naik peringkat global → log ke feed komunitas + simpan rank terakhir.
+  const handleRankComputed = (rank) => {
+    if (!rank || !user?.uid) return;
+    const last = authProfile?.lastGlobalRank;
+    if (last && rank < last) {
+      logCommunity({ type: 'rank-up', text: `naik ke peringkat #${rank} global`, emoji: '🚀' });
+    }
+    if (last !== rank) updateUserProfile({ lastGlobalRank: rank }).catch(() => {});
+  };
+
+  // Presence — bikin feed terasa hidup: log "masuk" + "sedang ..." saat buka fitur.
+  // Sekali per sesi per jenis (pakai ref) biar gak nge-flood.
+  const loggedIntentsRef = useRef({});
+  useEffect(() => {
+    if (!user?.uid) return;
+    if (!loggedIntentsRef.current.login) {
+      loggedIntentsRef.current.login = true;
+      logCommunity({ type: 'presence', text: 'masuk & siap belajar', emoji: '🌙' });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.uid]);
+
+  useEffect(() => {
+    if (!user?.uid) return;
+    const PRESENCE = {
+      hafalan: { text: 'sedang menghafal Al-Qur’an', emoji: '📿' },
+      match: { text: 'lagi adu skor di Match Arena', emoji: '⚔️' },
+      'tanya-cepat': { text: 'lagi pakai Tanya Cepat', emoji: '💬' },
+      roleplay: { text: 'lagi latihan ngobrol Arab', emoji: '🎭' },
+      'roleplay-list': { text: 'lagi pilih skenario roleplay', emoji: '🎭' },
+      'tebak-gambar': { text: 'lagi main Tebak Gambar', emoji: '🖼️' },
+      cerita: { text: 'lagi baca Cerita Interaktif', emoji: '📖' },
+      'tulis-arab': { text: 'lagi belajar nulis Arab', emoji: '✍️' },
+      lessons: { text: 'lagi belajar modul', emoji: '📚' },
+      'perkenalan-diri': { text: 'lagi belajar perkenalan diri', emoji: '👋' },
+    };
+    const p = PRESENCE[screen];
+    if (p && !loggedIntentsRef.current[screen]) {
+      loggedIntentsRef.current[screen] = true;
+      logCommunity({ type: 'presence', text: p.text, emoji: p.emoji });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [screen, user?.uid]);
 
   const awardXp = (earned) => {
     if (!earned || earned <= 0) return;
@@ -527,7 +571,7 @@ export default function TulisNoonApp() {
                 setScreen('game');
               }} onOpenChallenge={(scenario) => { setSelectedChallenge(scenario || getTodayChallenge()); setScreen('challenge-levels'); }} onOpenGuru={() => setScreen('guru')} achievements={achievements} />}
               {tab === 'belajar' && <BelajarTab onSelectPath={(p) => { setSelectedPath(p); setScreen('lessons'); }} onOpenGuru={() => setScreen('guru')} progress={progress} />}
-              {tab === 'sosial' && <SosialTab achievements={achievements} userName={userName} currentUserId={user?.uid} userProfile={authProfile} onOpenMatch={() => setScreen('match')} onOpenFriends={() => setScreen('friends')} onOpenCommunity={() => setScreen('community')} />}
+              {tab === 'sosial' && <SosialTab achievements={achievements} userName={userName} currentUserId={user?.uid} userProfile={authProfile} onOpenMatch={() => setScreen('match')} onOpenFriends={() => setScreen('friends')} onOpenCommunity={() => setScreen('community')} onRankComputed={handleRankComputed} />}
               {tab === 'profil' && <ProfilTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} progress={progress} onOpenPremium={() => setScreen('premium')} />}
             </div>
             <BottomNav active={tab} onChange={setTab} router={router} />
@@ -1999,13 +2043,15 @@ function BelajarTab({ onSelectPath, onOpenGuru, progress }) {
 }
 
 // ============ SOSIAL TAB ============
-function SosialTab({ achievements, userName, currentUserId, userProfile, onOpenMatch, onOpenFriends, onOpenCommunity }) {
+function SosialTab({ achievements, userName, currentUserId, userProfile, onOpenMatch, onOpenFriends, onOpenCommunity, onRankComputed }) {
   const [leaderboard, setLeaderboard] = useState([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
   const [lbScope, setLbScope] = useState('global'); // global | friends | regional
+  const [myRank, setMyRank] = useState(null); // peringkat global user
 
   const myCountry = userProfile?.location?.countryCode || null;
   const myFriends = userProfile?.friends || [];
+  const myXp = userProfile?.xp || 0;
 
   // Fetch leaderboard sesuai scope
   useEffect(() => {
@@ -2017,8 +2063,22 @@ function SosialTab({ achievements, userName, currentUserId, userProfile, onOpenM
       friendIds: myFriends,
       countryCode: myCountry,
       n: 20,
-    }).then((list) => {
-      if (!cancelled) { setLeaderboard(list); setLeaderboardLoading(false); }
+    }).then(async (list) => {
+      if (cancelled) return;
+      setLeaderboard(list);
+      setLeaderboardLoading(false);
+      // Global: selalu hitung peringkat (buat deteksi naik peringkat),
+      // tapi baris "peringkat kamu" cuma tampil kalau gak masuk top 5.
+      if (lbScope === 'global') {
+        const idx = list.findIndex((u) => u.id === currentUserId);
+        const rank = idx >= 0 ? idx + 1 : await getUserGlobalRank(myXp);
+        if (!cancelled) {
+          setMyRank(idx >= 0 && idx < 5 ? null : rank);
+          if (rank && onRankComputed) onRankComputed(rank);
+        }
+      } else {
+        setMyRank(null);
+      }
     }).catch(() => { if (!cancelled) setLeaderboardLoading(false); });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -2136,33 +2196,40 @@ function SosialTab({ achievements, userName, currentUserId, userProfile, onOpenM
         ) : leaderboard.length === 0 ? (
           <p className="text-xs text-center py-4" style={{ color: '#8b6b3d' }}>Belum ada user di peringkat.</p>
         ) : (
-          <div className="space-y-2">
-            {leaderboard.map((u, i) => {
+          <div className="space-y-1.5">
+            {/* Global: top 5 aja. Scope lain: tampilkan semua (max 20). */}
+            {(lbScope === 'global' ? leaderboard.slice(0, 5) : leaderboard).map((u, i) => {
               const isMe = u.id === currentUserId;
               const medalColor = i === 0 ? '#c9a961' : i === 1 ? '#a8a8a8' : i === 2 ? '#cd7f32' : '#8b6b3d';
               const medalEmoji = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : null;
               return (
                 <div
                   key={u.id}
-                  className="flex items-center gap-3 p-2 rounded-xl"
+                  className="flex items-center gap-3 px-2 py-2 rounded-xl"
                   style={{ background: isMe ? 'rgba(10,77,60,0.06)' : 'transparent', border: isMe ? '1.5px solid rgba(10,77,60,0.2)' : 'none' }}
                 >
-                  <span className="text-xs font-bold w-6 text-center" style={{ color: medalColor }}>
+                  <span className="text-xs font-bold w-7 text-center flex-shrink-0" style={{ color: medalColor }}>
                     {medalEmoji || `#${i + 1}`}
                   </span>
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 overflow-hidden" style={{ background: 'rgba(10,77,60,0.1)', color: '#0a4d3c' }}>
-                    {u.avatarEmoji ? <span className="text-base">{u.avatarEmoji}</span> : u.photoURL ? <img src={u.photoURL} alt="" className="w-full h-full object-cover" /> : (u.displayName || 'U').charAt(0).toUpperCase()}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate" style={{ color: '#1a1a1a' }}>
-                      {u.displayName || 'Anonim'}
-                      {isMe && <span className="ml-1 text-[10px] font-bold" style={{ color: '#0a4d3c' }}>· KAMU</span>}
-                    </p>
-                  </div>
-                  <span className="text-xs font-bold" style={{ color: '#c9a961' }}>{(u.xp || 0).toLocaleString('id-ID')} XP</span>
+                  <p className="flex-1 min-w-0 text-sm font-medium truncate" style={{ color: '#1a1a1a' }}>
+                    {u.displayName || 'Anonim'}
+                    {isMe && <span className="ml-1 text-[10px] font-bold" style={{ color: '#0a4d3c' }}>· KAMU</span>}
+                  </p>
+                  <span className="text-xs font-bold flex-shrink-0" style={{ color: '#c9a961' }}>{(u.xp || 0).toLocaleString('id-ID')} XP</span>
                 </div>
               );
             })}
+
+            {/* Baris "peringkat kamu" — global, kalau user gak masuk top 5 */}
+            {lbScope === 'global' && myRank && (
+              <div className="flex items-center gap-3 px-2 py-2 rounded-xl mt-1" style={{ background: 'rgba(10,77,60,0.06)', border: '1.5px solid rgba(10,77,60,0.2)' }}>
+                <span className="text-xs font-bold w-7 text-center flex-shrink-0" style={{ color: '#0a4d3c' }}>#{myRank}</span>
+                <p className="flex-1 min-w-0 text-sm font-medium truncate" style={{ color: '#1a1a1a' }}>
+                  {userName || 'Kamu'}<span className="ml-1 text-[10px] font-bold" style={{ color: '#0a4d3c' }}>· KAMU</span>
+                </p>
+                <span className="text-xs font-bold flex-shrink-0" style={{ color: '#c9a961' }}>{myXp.toLocaleString('id-ID')} XP</span>
+              </div>
+            )}
           </div>
         )}
       </div>
