@@ -3704,6 +3704,35 @@ function MatchQuestion({ question, scenarioColor, onComplete }) {
   const [mistakes, setMistakes] = useState(0);
   const [completed, setCompleted] = useState(false); // guard biar onComplete cuma dipanggil sekali
 
+  // Refs untuk gambar garis penghubung antar pasangan yang benar.
+  const gridRef = useRef(null);
+  const leftRefs = useRef({});
+  const rightRefs = useRef({});
+  const [lines, setLines] = useState([]);
+
+  // Hitung koordinat garis tiap kali matches berubah (ukur posisi DOM).
+  React.useLayoutEffect(() => {
+    const container = gridRef.current;
+    if (!container) { setLines([]); return; }
+    const cRect = container.getBoundingClientRect();
+    const next = [];
+    Object.entries(matches).forEach(([arIdx, idIdx]) => {
+      const lEl = leftRefs.current[arIdx];
+      const rEl = rightRefs.current[idIdx];
+      if (!lEl || !rEl) return;
+      const l = lEl.getBoundingClientRect();
+      const r = rEl.getBoundingClientRect();
+      next.push({
+        key: `${arIdx}-${idIdx}`,
+        x1: l.right - cRect.left,
+        y1: l.top + l.height / 2 - cRect.top,
+        x2: r.left - cRect.left,
+        y2: r.top + r.height / 2 - cRect.top,
+      });
+    });
+    setLines(next);
+  }, [matches, idOrder]);
+
   // Shuffle the Indonesian column on mount (Arab tetap urut original)
   const [idOrder] = useState(() => {
     const indices = question.pairs.map((_, i) => i);
@@ -3758,7 +3787,18 @@ function MatchQuestion({ question, scenarioColor, onComplete }) {
       <p className="text-xs tracking-widest uppercase mb-2 text-center" style={{ color: '#8b6b3d' }}>{question.instruction || 'Cocokkan pasangan'}</p>
       <p className="text-sm mb-4 text-center" style={{ color: '#3d2817' }}>Tap kiri lalu tap kanan untuk pasangkan</p>
 
-      <div className={`grid grid-cols-2 gap-3 mb-4 ${shake ? 'animate-pulse' : ''}`}>
+      <div ref={gridRef} className={`relative grid grid-cols-2 gap-3 mb-4 ${shake ? 'animate-pulse' : ''}`}>
+        {/* SVG overlay — garis penghubung tiap pasangan benar */}
+        <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 5 }}>
+          {lines.map((ln) => (
+            <g key={ln.key}>
+              <line x1={ln.x1} y1={ln.y1} x2={ln.x2} y2={ln.y2} stroke={scenarioColor} strokeWidth="2.5" strokeLinecap="round" opacity="0.7" />
+              <circle cx={ln.x1} cy={ln.y1} r="3.5" fill={scenarioColor} />
+              <circle cx={ln.x2} cy={ln.y2} r="3.5" fill={scenarioColor} />
+            </g>
+          ))}
+        </svg>
+
         {/* Kolom Arab (kiri) */}
         <div className="space-y-2">
           {question.pairs.map((p, arIdx) => {
@@ -3767,13 +3807,14 @@ function MatchQuestion({ question, scenarioColor, onComplete }) {
             return (
               <button
                 key={arIdx}
+                ref={(el) => { leftRefs.current[arIdx] = el; }}
                 onClick={() => handleArClick(arIdx)}
                 disabled={isMatched}
                 className="w-full p-3 rounded-xl text-center transition-all disabled:opacity-100"
                 style={{
                   background: isMatched ? `${scenarioColor}15` : isSelected ? 'rgba(201,169,97,0.25)' : 'white',
                   border: `2px solid ${isMatched ? scenarioColor : isSelected ? '#c9a961' : 'rgba(10,77,60,0.15)'}`,
-                  opacity: isMatched ? 0.7 : 1,
+                  opacity: isMatched ? 0.85 : 1,
                 }}
               >
                 <p className="text-xl" style={{ fontFamily: 'Amiri, serif', color: scenarioColor }}>{p.ar}</p>
@@ -3790,13 +3831,14 @@ function MatchQuestion({ question, scenarioColor, onComplete }) {
             return (
               <button
                 key={idIdx}
+                ref={(el) => { rightRefs.current[idIdx] = el; }}
                 onClick={() => handleIdClick(idIdx)}
                 disabled={isMatched}
                 className="w-full p-3 rounded-xl text-center transition-all disabled:opacity-100"
                 style={{
                   background: isMatched ? `${scenarioColor}15` : 'white',
                   border: `2px solid ${isMatched ? scenarioColor : 'rgba(10,77,60,0.15)'}`,
-                  opacity: isMatched ? 0.7 : 1,
+                  opacity: isMatched ? 0.85 : 1,
                   minHeight: '54px',
                 }}
               >
