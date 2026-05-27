@@ -15,10 +15,20 @@ import { sendTestNotification, getPendingPrayerNotifsCount } from '../../lib/loc
 // Debug-only: tombol test notif. Set true kalau mau debug notif sholat di dev.
 const SHOW_NOTIF_DEBUG = false;
 
+// Pilihan avatar emoji (hemat storage — cuma simpan string emoji, ga upload gambar).
+const AVATAR_EMOJIS = [
+  '🧕', '🧔🏽', '👳🏽‍♂️', '👨🏽', '👩🏽', '🧑🏽', '👦🏽', '👧🏽', '👴🏽', '👵🏽',
+  '😀', '😎', '🤓', '🥰', '😇', '🤗', '🌙', '⭐', '🌟', '✨',
+  '🕌', '🕋', '📿', '📖', '🤲', '☪️', '🐪', '🦅', '🦁', '🌹',
+  '☕', '🍵', '💎', '🔥', '🎯', '🏆', '🚀', '🌴', '⛰️', '🌊',
+];
+
 export default function ProfilePage() {
   const router = useRouter();
   const { user, userProfile, loading, signOut, updateUserProfile } = useAuth();
   const [showLevelInfo, setShowLevelInfo] = useState(false);
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [savingAvatar, setSavingAvatar] = useState(false);
   const [detectedTz, setDetectedTz] = useState(null);
   useEffect(() => { setDetectedTz(getUserTimezone()); }, []);
   const isME = isInMiddleEast();
@@ -54,6 +64,14 @@ export default function ProfilePage() {
   const { currentLevel, tier, nextTier, xpInLevel, xpNeeded, xpRemaining, percent } = progress;
   const displayName = userProfile?.displayName || user.email?.split('@')[0] || 'User';
   const photoURL = userProfile?.photoURL;
+  const avatarEmoji = userProfile?.avatarEmoji || null;
+
+  async function chooseAvatar(emoji) {
+    setSavingAvatar(true);
+    await updateUserProfile({ avatarEmoji: emoji });
+    setSavingAvatar(false);
+    setShowAvatarPicker(false);
+  }
 
   // Count gold (perfect-scored levels) di Challenge
   const goldCount = (() => {
@@ -109,13 +127,21 @@ export default function ProfilePage() {
           <div className="rounded-3xl p-5 relative overflow-hidden" style={{ background: tier.bgGradient }}>
             <div className="absolute -right-4 -top-4 text-7xl opacity-15">{tier.emoji}</div>
             <div className="flex items-center gap-4 mb-4">
-              {photoURL ? (
-                <img src={photoURL} alt={displayName} className="w-16 h-16 rounded-2xl border-2 border-white/40 shadow-lg" />
-              ) : (
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold border-2 border-white/40 shadow-lg" style={{ background: 'rgba(255,255,255,0.18)', color: '#faf6ee', fontFamily: 'Fraunces, serif' }}>
-                  {displayName.charAt(0).toUpperCase()}
-                </div>
-              )}
+              <button onClick={() => setShowAvatarPicker(true)} className="relative flex-shrink-0">
+                {avatarEmoji ? (
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-4xl border-2 border-white/40 shadow-lg" style={{ background: 'rgba(255,255,255,0.18)' }}>
+                    {avatarEmoji}
+                  </div>
+                ) : photoURL ? (
+                  <img src={photoURL} alt={displayName} className="w-16 h-16 rounded-2xl border-2 border-white/40 shadow-lg" />
+                ) : (
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold border-2 border-white/40 shadow-lg" style={{ background: 'rgba(255,255,255,0.18)', color: '#faf6ee', fontFamily: 'Fraunces, serif' }}>
+                    {displayName.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                {/* badge edit */}
+                <span className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-[11px] shadow" style={{ background: '#c9a961', color: '#0a4d3c' }}>✏️</span>
+              </button>
               <div className="flex-1 min-w-0">
                 <h2 className="text-xl font-bold text-white leading-tight" style={{ fontFamily: 'Fraunces, serif' }}>
                   {displayName}
@@ -362,6 +388,37 @@ export default function ProfilePage() {
       {/* Modal: XP & Level info — reuse shared component */}
       {showLevelInfo && (
         <XpLevelInfoModal xp={xp} onClose={() => setShowLevelInfo(false)} />
+      )}
+
+      {/* Modal: Pilih Avatar Emoji */}
+      {showAvatarPicker && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ background: 'rgba(0,0,0,0.45)' }} onClick={() => setShowAvatarPicker(false)}>
+          <div className="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-5 pb-safe" style={{ background: '#faf6ee', maxHeight: '70vh', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-lg font-bold" style={{ color: '#0a4d3c', fontFamily: 'Fraunces, serif' }}>Pilih Avatar</h3>
+              <button onClick={() => setShowAvatarPicker(false)} className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'rgba(10,77,60,0.08)', color: '#0a4d3c' }}>✕</button>
+            </div>
+            <p className="text-xs mb-4" style={{ color: '#8b6b3d' }}>Pakai emoji sebagai foto profil — ringan & tampil di teman, leaderboard, & komunitas.</p>
+            <div className="grid grid-cols-6 gap-2">
+              {AVATAR_EMOJIS.map((e) => (
+                <button
+                  key={e}
+                  onClick={() => chooseAvatar(e)}
+                  disabled={savingAvatar}
+                  className="aspect-square rounded-xl flex items-center justify-center text-2xl transition-transform active:scale-90 disabled:opacity-50"
+                  style={{ background: avatarEmoji === e ? 'rgba(201,169,97,0.35)' : 'white', border: avatarEmoji === e ? '2px solid #c9a961' : '1px solid rgba(10,77,60,0.08)' }}
+                >
+                  {e}
+                </button>
+              ))}
+            </div>
+            {avatarEmoji && (
+              <button onClick={() => chooseAvatar(null)} disabled={savingAvatar} className="w-full mt-4 py-2.5 rounded-xl text-sm font-medium" style={{ background: 'rgba(192,57,43,0.08)', color: '#c0392b' }}>
+                Hapus avatar emoji
+              </button>
+            )}
+          </div>
+        </div>
       )}
 
       {/* Floating Admin Help — HANYA di Profile, gak di tempat lain */}

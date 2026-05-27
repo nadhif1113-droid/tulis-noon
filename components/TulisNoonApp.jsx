@@ -26,6 +26,7 @@ import PerkenalanContextPicker from '@/components/PerkenalanContextPicker';
 import BrandLoader from '@/components/BrandLoader';
 import FriendsScreen from '@/components/FriendsScreen';
 import { speakArabic as ttsSpeakArabic } from '@/lib/tts';
+import { postActivity, getCommunityFeed } from '@/lib/social';
 import { LEARNING_UMRAH } from '@/data/learning-umrah';
 import { LEARNING_PELAJAR } from '@/data/learning-pelajar';
 import { LEARNING_PROFESIONAL } from '@/data/learning-profesional';
@@ -358,6 +359,26 @@ export default function TulisNoonApp() {
 
   // Helper: tambah XP ke state lokal + persist ke Firestore.
   // Plus: auto-update streak harian + tournament dailyXp tiap kali XP earned.
+  // Load feed komunitas real (semua user) pas app dibuka — biar "Aktivitas Komunitas" update.
+  useEffect(() => {
+    if (!user?.uid) return;
+    getCommunityFeed(25).then((feed) => {
+      if (feed && feed.length) setAchievements(feed);
+    }).catch(() => {});
+  }, [user?.uid]);
+
+  // Log 1 aktivitas: tampil instan di feed lokal + persist ke Firestore (community).
+  // community=false → cuma lokal (mis. warning koin kurang, ga usah disebar).
+  const logCommunity = (item, community = true) => {
+    setAchievements((a) => [{ id: Date.now(), time: 'baru saja', user: userName || 'Anda', ...item }, ...a]);
+    if (community && user?.uid) {
+      postActivity(
+        { uid: user.uid, name: userName || authProfile?.displayName || 'Pengguna', photoURL: authProfile?.photoURL || null },
+        item
+      ).catch(() => {});
+    }
+  };
+
   const awardXp = (earned) => {
     if (!earned || earned <= 0) return;
     const newXp = (xp || 0) + earned;
@@ -563,7 +584,7 @@ export default function TulisNoonApp() {
             onComplete={(earned) => {
               awardXp(earned);
               setProgress(p => ({ ...p, [selectedLesson.pathId]: Math.max((p[selectedLesson.pathId] || 0), selectedLesson.order) }));
-              setAchievements(a => [{ id: Date.now(), type:'lesson', text:`Selesai modul: ${selectedLesson.title} (+${earned} XP)`, emoji: selectedLesson.emoji, time:'baru saja', user: userName || 'Anda' }, ...a]);
+              logCommunity({ type:'lesson', text:`Selesai modul: ${selectedLesson.title} (+${earned} XP)`, emoji: selectedLesson.emoji });
             }}
             onUnlockConversation={async (moduleId, convIdx) => {
               const pricing = getLearningPricing(selectedLesson.pathId);
@@ -629,7 +650,7 @@ export default function TulisNoonApp() {
               if (!completed.includes(materiId)) {
                 try { await updateUserProfile({ completedPerkenalanMateri: [...completed, materiId] }); } catch {}
               }
-              setAchievements((a) => [{ id: Date.now(), type: 'lesson', text: `Perkenalan Diri: ${materiId} (+${earned} XP)`, emoji: '👋', time: 'baru saja', user: userName || 'Anda' }, ...a]);
+              logCommunity({ type: 'lesson', text: `Perkenalan Diri: ${materiId} (+${earned} XP)`, emoji: '👋' });
             }}
             onSpendCoinsUnlockMateri={async (materiId) => {
               const cur = authProfile?.coins || 0;
@@ -668,7 +689,7 @@ export default function TulisNoonApp() {
         {screen === 'lesson' && <LessonScreen lesson={selectedLesson} onBack={() => setScreen('lessons')} onComplete={(earned) => {
           setProgress(p => ({...p, [selectedPath.id]: (p[selectedPath.id] || 0) + 1}));
           awardXp(earned);
-          setAchievements(a => [{ id: Date.now(), type:'lesson', text:`Selesai: ${selectedLesson?.title}`, emoji:'✅', time:'baru saja', user: userName || 'Anda' }, ...a]);
+          logCommunity({ type:'lesson', text:`Selesai: ${selectedLesson?.title}`, emoji:'✅' });
           setScreen('lessons');
         }} />}
         {screen === 'game' && <GameScreen game={selectedGame} onBack={() => setScreen('main')} onComplete={(earned) => {
@@ -707,7 +728,7 @@ export default function TulisNoonApp() {
           }}
           onShare={(text) => {
             // Catat achievement aja, JANGAN navigate — user yang kontrol exit via tombol "Udahan".
-            setAchievements(a => [{ id: Date.now(), type:'challenge', text:text, emoji:'⚡', time:'baru saja', user: userName || 'Anda' }, ...a]);
+            logCommunity({ type:'challenge', text:text, emoji:'⚡' });
           }}
           onNextLevel={(nextLvl) => {
             // Stay di screen 'challenge' tapi ganti levelNumber → ChallengeScreen reset state via useEffect.
@@ -729,14 +750,7 @@ export default function TulisNoonApp() {
           onComplete={({ earned, score, grade: gradeLabel }) => {
             // Award XP + catat achievement
             awardXp(earned);
-            setAchievements((a) => [{
-              id: Date.now(),
-              type: 'roleplay',
-              text: `${selectedRoleplay.title} — ${gradeLabel} (+${earned} XP)`,
-              emoji: selectedRoleplay.emoji,
-              time: 'baru saja',
-              user: userName || 'Anda',
-            }, ...a]);
+            logCommunity({ type: 'roleplay', text: `${selectedRoleplay.title} — ${gradeLabel} (+${earned} XP)`, emoji: selectedRoleplay.emoji });
             // Deduct nyawa kalau grade rendah (Maqbul atau Latih lagi = "kalah")
             const isWin = gradeLabel === 'Mumtaaz' || gradeLabel === 'Jayyid';
             deductLifeIfLost(isWin);
@@ -769,14 +783,7 @@ export default function TulisNoonApp() {
           onHome={() => { setTab('home'); setScreen('main'); }}
           onComplete={({ earned, score, totalQuestions }) => {
             awardXp(earned);
-            setAchievements((a) => [{
-              id: Date.now(),
-              type: 'cerita',
-              text: `Cerita Interaktif — quiz selesai (${score}/${totalQuestions}, +${earned} XP)`,
-              emoji: '📖',
-              time: 'baru saja',
-              user: userName || 'Anda',
-            }, ...a]);
+            logCommunity({ type: 'cerita', text: `Cerita Interaktif — quiz selesai (${score}/${totalQuestions}, +${earned} XP)`, emoji: '📖' });
             deductLifeIfLost(score === totalQuestions);
           }}
         />}
@@ -789,14 +796,7 @@ export default function TulisNoonApp() {
           onHome={() => { setTab('home'); setScreen('main'); }}
           onComplete={({ earned, score, totalQuestions }) => {
             awardXp(earned);
-            setAchievements((a) => [{
-              id: Date.now(),
-              type: 'tebak-gambar',
-              text: `Tebak Gambar — selesai (${score}/${totalQuestions}, +${earned} XP)`,
-              emoji: '🖼️',
-              time: 'baru saja',
-              user: userName || 'Anda',
-            }, ...a]);
+            logCommunity({ type: 'tebak-gambar', text: `Tebak Gambar — selesai (${score}/${totalQuestions}, +${earned} XP)`, emoji: '🖼️' });
             deductLifeIfLost(score === totalQuestions);
           }}
         />}
@@ -839,14 +839,7 @@ export default function TulisNoonApp() {
             })
               .then(() => {
                 awardXp(rewardXp);
-                setAchievements((a) => [{
-                  id: Date.now(),
-                  type: 'hafalan-chunk',
-                  text: `${label} — +${rewardXp} XP, +${rewardCoin} 🪙`,
-                  emoji: chunkMeta.isFinalRecap ? '🏆' : chunkMeta.isFullSurat ? '📚' : '🌟',
-                  time: 'baru saja',
-                  user: userName || 'Anda',
-                }, ...a]);
+                logCommunity({ type: 'hafalan-chunk', text: `${label} — +${rewardXp} XP, +${rewardCoin} 🪙`, emoji: chunkMeta.isFinalRecap ? '🏆' : chunkMeta.isFullSurat ? '📚' : '🌟' });
               })
               .catch((err) => console.error('Hafalan chunk complete error:', err));
           }}
@@ -884,14 +877,7 @@ export default function TulisNoonApp() {
             // Catat achievement
             const resultLabel = result === 'win' ? 'MENANG' : result === 'lose' ? 'kalah' : 'seri';
             const opponentTag = isHuman ? `@${opponentName}` : `${opponentName} (Lv${opponentLevel})`;
-            setAchievements((a) => [{
-              id: Date.now(),
-              type: 'match',
-              text: `Match vs ${opponentTag} — ${resultLabel} ${userScore} vs ${botScore} (+${earned} XP)`,
-              emoji: result === 'win' ? '🏆' : isHuman ? '👥' : '🤖',
-              time: 'baru saja',
-              user: userName || 'Anda',
-            }, ...a]);
+            logCommunity({ type: 'match', text: `Match vs ${opponentTag} — ${resultLabel} ${userScore} vs ${botScore} (+${earned} XP)`, emoji: result === 'win' ? '🏆' : isHuman ? '👥' : '🤖' });
           }}
         />}
 
@@ -903,14 +889,7 @@ export default function TulisNoonApp() {
           onHome={() => { setTab('home'); setScreen('main'); }}
           onComplete={({ earned, score, totalQuestions }) => {
             awardXp(earned);
-            setAchievements((a) => [{
-              id: Date.now(),
-              type: 'tulis-arab',
-              text: `Tulis Arab — selesai level (${score}/${totalQuestions}, +${earned} XP)`,
-              emoji: '✍️',
-              time: 'baru saja',
-              user: userName || 'Anda',
-            }, ...a]);
+            logCommunity({ type: 'tulis-arab', text: `Tulis Arab — selesai level (${score}/${totalQuestions}, +${earned} XP)`, emoji: '✍️' });
             // Deduct nyawa kalau non-perfect
             deductLifeIfLost(score === totalQuestions);
           }}
@@ -1925,7 +1904,7 @@ function HomeTab({ userName, userProfile, location, xp, streak, coins, lives, ma
         <span className="text-xs" style={{ color: '#c9a961', fontWeight: 500 }}>Lihat semua</span>
       </div>
       <div className="space-y-2">
-        {achievements.slice(0,2).map((a) => (
+        {achievements.slice(0,4).map((a) => (
           <div key={a.id} className="p-3 rounded-xl flex items-center gap-3" style={{ background: 'white', border: '1px solid rgba(10,77,60,0.06)' }}>
             <div className="w-9 h-9 rounded-full flex items-center justify-center text-base" style={{ background: 'rgba(201,169,97,0.15)' }}>
               {a.emoji}
@@ -2112,8 +2091,8 @@ function SosialTab({ achievements, userName, currentUserId, onOpenMatch, onOpenF
                   <span className="text-xs font-bold w-6 text-center" style={{ color: medalColor }}>
                     {medalEmoji || `#${i + 1}`}
                   </span>
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0" style={{ background: 'rgba(10,77,60,0.1)', color: '#0a4d3c' }}>
-                    {(u.displayName || 'U').charAt(0).toUpperCase()}
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 overflow-hidden" style={{ background: 'rgba(10,77,60,0.1)', color: '#0a4d3c' }}>
+                    {u.avatarEmoji ? <span className="text-base">{u.avatarEmoji}</span> : u.photoURL ? <img src={u.photoURL} alt="" className="w-full h-full object-cover" /> : (u.displayName || 'U').charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate" style={{ color: '#1a1a1a' }}>

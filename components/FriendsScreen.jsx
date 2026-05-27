@@ -165,8 +165,8 @@ export default function FriendsScreen({ userId, userProfile, onBack, onHome }) {
         <div className="space-y-2">
           {friends.map((f, i) => (
             <div key={f.uid} className="flex items-center gap-3 p-3 rounded-2xl" style={{ background: 'white', border: '1px solid rgba(10,77,60,0.08)' }}>
-              <div className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: 'linear-gradient(135deg, #0a4d3c, #1a6b56)' }}>
-                {f.photoURL ? <img src={f.photoURL} alt="" className="w-full h-full object-cover" /> : <span className="text-white font-bold">{(f.displayName || '?')[0].toUpperCase()}</span>}
+              <div className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: f.avatarEmoji ? 'rgba(201,169,97,0.15)' : 'linear-gradient(135deg, #0a4d3c, #1a6b56)' }}>
+                {f.avatarEmoji ? <span className="text-xl">{f.avatarEmoji}</span> : f.photoURL ? <img src={f.photoURL} alt="" className="w-full h-full object-cover" /> : <span className="text-white font-bold">{(f.displayName || '?')[0].toUpperCase()}</span>}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm truncate" style={{ color: '#1a1a1a' }}>
