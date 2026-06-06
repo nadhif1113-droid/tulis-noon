@@ -3939,16 +3939,22 @@ function MatchQuestion({ question, scenarioColor, onComplete }) {
       <p className="text-xs tracking-widest uppercase mb-2 text-center" style={{ color: '#8b6b3d' }}>{question.instruction || 'Cocokkan pasangan'}</p>
       <p className="text-sm mb-4 text-center" style={{ color: '#3d2817' }}>Tap kiri lalu tap kanan untuk pasangkan</p>
 
-      <div ref={gridRef} className={`relative grid grid-cols-2 gap-3 mb-4 ${shake ? 'animate-pulse' : ''}`}>
-        {/* SVG overlay — garis penghubung tiap pasangan benar */}
-        <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 5 }}>
-          {lines.map((ln) => (
-            <g key={ln.key}>
-              <line x1={ln.x1} y1={ln.y1} x2={ln.x2} y2={ln.y2} stroke={scenarioColor} strokeWidth="2.5" strokeLinecap="round" opacity="0.7" />
-              <circle cx={ln.x1} cy={ln.y1} r="3.5" fill={scenarioColor} />
-              <circle cx={ln.x2} cy={ln.y2} r="3.5" fill={scenarioColor} />
-            </g>
-          ))}
+      <div ref={gridRef} className={`relative grid grid-cols-2 mb-4 ${shake ? 'animate-pulse' : ''}`} style={{ columnGap: 56, rowGap: 12 }}>
+        {/* SVG overlay — garis penghubung tiap pasangan benar.
+            Pakai kurva bezier yg keluar mendatar dari tiap kartu biar pasangannya
+            jelas (bukan diagonal yg bikin susah ngeliat siapa pasangan siapa). */}
+        <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 5, overflow: 'visible' }}>
+          {lines.map((ln) => {
+            const dx = Math.max((ln.x2 - ln.x1) * 0.55, 24);
+            const path = `M ${ln.x1} ${ln.y1} C ${ln.x1 + dx} ${ln.y1}, ${ln.x2 - dx} ${ln.y2}, ${ln.x2} ${ln.y2}`;
+            return (
+              <g key={ln.key}>
+                <path d={path} stroke={scenarioColor} strokeWidth="3" strokeLinecap="round" fill="none" opacity="0.85" />
+                <circle cx={ln.x1} cy={ln.y1} r="5" fill="white" stroke={scenarioColor} strokeWidth="2.5" />
+                <circle cx={ln.x2} cy={ln.y2} r="5" fill="white" stroke={scenarioColor} strokeWidth="2.5" />
+              </g>
+            );
+          })}
         </svg>
 
         {/* Kolom Arab (kiri) */}
