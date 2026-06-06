@@ -141,7 +141,90 @@ const PASAR_MADINAH_LEVELS = [
       { type: 'mc', ar: 'إِيصَال مِنْ فَضْلِك', latin: 'Iishaal min fadhlik', options: ['Diskon tolong', 'Bonus tolong', 'Struk tolong', 'Ulang tolong'], correct: 2 },
     ],
   },
-  ...scaffoldComingSoonLevels(6, 100),
+  {
+    level: 6,
+    title: 'Tanya Kabar & Asal',
+    description: 'Basa-basi: tanya kabar & kebangsaan (jinsiyah)',
+    questions: [
+      { type: 'mc', ar: 'كَيْفَ حَالُك؟', latin: 'Kayfa haaluk?', options: ['Siapa namamu', 'Apa kabar', 'Dari mana asalmu', 'Mau ke mana'], correct: 1 },
+      { type: 'mc', ar: 'مِنْ أَيْنَ أَنْتَ؟', latin: 'Min ayna anta?', options: ['Dari mana asalmu', 'Apa kabar', 'Berapa umurmu', 'Kapan datang'], correct: 0 },
+      { type: 'mc', ar: 'أَنَا مِنْ إِنْدُونِيسِيَا', latin: 'Ana min Induuniisiyaa', options: ['Saya ke Indonesia', 'Saya dari Indonesia', 'Saya orang Saudi', 'Saya suka Indonesia'], correct: 1 },
+      { type: 'match', instruction: 'Cocokkan kebangsaan (jinsiyah)', pairs: [
+        { ar: 'إِنْدُونِيسِيّ', latin: 'Induuniisiyy', id: 'Orang Indonesia' },
+        { ar: 'سَعُودِيّ', latin: 'Sa\'uudiyy', id: 'Orang Saudi' },
+        { ar: 'مَالِيزِيّ', latin: 'Maaliiziyy', id: 'Orang Malaysia' },
+        { ar: 'تُرْكِيّ', latin: 'Turkiyy', id: 'Orang Turki' },
+      ]},
+      { type: 'mc', ar: 'تَشَرَّفْنَا', latin: 'Tasyarrafnaa', options: ['Sampai jumpa', 'Maafkan saya', 'Senang berkenalan', 'Selamat datang'], correct: 2 },
+    ],
+  },
+  {
+    level: 7,
+    title: 'Warna-warni Dasar',
+    description: 'Warna untuk pilih baju, sajadah, & oleh-oleh',
+    questions: [
+      { type: 'mc', ar: 'أَحْمَر', latin: 'Ahmar', options: ['Merah', 'Biru', 'Hijau', 'Kuning'], correct: 0 },
+      { type: 'mc', ar: 'أَزْرَق', latin: 'Azraq', options: ['Putih', 'Biru', 'Hitam', 'Cokelat'], correct: 1 },
+      { type: 'match', instruction: 'Cocokkan warna dengan artinya', pairs: [
+        { ar: 'أَبْيَض', latin: 'Abyadh', id: 'Putih' },
+        { ar: 'أَسْوَد', latin: 'Aswad', id: 'Hitam' },
+        { ar: 'أَخْضَر', latin: 'Akhdhar', id: 'Hijau' },
+        { ar: 'أَصْفَر', latin: 'Ashfar', id: 'Kuning' },
+      ]},
+      { type: 'mc', ar: 'هَذَا القَمِيص أَبْيَض', latin: 'Hadzal qamiish abyadh', options: ['Baju ini hitam', 'Baju ini putih', 'Baju ini merah', 'Baju ini biru'], correct: 1 },
+      { type: 'match', instruction: 'Cocokkan warna lainnya', pairs: [
+        { ar: 'بُنِّيّ', latin: 'Bunniyy', id: 'Cokelat' },
+        { ar: 'رَمَادِيّ', latin: 'Ramaadiyy', id: 'Abu-abu' },
+        { ar: 'وَرْدِيّ', latin: 'Wardiyy', id: 'Merah muda' },
+        { ar: 'ذَهَبِيّ', latin: 'Dzahabiyy', id: 'Emas' },
+      ]},
+    ],
+  },
+  {
+    level: 8,
+    title: 'Ungkapan & Doa',
+    description: 'Kalimat thayyibah yang sering dipakai di sana',
+    questions: [
+      { type: 'mc', ar: 'بَارَكَ اللهُ فِيك', latin: 'Baarakallahu fiik', options: ['Semoga Allah memberkahimu', 'Semoga Allah mengampunimu', 'Sampai jumpa lagi', 'Terima kasih kembali'], correct: 0 },
+      { type: 'mc', ar: 'جَزَاكَ اللهُ خَيْرًا', latin: 'Jazaakallahu khairan', options: ['Selamat tinggal', 'Semoga Allah membalasmu dengan kebaikan', 'Semoga Allah merahmatimu', 'Maafkan aku'], correct: 1 },
+      { type: 'match', instruction: 'Cocokkan ungkapan dengan artinya', pairs: [
+        { ar: 'مَا شَاءَ الله', latin: 'Maa syaa\'allah', id: 'Atas kehendak Allah' },
+        { ar: 'إِنْ شَاءَ الله', latin: 'In syaa\'allah', id: 'Jika Allah menghendaki' },
+        { ar: 'سُبْحَانَ الله', latin: 'Subhaanallah', id: 'Maha Suci Allah' },
+        { ar: 'الْحَمْدُ لِلَّه', latin: 'Alhamdulillah', id: 'Segala puji bagi Allah' },
+      ]},
+      { type: 'mc', ar: 'وَإِيَّاك', latin: 'Wa iyyaak', options: ['Dan kepadamu juga', 'Tidak apa-apa', 'Sama-sama', 'Sampai nanti'], correct: 0 },
+      { type: 'match', instruction: 'Cocokkan dzikir & doa harian', pairs: [
+        { ar: 'بِسْمِ الله', latin: 'Bismillah', id: 'Dengan nama Allah' },
+        { ar: 'أَسْتَغْفِرُ الله', latin: 'Astaghfirullah', id: 'Aku memohon ampun pada Allah' },
+        { ar: 'اللهُ أَكْبَر', latin: 'Allahu akbar', id: 'Allah Maha Besar' },
+        { ar: 'لَا إِلَهَ إِلَّا الله', latin: 'Laa ilaaha illallah', id: 'Tiada tuhan selain Allah' },
+      ]},
+    ],
+  },
+  {
+    level: 9,
+    title: 'Tanya Arah & Fasilitas',
+    description: 'Tanya tempat wudhu, toilet, & mushola',
+    questions: [
+      { type: 'mc', ar: 'أَيْنَ دَوْرَةُ المِيَاه؟', latin: 'Ayna dawratul miyaah?', options: ['Di mana lift', 'Di mana toilet', 'Di mana pintu keluar', 'Di mana tangga'], correct: 1 },
+      { type: 'mc', ar: 'أَيْنَ مَكَانُ الوُضُوء؟', latin: 'Ayna makaanul wudhuu\'?', options: ['Di mana tempat wudhu', 'Di mana tempat makan', 'Di mana tempat duduk', 'Di mana tempat parkir'], correct: 0 },
+      { type: 'match', instruction: 'Cocokkan fasilitas', pairs: [
+        { ar: 'مَكَانُ الوُضُوء', latin: 'Makaanul wudhuu\'', id: 'Tempat wudhu' },
+        { ar: 'دَوْرَةُ المِيَاه', latin: 'Dawratul miyaah', id: 'Toilet' },
+        { ar: 'المُصَلَّى', latin: 'Al-mushallaa', id: 'Mushola' },
+        { ar: 'المِصْعَد', latin: 'Al-mish\'ad', id: 'Lift' },
+      ]},
+      { type: 'mc', ar: 'هَلْ هُنَاكَ مُصَلَّى قَرِيب؟', latin: 'Hal hunaaka mushallaa qariib?', options: ['Apakah toilet jauh', 'Apakah ada mushola dekat', 'Apakah ini gratis', 'Apakah sudah tutup'], correct: 1 },
+      { type: 'match', instruction: 'Cocokkan petunjuk lokasi', pairs: [
+        { ar: 'الطَّابِق الأَوَّل', latin: 'Ath-thaabiq al-awwal', id: 'Lantai satu' },
+        { ar: 'فَوْق', latin: 'Fawq', id: 'Di atas' },
+        { ar: 'تَحْت', latin: 'Taht', id: 'Di bawah' },
+        { ar: 'بِجَانِب', latin: 'Bijaanib', id: 'Di samping' },
+      ]},
+    ],
+  },
+  ...scaffoldComingSoonLevels(10, 100),
 ];
 
 // ============================================================================

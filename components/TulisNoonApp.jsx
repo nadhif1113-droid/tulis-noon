@@ -1422,10 +1422,11 @@ function WelcomeScreen({ onComplete, initialName = '' }) {
 
   // Step 4: Accent preference
   if (step === 4) {
+    // Urutan: Fusha didahulukan (landasan dasar — Bahasa resmi & Al-Quran),
+    // lalu Saudi, Mesir, Syam.
     const accents = [
-      { id: 'saudi', label: 'Saudi / Khaliji', desc: 'Aksen Arab Saudi & Teluk', flag: '🇸🇦' },
       { id: 'fusha', label: 'Fusha (Standard)', desc: 'Bahasa Arab resmi & Al-Quran', flag: '📖' },
-      { id: 'masri', label: 'Mesir', desc: 'Aksen Mesir (film & drama)', flag: '🇪🇬' },
+      { id: 'saudi', label: 'Saudi / Khaliji', desc: 'Aksen Arab Saudi & Teluk', flag: '🇸🇦' },
       { id: 'shami', label: 'Syam', desc: 'Aksen Suriah, Yordan, Palestin', flag: '🇸🇾' },
     ];
 
