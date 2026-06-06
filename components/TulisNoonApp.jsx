@@ -40,6 +40,7 @@ import { schedulePrayerNotifications } from '@/lib/local-prayer-notifications';
 import { detectLocation } from '@/lib/location-detector';
 import { PERKENALAN_MATERI_COST, PERKENALAN_BUNDLE_COST } from '@/data/perkenalan-diri-materi';
 import { NGOMONG_SESSION_COST } from '@/data/ngomong-materi';
+import { LAUNCH_OPEN_ALL_PREMIUM } from '@/lib/feature-flags';
 import { PREMIUM_UNLOCK_COST } from '@/lib/hafalan-tier';
 import { checkLivesRefresh } from '@/lib/lives-system';
 import { calculateStreakUpdate, getStreakMilestoneReward } from '@/lib/streak-system';
@@ -713,6 +714,9 @@ export default function TulisNoonApp() {
             onBack={() => setScreen('main')}
             onHome={() => { setTab('home'); setScreen('main'); }}
             onConsumeQuota={async () => {
+              // Launch phase: kalau flag global aktif, kuota Tanya Cepat unlimited
+              // (tidak potong free quota maupun bundle). Aman buat testing.
+              if (LAUNCH_OPEN_ALL_PREMIUM) return true;
               const freeUsed = authProfile?.tanyaCepatFreeUsed || 0;
               const bundleQuota = authProfile?.tanyaCepatBundleQuota || 0;
               // Pakai free dulu, baru bundle
