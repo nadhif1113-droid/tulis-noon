@@ -11,6 +11,7 @@ import { ArrowLeft, Home, Volume2, Mic, Check, X, Lock, ChevronRight, Coins, Rot
 import { NGOMONG_FREE_ITEMS, NGOMONG_SESSION_COST, NGOMONG_LEVELS, getNgomongMateriByLevel } from '@/data/ngomong-materi';
 import { speakArabic } from '@/lib/tts';
 import { compareArabicSpeech, isSpeechRecognitionSupported } from '@/lib/hafalan-method';
+import { isPremiumUnlocked } from '@/lib/feature-flags';
 
 function shuffle(arr) {
   const a = arr.slice();
@@ -32,7 +33,7 @@ export default function NgomongScreen({ coins = 0, unlocked = [], onUnlockMateri
     return (
       <MateriSession
         materi={activeMateri}
-        isUnlocked={unlocked.includes(activeMateri.id)}
+        isUnlocked={isPremiumUnlocked(unlocked.includes(activeMateri.id))}
         coins={coins}
         onUnlock={onUnlockMateri}
         onUpgrade={onUpgrade}
@@ -90,7 +91,7 @@ export default function NgomongScreen({ coins = 0, unlocked = [], onUnlockMateri
         <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#8b6b3d' }}>Pilih Materi</p>
         <div className="space-y-2.5">
           {materiList.map((m) => {
-            const isUnlocked = unlocked.includes(m.id);
+            const isUnlocked = isPremiumUnlocked(unlocked.includes(m.id));
             return (
               <button key={m.id} onClick={() => setActiveMateri(m)} className="w-full flex items-center gap-3 rounded-2xl p-3.5 text-left active:scale-[0.98] transition-transform" style={{ background: 'white', border: '1px solid rgba(10,77,60,0.1)' }}>
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 text-2xl" style={{ background: 'rgba(201,169,97,0.12)' }}>{m.emoji}</div>
