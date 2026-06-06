@@ -3853,6 +3853,20 @@ function MatchQuestion({ question, scenarioColor, onComplete }) {
   const [mistakes, setMistakes] = useState(0);
   const [completed, setCompleted] = useState(false); // guard biar onComplete cuma dipanggil sekali
 
+  // Shuffle the Indonesian column on mount (Arab tetap urut original).
+  // PENTING: dideklarasi SEBELUM useLayoutEffect di bawah — kalau diletakkan
+  // setelahnya, deps array `[matches, idOrder]` akan crash dgn TDZ ReferenceError
+  // pas render pertama → seluruh app error "Application error".
+  const [idOrder] = useState(() => {
+    const indices = question.pairs.map((_, i) => i);
+    // Fisher-Yates shuffle
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+    return indices;
+  });
+
   // Refs untuk gambar garis penghubung antar pasangan yang benar.
   const gridRef = useRef(null);
   const leftRefs = useRef({});
@@ -3881,17 +3895,6 @@ function MatchQuestion({ question, scenarioColor, onComplete }) {
     });
     setLines(next);
   }, [matches, idOrder]);
-
-  // Shuffle the Indonesian column on mount (Arab tetap urut original)
-  const [idOrder] = useState(() => {
-    const indices = question.pairs.map((_, i) => i);
-    // Fisher-Yates shuffle
-    for (let i = indices.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [indices[i], indices[j]] = [indices[j], indices[i]];
-    }
-    return indices;
-  });
 
   // Auto-complete kalau semua udah ke-match dengan benar.
   // Poin diberikan HANYA kalau mistakes === 0 (semua benar pada percobaan pertama).
