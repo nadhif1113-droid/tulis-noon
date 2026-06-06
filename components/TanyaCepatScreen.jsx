@@ -9,6 +9,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Home, Mic, MicOff, Send, Volume2, Sparkles, Loader2, X, Coins, MessageCircle, Lightbulb, Copy, Check, Info, HelpCircle } from 'lucide-react';
 import { speakArabic as ttsSpeakArabic } from '@/lib/tts';
+import { LAUNCH_OPEN_ALL_PREMIUM } from '@/lib/feature-flags';
 
 const INTRO_STORAGE_KEY = 'tanyaCepatIntroSeen_v1';
 
@@ -61,7 +62,8 @@ export default function TanyaCepatScreen({
   const bundleQuota = userProfile?.tanyaCepatBundleQuota || 0;
   const freeRemaining = Math.max(0, TANYA_CEPAT_FREE_LIMIT - freeUsed);
   const totalRemaining = freeRemaining + bundleQuota;
-  const hasQuota = totalRemaining > 0;
+  // Launch phase: kalau flag aktif, gerbang quota selalu lolos (unlimited testing).
+  const hasQuota = LAUNCH_OPEN_ALL_PREMIUM ? true : totalRemaining > 0;
 
   // Auto-scroll messages
   useEffect(() => {
