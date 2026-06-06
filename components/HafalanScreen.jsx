@@ -24,6 +24,7 @@ import {
   CHUNK_COMPLETION_REWARD,
 } from '@/lib/hafalan-method';
 import { isSuratFree, isSuratUnlocked, PREMIUM_UNLOCK_COST } from '@/lib/hafalan-tier';
+import { isPremiumUnlocked as checkPremiumUnlocked } from '@/lib/feature-flags';
 
 export default function HafalanScreen({
   hafalanProgress = {},
@@ -108,7 +109,8 @@ function ListView({ hafalanProgress, userProfile, coins, onBack, onHome, onShowU
   const alFatihahMeta = QURAN_SURAT.find((s) => s.number === 1);
   const juz30Surat = QURAN_SURAT.filter((s) => s.number !== 1 && s.juz.includes(30));
   const premiumSurat = QURAN_SURAT.filter((s) => s.number !== 1 && !s.juz.includes(30));
-  const isPremiumUnlocked = !!userProfile?.hafalanFullUnlocked;
+  // Hormati LAUNCH_OPEN_ALL_PREMIUM — kalau flag aktif, semua surat kebuka.
+  const isPremiumUnlocked = checkPremiumUnlocked(userProfile?.hafalanFullUnlocked);
 
   // Filter by search query (kalau ada)
   const matchSearch = (meta) => {
