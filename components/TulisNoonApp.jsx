@@ -3859,6 +3859,20 @@ function MatchQuestion({ question, scenarioColor, onComplete }) {
   const rightRefs = useRef({});
   const [lines, setLines] = useState([]);
 
+  // Shuffle the Indonesian column on mount (Arab tetap urut original).
+  // HARUS dideklarasikan SEBELUM useLayoutEffect di bawah, karena dipakai
+  // di dependency array-nya — kalau ditaruh setelah, kena Temporal Dead Zone
+  // (ReferenceError) dan bikin soal 'match' crash.
+  const [idOrder] = useState(() => {
+    const indices = question.pairs.map((_, i) => i);
+    // Fisher-Yates shuffle
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+    return indices;
+  });
+
   // Hitung koordinat garis tiap kali matches berubah (ukur posisi DOM).
   React.useLayoutEffect(() => {
     const container = gridRef.current;
@@ -3881,17 +3895,6 @@ function MatchQuestion({ question, scenarioColor, onComplete }) {
     });
     setLines(next);
   }, [matches, idOrder]);
-
-  // Shuffle the Indonesian column on mount (Arab tetap urut original)
-  const [idOrder] = useState(() => {
-    const indices = question.pairs.map((_, i) => i);
-    // Fisher-Yates shuffle
-    for (let i = indices.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [indices[i], indices[j]] = [indices[j], indices[i]];
-    }
-    return indices;
-  });
 
   // Auto-complete kalau semua udah ke-match dengan benar.
   // Poin diberikan HANYA kalau mistakes === 0 (semua benar pada percobaan pertama).
