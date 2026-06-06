@@ -40,7 +40,8 @@ import { schedulePrayerNotifications } from '@/lib/local-prayer-notifications';
 import { detectLocation } from '@/lib/location-detector';
 import { PERKENALAN_MATERI_COST, PERKENALAN_BUNDLE_COST } from '@/data/perkenalan-diri-materi';
 import { NGOMONG_SESSION_COST } from '@/data/ngomong-materi';
-import { LAUNCH_OPEN_ALL_PREMIUM } from '@/lib/feature-flags';
+import { LAUNCH_OPEN_ALL_PREMIUM, isUserInTrial, trialDaysRemaining, premiumSource } from '@/lib/feature-flags';
+import { PREMIUM_TIERS, PENDIRI_SLOT_LIMIT, FREE_TIER_PERKS } from '@/lib/premium-tiers';
 import { PREMIUM_UNLOCK_COST } from '@/lib/hafalan-tier';
 import { checkLivesRefresh } from '@/lib/lives-system';
 import { calculateStreakUpdate, getStreakMilestoneReward } from '@/lib/streak-system';
@@ -4328,281 +4329,140 @@ function GuruDetailScreen({ guru, onBack }) {
   );
 }
 
-// ============ PREMIUM with MOTIVATION FLOW ============
+// ============ PREMIUM SCREEN — "Tulis Noon Mahir" tier selection ============
+// Bayar via lynk.id (sementara). Setelah bayar, user kirim bukti ke admin chatbot
+// di Profile → admin manual aktifkan di Firestore.
 function PremiumScreen({ onBack, userProfile, onSubmit }) {
-  const [step, setStep] = useState('intro'); // intro, q1, q2, q3, q4, plans, success
-  const [data, setData] = useState({
-    goal: userProfile?.goal || '',
-    profession: userProfile?.profession || '',
-    motivation: userProfile?.motivation || '',
-    targetTime: userProfile?.targetTime || '',
-  });
+  const inTrial = isUserInTrial(userProfile);
+  const daysLeft = trialDaysRemaining(userProfile);
+  const source = premiumSource(userProfile);
+  const isAlreadyMahir = source === 'paid' || source === 'lifetime' || source === 'launch';
 
-  const updateData = (key, val) => setData(d => ({ ...d, [key]: val }));
+  const openPayment = (url) => {
+    try {
+      if (typeof window !== 'undefined') window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (e) {}
+  };
 
-  const Header = ({ stepNum, totalSteps, onPrev }) => (
-    <div className="flex items-center gap-3 mb-6">
-      <button onClick={onPrev} className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(10,77,60,0.08)' }}>
-        <ArrowLeft size={18} style={{ color: '#0a4d3c' }} />
-      </button>
-      <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(10,77,60,0.1)' }}>
-        <div className="h-full transition-all duration-500" style={{ width: `${(stepNum/totalSteps)*100}%`, background: '#c9a961' }} />
+  return (
+    <div className="flex-1 overflow-y-auto" style={{ height: '100%' }}>
+      {/* Header */}
+      <div className="flex items-center gap-3 px-5 py-3 sticky top-0 z-10" style={{ background: '#faf6ee', borderBottom: '1px solid rgba(10,77,60,0.08)' }}>
+        <button onClick={onBack} className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'rgba(10,77,60,0.08)' }}>
+          <ArrowLeft size={17} style={{ color: '#0a4d3c' }} />
+        </button>
+        <div className="flex-1">
+          <p className="text-[10px] tracking-[0.2em] uppercase" style={{ color: '#8b6b3d' }}>Upgrade</p>
+          <h1 className="text-lg font-bold" style={{ fontFamily: 'Fraunces, serif', color: '#0a4d3c' }}>Tulis Noon Mahir</h1>
+        </div>
       </div>
-      <span className="text-xs font-semibold" style={{ color: '#8b6b3d' }}>{stepNum}/{totalSteps}</span>
+
+      <div className="px-5 py-5">
+        {/* Hero */}
+        <div className="rounded-3xl p-5 mb-4 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #0a4d3c, #1a6b56)' }}>
+          <div className="absolute -right-6 -top-6 text-9xl opacity-15" style={{ fontFamily: 'Amiri, serif', color: '#c9a961' }}>ن</div>
+          <Sparkles size={22} color="#c9a961" className="mb-2" />
+          <h2 className="text-2xl text-white mb-1" style={{ fontFamily: 'Fraunces, serif', fontWeight: 700 }}>Akses penuh, lancar lebih cepat</h2>
+          <p className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>Semua modul belajar, hafalan Al-Quran lengkap, Tanya Cepat AI tanpa batas, dan Belajar Ngomong penuh.</p>
+        </div>
+
+        {/* Status user */}
+        {isAlreadyMahir && (
+          <div className="rounded-2xl p-3 mb-4 flex items-center gap-2" style={{ background: 'rgba(22,163,74,0.1)', border: '1px solid rgba(22,163,74,0.3)' }}>
+            <Check size={18} style={{ color: '#16a34a' }} />
+            <p className="text-sm font-semibold" style={{ color: '#16a34a' }}>
+              {source === 'lifetime' ? 'Kamu Pendiri Lifetime — akses selamanya 🎉'
+                : source === 'paid' ? 'Premium aktif — terima kasih sudah upgrade!'
+                : 'Semua fitur lagi terbuka (mode launch).'}
+            </p>
+          </div>
+        )}
+        {inTrial && !isAlreadyMahir && (
+          <div className="rounded-2xl p-3 mb-4 flex items-center gap-2" style={{ background: 'rgba(201,169,97,0.12)', border: '1px solid rgba(201,169,97,0.4)' }}>
+            <Sparkles size={17} style={{ color: '#c9a961' }} />
+            <div className="flex-1">
+              <p className="text-sm font-bold" style={{ color: '#a05536' }}>Trial gratis — {daysLeft} hari tersisa</p>
+              <p className="text-xs" style={{ color: '#8b6b3d' }}>Semua fitur kebuka selama trial. Habis trial tetap bisa pakai versi gratis.</p>
+            </div>
+          </div>
+        )}
+
+        {/* 3 Tier */}
+        <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#8b6b3d' }}>Pilih Paket</p>
+        <div className="space-y-3 mb-5">
+          {PREMIUM_TIERS.map((t) => (
+            <div key={t.id} className="rounded-2xl p-4 relative" style={{
+              background: 'white',
+              border: t.isRecommended ? '2px solid #c9a961' : t.isPendiri ? '2px solid #0a4d3c' : '1px solid rgba(10,77,60,0.12)',
+              boxShadow: t.isRecommended ? '0 8px 24px -12px rgba(201,169,97,0.5)' : 'none',
+            }}>
+              {t.isRecommended && (
+                <span className="absolute -top-2 right-4 px-2.5 py-0.5 rounded-full text-[10px] font-bold text-white" style={{ background: '#c9a961' }}>
+                  ★ Paling Laris
+                </span>
+              )}
+              {t.isPendiri && (
+                <span className="absolute -top-2 right-4 px-2.5 py-0.5 rounded-full text-[10px] font-bold text-white" style={{ background: '#0a4d3c' }}>
+                  Limited {PENDIRI_SLOT_LIMIT} user
+                </span>
+              )}
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base font-bold" style={{ color: '#0a4d3c', fontFamily: 'Fraunces, serif' }}>{t.name}</h3>
+                  <p className="text-xs" style={{ color: '#8b6b3d' }}>{t.tagline}</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-xl font-bold leading-none" style={{ color: '#0a4d3c', fontFamily: 'Fraunces, serif' }}>{t.priceLabel}</p>
+                  {t.priceCompare && <p className="text-[10px] line-through mt-0.5" style={{ color: '#8b6b3d' }}>{t.priceCompare}</p>}
+                  <p className="text-[10px] mt-0.5" style={{ color: '#8b6b3d' }}>{t.durationLabel}</p>
+                </div>
+              </div>
+              <div className="space-y-1 mb-3">
+                {t.perks.map((p, i) => (
+                  <div key={i} className="flex items-start gap-1.5">
+                    <Check size={12} style={{ color: '#c9a961', marginTop: 3 }} className="flex-shrink-0" />
+                    <p className="text-xs" style={{ color: '#3d2817' }}>{p}</p>
+                  </div>
+                ))}
+              </div>
+              <button onClick={() => openPayment(t.payUrl)} className="w-full py-3 rounded-2xl text-white font-bold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform" style={{
+                background: t.isRecommended ? '#c9a961' : t.isPendiri ? '#0a4d3c' : 'rgba(10,77,60,0.85)',
+              }}>
+                <Coins size={15} /> Bayar via lynk.id
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Sudah bayar */}
+        <div className="rounded-2xl p-4 mb-5" style={{ background: 'rgba(10,77,60,0.05)', border: '1px dashed rgba(10,77,60,0.2)' }}>
+          <p className="text-sm font-semibold mb-1" style={{ color: '#0a4d3c' }}>Sudah bayar? 👋</p>
+          <p className="text-xs leading-relaxed" style={{ color: '#3d2817' }}>
+            Buka <b>Profil → Hubungi Admin</b>, lalu kirim bukti pembayaran lynk.id-mu.
+            Premium akan aktif maksimal 24 jam.
+          </p>
+        </div>
+
+        {/* Free tier */}
+        <div className="rounded-2xl p-4" style={{ background: 'white', border: '1px solid rgba(10,77,60,0.1)' }}>
+          <p className="text-xs tracking-widest uppercase mb-2" style={{ color: '#8b6b3d' }}>Tier Gratis</p>
+          <p className="text-sm font-semibold mb-2" style={{ color: '#0a4d3c' }}>Setelah trial kamu tetap bisa:</p>
+          <div className="space-y-1">
+            {FREE_TIER_PERKS.map((p, i) => (
+              <div key={i} className="flex items-start gap-1.5">
+                <span style={{ color: '#8b6b3d', marginTop: 1 }}>•</span>
+                <p className="text-xs" style={{ color: '#3d2817' }}>{p}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <p className="text-[10px] text-center mt-4 mb-2" style={{ color: '#8b6b3d' }}>
+          Pembayaran sementara via lynk.id. Aktivasi premium maksimal 24 jam setelah bukti diterima.
+        </p>
+      </div>
     </div>
   );
-
-  // Intro
-  if (step === 'intro') {
-    return (
-      <div className="flex-1 flex flex-col px-5 py-6">
-        <button onClick={onBack} className="w-10 h-10 rounded-full flex items-center justify-center mb-6 self-start" style={{ background: 'rgba(10,77,60,0.08)' }}>
-          <ArrowLeft size={18} style={{ color: '#0a4d3c' }} />
-        </button>
-
-        <div className="rounded-3xl p-6 mb-6 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #c9a961, #d4b876)' }}>
-          <div className="absolute -right-6 -top-6 text-9xl opacity-20" style={{ fontFamily: 'Amiri, serif', color: 'white' }}>★</div>
-          <Sparkles size={28} color="white" className="mb-3" />
-          <h2 className="text-3xl text-white mb-2" style={{ fontFamily: 'Fraunces, serif', fontWeight: 700 }}>Tulis Noon<br/>Premium</h2>
-          <p className="text-white opacity-90 text-sm">Akses penuh untuk mendalami bahasa Arab</p>
-        </div>
-
-        <p className="text-base mb-5" style={{ color: '#3d2817' }}>
-          Sebelum kami tunjukkan paket Premium, kami ingin <em style={{ fontFamily: 'Fraunces, serif' }}>memahami</em> kebutuhanmu lebih dulu.
-        </p>
-
-        <div className="space-y-3 flex-1">
-          {[
-            { icon: '🎯', t: 'Rencana belajar pribadi', d: 'Sesuai tujuan & jadwalmu' },
-            { icon: '🤖', t: 'AI tutor khusus', d: 'Selalu siap jawab pertanyaanmu' },
-            { icon: '👳🏽‍♂️', t: 'Diskon kelas dengan ustadz', d: 'Akses guru profesional' },
-            { icon: '📊', t: 'Laporan kemajuan detail', d: 'Pantau perkembanganmu' },
-          ].map((f,i) => (
-            <div key={i} className="flex items-start gap-3 p-3 rounded-xl" style={{ background: 'white' }}>
-              <div className="text-2xl">{f.icon}</div>
-              <div>
-                <p className="font-semibold text-sm" style={{ color: '#1a1a1a' }}>{f.t}</p>
-                <p className="text-xs" style={{ color: '#666' }}>{f.d}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <button onClick={() => setStep('q1')} className="w-full py-4 rounded-2xl text-white font-medium flex items-center justify-center gap-2 mt-4" style={{ background: '#0a4d3c' }}>
-          Mulai Personalisasi <ArrowRight size={18} />
-        </button>
-      </div>
-    );
-  }
-
-  // Q1: Goal
-  if (step === 'q1') {
-    const goals = [
-      { id: 'ibadah', label: 'Ibadah & Al-Quran', desc: 'Memahami sholat, doa, dan Al-Quran', emoji: '🕌' },
-      { id: 'profesi', label: 'Karir & Profesi', desc: 'Bekerja di lingkungan Arab', emoji: '💼' },
-      { id: 'akademik', label: 'Studi/Beasiswa', desc: 'Kuliah di negara Arab', emoji: '🎓' },
-      { id: 'keluarga', label: 'Keluarga & Sosial', desc: 'Pasangan/keluarga berbahasa Arab', emoji: '👨‍👩‍👧' },
-      { id: 'umrah', label: 'Umrah/Haji', desc: 'Perjalanan ke Tanah Suci', emoji: '🕋' },
-    ];
-
-    return (
-      <div className="flex-1 flex flex-col px-5 py-6">
-        <Header stepNum={1} totalSteps={4} onPrev={() => setStep('intro')} />
-        <p className="text-xs tracking-widest uppercase mb-2" style={{ color: '#c9a961' }}>Pertanyaan 1</p>
-        <h2 className="text-2xl mb-2 leading-tight" style={{ fontFamily: 'Fraunces, serif', fontWeight: 600, color: '#0a4d3c' }}>
-          Apa tujuan utamamu belajar bahasa Arab?
-        </h2>
-        <p className="text-sm mb-6" style={{ color: '#666' }}>Pilih yang paling utama.</p>
-
-        <div className="space-y-2 flex-1 overflow-auto">
-          {goals.map((g) => {
-            const isSelected = data.goal === g.id;
-            return (
-              <button key={g.id} onClick={() => updateData('goal', g.id)} className="w-full p-4 rounded-2xl text-left flex items-center gap-4" style={{ background: isSelected ? 'rgba(201,169,97,0.1)' : 'white', border: `2px solid ${isSelected ? '#c9a961' : 'rgba(10,77,60,0.15)'}` }}>
-                <div className="text-3xl flex-shrink-0">{g.emoji}</div>
-                <div className="flex-1">
-                  <p className="font-semibold text-sm" style={{ color: '#1a1a1a' }}>{g.label}</p>
-                  <p className="text-xs" style={{ color: '#666' }}>{g.desc}</p>
-                </div>
-                {isSelected && <Check size={20} style={{ color: '#c9a961' }} />}
-              </button>
-            );
-          })}
-        </div>
-
-        <button onClick={() => data.goal && setStep('q2')} disabled={!data.goal} className="w-full py-4 rounded-2xl text-white font-medium flex items-center justify-center gap-2 mt-4 disabled:opacity-40" style={{ background: '#0a4d3c' }}>
-          Lanjut <ArrowRight size={18} />
-        </button>
-      </div>
-    );
-  }
-
-  // Q2: Profession
-  if (step === 'q2') {
-    return (
-      <div className="flex-1 flex flex-col px-5 py-6">
-        <Header stepNum={2} totalSteps={4} onPrev={() => setStep('q1')} />
-        <p className="text-xs tracking-widest uppercase mb-2" style={{ color: '#c9a961' }}>Pertanyaan 2</p>
-        <h2 className="text-2xl mb-2 leading-tight" style={{ fontFamily: 'Fraunces, serif', fontWeight: 600, color: '#0a4d3c' }}>
-          Apa profesi/aktivitas kamu saat ini?
-        </h2>
-        <p className="text-sm mb-6" style={{ color: '#666' }}>Bantu kami sesuaikan istilah & konteks pembelajaran.</p>
-
-        <input
-          type="text"
-          value={data.profession}
-          onChange={(e) => updateData('profession', e.target.value)}
-          placeholder="Contoh: Guru, Pegawai, Mahasiswa..."
-          className="w-full px-5 py-4 rounded-2xl text-base outline-none mb-3"
-          style={{ background: 'white', border: '2px solid rgba(10,77,60,0.15)', color: '#1a1a1a' }}
-        />
-
-        <div className="flex flex-wrap gap-2 mb-4">
-          {['Pelajar/Mahasiswa', 'Pekerja Kantor', 'Wiraswasta', 'Guru/Dosen', 'Ibu Rumah Tangga', 'Profesional Kesehatan', 'TKI/Pekerja LN'].map((p) => (
-            <button key={p} onClick={() => updateData('profession', p)} className="px-3 py-1.5 rounded-full text-xs font-medium" style={{ background: data.profession === p ? '#0a4d3c' : 'white', color: data.profession === p ? 'white' : '#0a4d3c', border: '1px solid rgba(10,77,60,0.15)' }}>
-              {p}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex-1" />
-        <button onClick={() => data.profession && setStep('q3')} disabled={!data.profession} className="w-full py-4 rounded-2xl text-white font-medium flex items-center justify-center gap-2 disabled:opacity-40" style={{ background: '#0a4d3c' }}>
-          Lanjut <ArrowRight size={18} />
-        </button>
-      </div>
-    );
-  }
-
-  // Q3: Deep motivation
-  if (step === 'q3') {
-    return (
-      <div className="flex-1 flex flex-col px-5 py-6">
-        <Header stepNum={3} totalSteps={4} onPrev={() => setStep('q2')} />
-        <p className="text-xs tracking-widest uppercase mb-2" style={{ color: '#c9a961' }}>Pertanyaan 3</p>
-        <h2 className="text-2xl mb-2 leading-tight" style={{ fontFamily: 'Fraunces, serif', fontWeight: 600, color: '#0a4d3c' }}>
-          Mengapa kamu ingin <em>fasih</em> bahasa Arab?
-        </h2>
-        <p className="text-sm mb-6" style={{ color: '#666' }}>Ceritakan dengan jujur. Ini akan jadi pengingatmu di hari malas.</p>
-
-        <textarea
-          value={data.motivation}
-          onChange={(e) => updateData('motivation', e.target.value)}
-          placeholder="Misal: Saya ingin memahami bacaan sholat dengan hati, bukan hanya hafalan..."
-          rows={5}
-          className="w-full px-5 py-4 rounded-2xl text-base outline-none mb-3 resize-none"
-          style={{ background: 'white', border: '2px solid rgba(10,77,60,0.15)', color: '#1a1a1a', fontFamily: 'inherit' }}
-        />
-
-        <div className="p-3 rounded-xl mb-4" style={{ background: 'rgba(201,169,97,0.1)' }}>
-          <p className="text-xs leading-relaxed" style={{ color: '#7a3d2a' }}>
-            💡 <strong>Tahukah kamu?</strong> Orang yang menulis "mengapa" mereka belajar 3x lebih konsisten dibanding yang tidak.
-          </p>
-        </div>
-
-        <div className="flex-1" />
-        <button onClick={() => data.motivation && data.motivation.length >= 10 && setStep('q4')} disabled={!data.motivation || data.motivation.length < 10} className="w-full py-4 rounded-2xl text-white font-medium flex items-center justify-center gap-2 disabled:opacity-40" style={{ background: '#0a4d3c' }}>
-          Lanjut <ArrowRight size={18} />
-        </button>
-      </div>
-    );
-  }
-
-  // Q4: Target time
-  if (step === 'q4') {
-    const targets = [
-      { id: '1month', label: '1 bulan', desc: 'Saya butuh cepat (umrah dekat)', emoji: '⚡' },
-      { id: '3months', label: '3 bulan', desc: 'Intensif tapi realistis', emoji: '🎯' },
-      { id: '6months', label: '6 bulan', desc: 'Tempo seimbang', emoji: '🌱' },
-      { id: '1year', label: '1 tahun+', desc: 'Pelan tapi pasti', emoji: '🌳' },
-    ];
-
-    return (
-      <div className="flex-1 flex flex-col px-5 py-6">
-        <Header stepNum={4} totalSteps={4} onPrev={() => setStep('q3')} />
-        <p className="text-xs tracking-widest uppercase mb-2" style={{ color: '#c9a961' }}>Pertanyaan 4</p>
-        <h2 className="text-2xl mb-2 leading-tight" style={{ fontFamily: 'Fraunces, serif', fontWeight: 600, color: '#0a4d3c' }}>
-          Kapan kamu ingin sudah lancar?
-        </h2>
-        <p className="text-sm mb-6" style={{ color: '#666' }}>Target waktu yang realistis untukmu.</p>
-
-        <div className="space-y-3 flex-1">
-          {targets.map((t) => {
-            const isSelected = data.targetTime === t.id;
-            return (
-              <button key={t.id} onClick={() => updateData('targetTime', t.id)} className="w-full p-4 rounded-2xl text-left flex items-center gap-4" style={{ background: isSelected ? 'rgba(201,169,97,0.1)' : 'white', border: `2px solid ${isSelected ? '#c9a961' : 'rgba(10,77,60,0.15)'}` }}>
-                <div className="text-3xl flex-shrink-0">{t.emoji}</div>
-                <div className="flex-1">
-                  <p className="font-semibold text-base" style={{ color: '#1a1a1a' }}>{t.label}</p>
-                  <p className="text-xs" style={{ color: '#666' }}>{t.desc}</p>
-                </div>
-                {isSelected && <Check size={20} style={{ color: '#c9a961' }} />}
-              </button>
-            );
-          })}
-        </div>
-
-        <button onClick={() => data.targetTime && setStep('plans')} disabled={!data.targetTime} className="w-full py-4 rounded-2xl text-white font-medium flex items-center justify-center gap-2 mt-4 disabled:opacity-40" style={{ background: '#0a4d3c' }}>
-          Lihat Paket Premium <ArrowRight size={18} />
-        </button>
-      </div>
-    );
-  }
-
-  // Plans
-  if (step === 'plans') {
-    const plans = [
-      { id: 'monthly', name: 'Bulanan', price: 49000, period: '/bulan', save: null },
-      { id: 'quarterly', name: '3 Bulan', price: 129000, period: '/3 bulan', save: 'Hemat 12%', popular: true },
-      { id: 'yearly', name: 'Tahunan', price: 399000, period: '/tahun', save: 'Hemat 32%' },
-    ];
-
-    return (
-      <div className="flex-1 flex flex-col px-5 py-6">
-        <button onClick={() => setStep('q4')} className="w-10 h-10 rounded-full flex items-center justify-center mb-6 self-start" style={{ background: 'rgba(10,77,60,0.08)' }}>
-          <ArrowLeft size={18} style={{ color: '#0a4d3c' }} />
-        </button>
-
-        <p className="text-xs tracking-widest uppercase mb-2" style={{ color: '#c9a961' }}>Paket pilihan untukmu</p>
-        <h2 className="text-2xl mb-2 leading-tight" style={{ fontFamily: 'Fraunces, serif', fontWeight: 600, color: '#0a4d3c' }}>
-          Berdasarkan profilmu...
-        </h2>
-        <p className="text-sm mb-6" style={{ color: '#666' }}>
-          Untuk target <strong>{data.targetTime === '1month' ? '1 bulan' : data.targetTime === '3months' ? '3 bulan' : data.targetTime === '6months' ? '6 bulan' : '1 tahun'}</strong>, kami rekomendasikan paket <strong>{data.targetTime === '1month' ? 'Bulanan' : data.targetTime === '3months' ? '3 Bulan' : 'Tahunan'}</strong>.
-        </p>
-
-        <div className="space-y-3 flex-1">
-          {plans.map((p) => (
-            <div key={p.id} className="p-4 rounded-2xl relative" style={{ background: 'white', border: `2px solid ${p.popular ? '#c9a961' : 'rgba(10,77,60,0.1)'}` }}>
-              {p.popular && (
-                <div className="absolute -top-2 left-4 px-3 py-0.5 rounded-full text-[10px] font-bold" style={{ background: '#c9a961', color: 'white' }}>POPULER</div>
-              )}
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-semibold text-base" style={{ color: '#1a1a1a' }}>{p.name}</p>
-                  {p.save && <p className="text-xs font-semibold" style={{ color: '#c9a961' }}>{p.save}</p>}
-                </div>
-                <div className="text-right">
-                  <p className="text-xl font-bold" style={{ color: '#0a4d3c' }}>Rp{(p.price/1000).toFixed(0)}rb</p>
-                  <p className="text-xs" style={{ color: '#666' }}>{p.period}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-4 p-3 rounded-xl text-xs flex items-start gap-2" style={{ background: 'rgba(201,169,97,0.1)', border: '1px dashed #c9a961' }}>
-          <Sparkles size={14} style={{ color: '#c9a961' }} className="mt-0.5 flex-shrink-0" />
-          <p style={{ color: '#7a3d2a' }}>
-            <strong>Mode demo:</strong> Sistem pembayaran akan aktif setelah validasi 5 user trial.
-          </p>
-        </div>
-
-        <button onClick={() => { onSubmit(data); }} className="w-full py-4 rounded-2xl text-white font-medium flex items-center justify-center gap-2 mt-4" style={{ background: '#0a4d3c' }}>
-          Simpan Preferensi <Check size={18} />
-        </button>
-      </div>
-    );
-  }
 }
 
 // ============================================================================
