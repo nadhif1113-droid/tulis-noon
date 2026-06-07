@@ -2129,12 +2129,13 @@ function HomeTab({ userName, userProfile, location, xp, streak, coins, lives, ma
           {
             id: 'video-quiz', t: 'Quiz Video', d: 'Skenario',
             icon: Play, color: '#7a3d2a', bg: 'rgba(122,61,42,0.1)',
+            comingSoon: true,
             interests: ['travel', 'business', 'religion', 'family'],
             personalizedDesc: {
-              travel: 'Skenario umrah',
-              business: 'Skenario kerja',
-              religion: 'Skenario masjid',
-              family: 'Skenario keluarga',
+              travel: 'Segera hadir',
+              business: 'Segera hadir',
+              religion: 'Segera hadir',
+              family: 'Segera hadir',
             },
           },
           {
@@ -2222,18 +2223,23 @@ function HomeTab({ userName, userProfile, location, xp, streak, coins, lives, ma
             <div className="grid grid-cols-2 gap-3 mb-6">
               {scored.map((g) => {
                 const Icon = g.icon;
-                const isTopMatch = hasPersonalization && g.score === topMatchScore;
+                const isTopMatch = hasPersonalization && g.score === topMatchScore && !g.comingSoon;
+                const isComingSoon = !!g.comingSoon;
                 return (
                   <button
                     key={g.id}
-                    onClick={() => onOpenGame(g)}
-                    className="p-4 rounded-2xl text-left active:scale-[0.98] transition-transform relative"
+                    onClick={() => !isComingSoon && onOpenGame(g)}
+                    disabled={isComingSoon}
+                    className="p-4 rounded-2xl text-left active:scale-[0.98] transition-transform relative disabled:cursor-default"
                     style={{
-                      background: 'white',
-                      border: isTopMatch
+                      background: isComingSoon ? 'rgba(10,77,60,0.04)' : 'white',
+                      border: isComingSoon
+                        ? '1px dashed rgba(10,77,60,0.2)'
+                        : isTopMatch
                         ? '1.5px solid rgba(201,169,97,0.6)'
                         : '1px solid rgba(10,77,60,0.08)',
                       boxShadow: isTopMatch ? '0 4px 16px -8px rgba(201,169,97,0.5)' : 'none',
+                      opacity: isComingSoon ? 0.75 : 1,
                     }}
                   >
                     {isTopMatch && (
@@ -2244,11 +2250,19 @@ function HomeTab({ userName, userProfile, location, xp, streak, coins, lives, ma
                         ✨ Untukmu
                       </span>
                     )}
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3" style={{ background: g.bg }}>
-                      <Icon size={18} style={{ color: g.color }} />
+                    {isComingSoon && (
+                      <span
+                        className="absolute -top-2 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide"
+                        style={{ background: 'rgba(201,169,97,0.25)', color: '#a05536' }}
+                      >
+                        🔒 SOON
+                      </span>
+                    )}
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3" style={{ background: isComingSoon ? 'rgba(10,77,60,0.06)' : g.bg }}>
+                      <Icon size={18} style={{ color: isComingSoon ? '#8b6b3d' : g.color }} />
                     </div>
-                    <p className="font-semibold text-sm" style={{ color: '#1a1a1a' }}>{g.t}</p>
-                    <p className="text-xs" style={{ color: '#666' }}>{g.displayDesc}</p>
+                    <p className="font-semibold text-sm" style={{ color: isComingSoon ? '#8b6b3d' : '#1a1a1a' }}>{g.t}</p>
+                    <p className="text-xs" style={{ color: '#8b6b3d' }}>{isComingSoon ? 'Segera hadir' : g.displayDesc}</p>
                   </button>
                 );
               })}
