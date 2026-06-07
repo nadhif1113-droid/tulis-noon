@@ -1994,6 +1994,510 @@ export const NAHWU_LESSONS = [
       },
     ],
   },
+  ,
+  // ============ PELAJARAN 25 (PREMIUM) ============
+  {
+    id: 'nahwu-25-taukid',
+    order: 25,
+    isFree: false,
+    title: 'Taukid',
+    subtitle: 'Penegasan dgn kullu, jami\', nafsuhu',
+    emoji: '🔖',
+    duration: '5 menit',
+    color: '#a05536',
+    xpReward: 30,
+    theory: {
+      intro: 'Taukid (التَّوْكِيْدُ) adalah penegasan. Ada 2 jenis: TAUKID LAFZHI (mengulang kata yg sama) dan TAUKID MA\'NAWI (pakai kata khusus: نَفْسٌ، عَيْنٌ، كُلٌّ، جَمِيعٌ، كِلَا).',
+      sections: [
+        {
+          title: 'Taukid Lafzhi',
+          body: 'Mengulang kata atau kalimat untuk penegasan.',
+          examples: [
+            { ar: 'لَا لَا أُحِبُّهُ', latin: 'laa laa uhibbuh', id: 'Tidak tidak aku menyukainya (penegasan negatif)' },
+            { ar: 'قُمْ قُمْ', latin: 'qum qum', id: 'Bangun, bangun!' },
+          ],
+        },
+        {
+          title: 'Taukid Ma\'nawi dgn نَفْسٌ، عَيْنٌ',
+          body: 'Untuk menegaskan SUBJEK (orang/benda) sendiri yang dimaksud.',
+          examples: [
+            { ar: 'جَاءَ الْأَمِيرُ نَفْسُهُ', latin: 'jaa\'al-amiiru nafsuh', id: 'Sang amir SENDIRI yang datang (bukan utusan)' },
+            { ar: 'رَأَيْتُ زَيْدًا عَيْنَهُ', latin: 'ra\'aitu Zaidan \'ainah', id: 'Aku lihat Zaid SENDIRI' },
+          ],
+        },
+        {
+          title: 'Taukid Ma\'nawi dgn كُلٌّ، جَمِيعٌ',
+          body: 'Untuk menegaskan KESELURUHAN (tidak ada yg tertinggal).',
+          examples: [
+            { ar: 'جَاءَ الطُّلَّابُ كُلُّهُمْ', latin: 'jaa\'ath-thullaabu kulluhum', id: 'SEMUA murid datang (tidak ada yg absen)' },
+            { ar: 'حَضَرَ الْقَوْمُ جَمِيعُهُمْ', latin: 'hadharal-qaumu jamii\'uhum', id: 'SELURUH kaum hadir' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'فَسَجَدَ الْمَلَائِكَةُ كُلُّهُمْ أَجْمَعُونَ',
+        latin: 'fasajadal-malaa\'ikatu kulluhum ajma\'uun',
+        surah: 'Al-Hijr',
+        ayatNum: 30,
+        analysis: [
+          { word: 'فَ', type: 'Harf athaf', note: '' },
+          { word: 'سَجَدَ', type: 'Fi\'il Madhi', note: 'bersujud' },
+          { word: 'الْمَلَائِكَةُ', type: 'Fa\'il', note: 'rofa\'' },
+          { word: 'كُلُّ', type: 'Taukid ma\'nawi', note: 'rofa\' ikut fa\'il; mudhof' },
+          { word: 'هُمْ', type: 'Mudhof ilaih', note: 'kembali ke al-malaa\'ikah' },
+          { word: 'أَجْمَعُونَ', type: 'Taukid ma\'nawi (ke-2)', note: 'rofa\' jamak; tambah penegasan' },
+        ],
+        explanation: 'Lihat: DUA taukid berturut-turut (كُلُّهُمْ + أَجْمَعُونَ) untuk penegasan SUPER-KUAT bahwa SEMUA malaikat — tanpa kecuali — bersujud. Hanya iblis yang tidak. Inilah taukid berlapis di Qur\'an.',
+      },
+    },
+    quiz: [
+      {
+        q: 'Ada berapa jenis taukid?',
+        options: ['1', '2 (lafzhi & ma\'nawi)', '3', '4'],
+        correct: 1,
+        explanation: 'Dua: Lafzhi (mengulang kata sama) dan Ma\'nawi (pakai kata khusus seperti nafsu, kullu).',
+      },
+      {
+        q: 'كُلٌّ dipakai untuk taukid yang artinya...',
+        options: ['Sendiri', 'Seluruhnya', 'Bahkan', 'Sungguh'],
+        correct: 1,
+        explanation: 'كُلٌّ menegaskan KESELURUHAN — semua, tidak ada yg tertinggal.',
+      },
+      {
+        q: 'I\'rab taukid mengikuti...',
+        options: ['Mubtada\'', 'Mu\'akkad (yang ditegaskan)', 'Fa\'il selalu', 'Bebas'],
+        correct: 1,
+        explanation: 'Taukid mengikuti i\'rab mu\'akkad. Kalau mu\'akkad rofa\', taukid rofa\'.',
+      },
+      {
+        q: 'نَفْسُهُ digunakan untuk...',
+        options: ['Menegaskan keseluruhan', 'Menegaskan bahwa subjek itu SENDIRI yang dimaksud (bukan wakil)', 'Membalik makna', 'Membatalkan kalimat'],
+        correct: 1,
+        explanation: 'نَفْسُهُ menegaskan: subjek itu SENDIRI (bukan wakilnya atau orang lain).',
+      },
+    ],
+  },
+
+  // ============ PELAJARAN 26 (PREMIUM) ============
+  {
+    id: 'nahwu-26-maful-ajlih-maah',
+    order: 26,
+    isFree: false,
+    title: 'Maf\'ul li Ajlih & Maf\'ul Ma\'ah',
+    subtitle: 'Sebab perbuatan & yang mengiringi',
+    emoji: '🎯',
+    duration: '6 menit',
+    color: '#a05536',
+    xpReward: 35,
+    theory: {
+      intro: 'Dua jenis maf\'ul terakhir: Maf\'ul li Ajlih (السبب/karena apa perbuatan dilakukan) dan Maf\'ul Ma\'ah (yang mengiringi perbuatan). Keduanya nashob.',
+      sections: [
+        {
+          title: 'Maf\'ul li Ajlih (Sebab)',
+          body: 'Mashdar yg menjelaskan SEBAB/MOTIF di balik perbuatan. Menjawab "kenapa?". Selalu nashob.',
+          examples: [
+            { ar: 'قَامَ احْتِرَامًا لِلْأُسْتَاذِ', latin: 'qaama-htiraaman lil-ustaadz', id: 'Dia berdiri KARENA penghormatan kpd ustadz' },
+            { ar: 'سَافَرْتُ طَلَبًا لِلْعِلْمِ', latin: 'saafartu thalaban lil-\'ilm', id: 'Aku bepergian KARENA mencari ilmu' },
+            { ar: 'دَرَسْتُ رَجَاءَ النَّجَاحِ', latin: 'darastu rajaa\'an-najaah', id: 'Aku belajar berharap kesuksesan' },
+          ],
+        },
+        {
+          title: 'Maf\'ul Ma\'ah (Mengiringi)',
+          body: 'Isim setelah و yang berarti "BERSAMA". Bukan athaf, tapi pengiring. Selalu nashob.',
+          examples: [
+            { ar: 'مَشَيْتُ وَالنَّهْرَ', latin: 'masyaitu wan-nahra', id: 'Aku berjalan menyusuri sungai (نهر nashob, bersama)' },
+            { ar: 'سِرْتُ وَالطَّرِيقَ', latin: 'sirtu wath-thariiqa', id: 'Aku jalan menelusuri jalan' },
+          ],
+        },
+        {
+          title: 'Beda dgn Athaf',
+          body: 'Athaf: kedua kata bisa dipisah sendiri-sendiri (Zaid datang & Amr datang). Maf\'ul ma\'ah: kata setelah و TIDAK bisa berdiri sendiri sbg subjek perbuatan yg sama.',
+          examples: [
+            { ar: 'جَاءَ زَيْدٌ وَعَمْرٌو (athaf)', latin: '', id: 'Zaid & Amr SAMA-SAMA datang' },
+            { ar: 'سِرْتُ وَالطَّرِيقَ (ma\'ah)', latin: '', id: 'Aku jalan MENYUSURI jalan — jalan TIDAK ikut "berjalan"' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'يَخْرُجُونَ مِنَ الْأَجْدَاثِ سِرَاعًا',
+        latin: 'yakhrujuuna minal-ajdaatsi siraa\'aa',
+        surah: 'Al-Ma\'arij',
+        ayatNum: 43,
+        analysis: [
+          { word: 'يَخْرُجُونَ', type: 'Fi\'il Mudhori\'', note: 'mereka keluar' },
+          { word: 'مِنَ الْأَجْدَاثِ', type: 'Jar majrur', note: 'dari kuburan-kuburan' },
+          { word: 'سِرَاعًا', type: 'Hal', note: 'nashob; dalam keadaan cepat' },
+        ],
+        explanation: 'Kata سِرَاعًا di sini hal (keadaan). Tapi banyak ayat juga pakai maf\'ul li ajlih. Misal: قَامَ تَعْظِيمًا لِلَّهِ — Dia berdiri KARENA mengagungkan Allah (تَعْظِيمًا = maf\'ul li ajlih).',
+      },
+    },
+    quiz: [
+      {
+        q: 'Maf\'ul li Ajlih menjelaskan...',
+        options: ['Tempat', 'Waktu', 'Sebab/motif', 'Pelaku'],
+        correct: 2,
+        explanation: 'Maf\'ul li Ajlih menjelaskan SEBAB perbuatan. Menjawab: kenapa?',
+      },
+      {
+        q: 'I\'rab maf\'ul li ajlih...',
+        options: ['Rofa\'', 'Nashob', 'Jar', 'Jazm'],
+        correct: 1,
+        explanation: 'Selalu nashob — tandanya fathah/tanwin.',
+      },
+      {
+        q: 'Pada سَافَرْتُ طَلَبًا لِلْعِلْمِ, kata طَلَبًا adalah...',
+        options: ['Fa\'il', 'Hal', 'Maf\'ul li Ajlih', 'Tamyiz'],
+        correct: 2,
+        explanation: 'طَلَبًا = "demi mencari" — menjelaskan SEBAB safar. Mashdar nashob sbg maf\'ul li ajlih.',
+      },
+      {
+        q: 'Maf\'ul Ma\'ah pakai huruf...',
+        options: ['فِي', 'بِ', 'و (ma\'iyyah, bukan athaf)', 'إِلَى'],
+        correct: 2,
+        explanation: 'Maf\'ul Ma\'ah pakai و yg berarti "BERSAMA" — bukan و athaf yg berarti "DAN".',
+      },
+    ],
+  },
+
+  // ============ PELAJARAN 27 (PREMIUM) ============
+  {
+    id: 'nahwu-27-adwat-syarth',
+    order: 27,
+    isFree: false,
+    title: 'Adwat asy-Syarth',
+    subtitle: 'Kata bersyarat: إِنْ، إِذَا، مَنْ، مَا',
+    emoji: '🔀',
+    duration: '7 menit',
+    color: '#a05536',
+    xpReward: 40,
+    theory: {
+      intro: 'Adwat asy-Syarth (أَدَوَاتُ الشَّرْطِ) adalah kata-kata yang membuat kalimat menjadi BERSYARAT. Strukturnya: SYARAT (kondisi) + JAWAB (akibat). Sebagian membuat 2 fi\'il jadi MAJZUM, sebagian tidak.',
+      sections: [
+        {
+          title: 'Adwat Jazm — Membuat 2 Fi\'il Majzum',
+          body: 'إِنْ (jika), مَنْ (siapa), مَا (apa), مَهْمَا (apa pun), مَتَى (kapan), أَيْنَ (di mana), كَيْفَمَا (bagaimana pun). Membuat fi\'il SYARAT dan JAWAB keduanya majzum.',
+          examples: [
+            { ar: 'إِنْ تَجْتَهِدْ تَنْجَحْ', latin: 'in tajtahid tanjah', id: 'Jika kamu bersungguh-sungguh, kamu akan sukses (تَجْتَهِدْ majzum, تَنْجَحْ majzum)' },
+            { ar: 'مَنْ يَزْرَعْ يَحْصُدْ', latin: 'man yazra\' yahshud', id: 'Siapa yang menanam, dia memanen' },
+          ],
+        },
+        {
+          title: 'Adwat Non-Jazm — Tidak Membuat Majzum',
+          body: 'إِذَا (apabila), كُلَّمَا (setiap kali), لَوْ (seandainya — untuk yg tidak terjadi), لَوْلَا (kalau bukan). Fi\'il-fi\'il-nya tetap pada i\'rab biasa.',
+          examples: [
+            { ar: 'إِذَا جَاءَ الرَّبِيعُ تَفَتَّحَ الزُّهُورُ', latin: 'idzaa jaa\'ar-rabii\'u tafattahaz-zuhuur', id: 'Apabila musim semi datang, bunga-bunga mekar' },
+            { ar: 'لَوْ كُنْتَ هُنَا لَرَأَيْتَهُ', latin: 'lau kunta hunaa lara\'aitah', id: 'Seandainya kamu di sini, kamu pasti melihatnya' },
+          ],
+        },
+        {
+          title: 'Pola Lengkap Bersyarat',
+          body: 'Struktur: Adat syarath + Fi\'il syarath + Fi\'il jawab. Jawab boleh didahului فَ jika jawab-nya jumlah ismiyyah atau fi\'il jamid (tidak bisa majzum).',
+          examples: [
+            { ar: 'إِنْ نَجَحْتَ فَأَنْتَ سَعِيدٌ', latin: 'in najahta fa\'anta sa\'iid', id: 'Jika kamu sukses MAKA kamu bahagia (jawab = jumlah ismiyyah)' },
+            { ar: 'إِنْ تَزُرْنِي فَلَكَ كِتَابٌ', latin: 'in tazurnii falaka kitaab', id: 'Jika kamu kunjungi aku, maka untukmu sebuah buku' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'إِنْ تَنْصُرُوا اللَّهَ يَنْصُرْكُمْ',
+        latin: 'in tanshurullaaha yanshurkum',
+        surah: 'Muhammad',
+        ayatNum: 7,
+        analysis: [
+          { word: 'إِنْ', type: 'Adat syarath jazm', note: 'jika' },
+          { word: 'تَنْصُرُوا', type: 'Fi\'il syarath', note: 'majzum dgn hadzfun nuun (jamak)' },
+          { word: 'اللَّهَ', type: 'Maf\'ul bih', note: 'nashob' },
+          { word: 'يَنْصُرْ', type: 'Fi\'il jawab', note: 'majzum dgn sukun' },
+          { word: 'كُمْ', type: 'Dhomir', note: 'maf\'ul; kalian' },
+        ],
+        explanation: 'Klasik: إِنْ + fi\'il syarath majzum + fi\'il jawab majzum. تَنْصُرُوا (jamak — n di akhir dibuang sbg tanda jazm). يَنْصُرْ (sukun sbg tanda jazm). "Jika kalian tolong Allah, Allah akan tolong kalian".',
+      },
+    },
+    quiz: [
+      {
+        q: 'Adat syarath yang membuat fi\'il majzum adalah...',
+        options: ['إِذَا', 'كُلَّمَا', 'إِنْ', 'لَوْ'],
+        correct: 2,
+        explanation: 'إِنْ adalah adat syarath JAZM. إِذَا، لَوْ tidak menge-jazm.',
+      },
+      {
+        q: 'Pada إِنْ تَجْتَهِدْ تَنْجَحْ, تَجْتَهِدْ ber-i\'rab...',
+        options: ['Rofa\'', 'Nashob', 'Jar', 'Majzum'],
+        correct: 3,
+        explanation: 'تَجْتَهِدْ adalah fi\'il syarath — majzum dgn sukun karena didahului إِنْ.',
+      },
+      {
+        q: 'Beda إِنْ dgn إِذَا?',
+        options: ['Sama saja', 'إِنْ untuk yg pasti, إِذَا untuk ragu', 'إِنْ pakai dlm hal yg meragukan, إِذَا pakai dlm hal yg pasti terjadi', 'Tidak ada beda'],
+        correct: 2,
+        explanation: 'إِنْ → keraguan (mungkin terjadi mungkin tidak). إِذَا → kepastian (pasti akan terjadi).',
+      },
+      {
+        q: 'Kapan jawab syarath wajib didahului فَ?',
+        options: ['Selalu', 'Tidak pernah', 'Saat jawab berupa jumlah ismiyyah atau fi\'il jamid', 'Saat negatif'],
+        correct: 2,
+        explanation: 'Jika jawab syarath berupa jumlah ismiyyah (mubtada\'+khobar) atau fi\'il jamid (tidak bisa majzum), maka harus didahului فَ.',
+      },
+    ],
+  },
+
+  // ============ PELAJARAN 28 (PREMIUM) ============
+  {
+    id: 'nahwu-28-asma-istifham',
+    order: 28,
+    isFree: false,
+    title: 'Asma\' al-Istifham',
+    subtitle: 'Kata tanya: مَا، مَنْ، مَتَى، أَيْنَ، كَيْفَ',
+    emoji: '❓',
+    duration: '6 menit',
+    color: '#a05536',
+    xpReward: 30,
+    theory: {
+      intro: 'Asma\' al-Istifham (أَسْمَاءُ الْاِسْتِفْهَامِ) adalah kata-kata untuk bertanya. Semuanya MABNI. Kata tanya terbagi 2: HURUF (هَلْ، أ) dan ISIM (مَنْ، مَا، مَتَى، أَيْنَ، كَيْفَ، كَمْ، أَيُّ).',
+      sections: [
+        {
+          title: 'Huruf Istifham: هَلْ & أ',
+          body: 'Untuk pertanyaan ya/tidak. أ paling ringan & sering di Qur\'an. هَلْ lebih netral.',
+          examples: [
+            { ar: 'هَلْ زَيْدٌ قَائِمٌ؟', latin: 'hal Zaidun qaa\'im', id: 'Apakah Zaid berdiri?' },
+            { ar: 'أَتَأْكُلُ الْآنَ؟', latin: 'a-ta\'kulul-aan', id: 'Apakah kamu makan sekarang?' },
+            { ar: 'أَلَيْسَ اللَّهُ بِأَحْكَمِ الْحَاكِمِينَ؟', latin: 'a-laisallaahu bi-ahkamil-haakimiin', id: 'Bukankah Allah hakim paling bijak?' },
+          ],
+        },
+        {
+          title: 'Isim Istifham — Lokasi, Waktu, Sebab',
+          body: 'مَتَى (kapan), أَيْنَ (di mana), كَيْفَ (bagaimana), لِمَ (kenapa).',
+          examples: [
+            { ar: 'مَتَى تَأْتِي؟', latin: 'mataa ta\'tii', id: 'Kapan kamu datang?' },
+            { ar: 'أَيْنَ الْكِتَابُ؟', latin: 'ainal-kitaab', id: 'Di mana buku itu?' },
+            { ar: 'كَيْفَ حَالُكَ؟', latin: 'kaifa haaluk', id: 'Bagaimana keadaanmu?' },
+          ],
+        },
+        {
+          title: 'Isim Istifham — Jumlah & Identitas',
+          body: 'كَمْ (berapa), أَيُّ (yang mana), مَنْ (siapa), مَا (apa).',
+          examples: [
+            { ar: 'كَمْ كِتَابًا عِنْدَكَ؟', latin: 'kam kitaaban \'indaka', id: 'Berapa buku ada di kamu? (كم + tamyiz nashob)' },
+            { ar: 'أَيُّ الطَّرِيقَيْنِ أَفْضَلُ؟', latin: 'ayyuth-thariiqaini afdhal', id: 'Jalan yang mana lebih utama?' },
+            { ar: 'مَنْ أَنْتَ؟', latin: 'man anta', id: 'Siapa kamu?' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'فَأَيْنَ تَذْهَبُونَ',
+        latin: 'fa-aina tadzhabuun',
+        surah: 'At-Takwir',
+        ayatNum: 26,
+        analysis: [
+          { word: 'فَ', type: 'Harf athaf', note: 'maka' },
+          { word: 'أَيْنَ', type: 'Isim Istifham', note: 'mabni; mahallan nashob sbg zhorof' },
+          { word: 'تَذْهَبُونَ', type: 'Fi\'il Mudhori\'', note: 'kalian pergi' },
+        ],
+        explanation: 'أَيْنَ adalah isim istifham — mabni atas fathah. Mahallan nashob karena posisinya sbg zhorof makan. "Maka KE MANA kalian pergi?" — pertanyaan retoris untuk membangunkan kesadaran.',
+      },
+    },
+    quiz: [
+      {
+        q: 'Untuk bertanya "berapa", pakai...',
+        options: ['كَمْ', 'كَيْفَ', 'أَيْنَ', 'مَتَى'],
+        correct: 0,
+        explanation: 'كَمْ = berapa. Diikuti tamyiz mufrad nashob.',
+      },
+      {
+        q: 'هَلْ vs أَ — beda utamanya?',
+        options: ['Sama saja', 'هَلْ untuk pertanyaan netral; أَ lebih ringan & sering di Qur\'an', 'أَ untuk negatif', 'هَلْ hanya untuk syair'],
+        correct: 1,
+        explanation: 'هَلْ netral untuk pertanyaan ya/tidak. أَ lebih ringan dan sangat sering di Qur\'an, sering untuk pertanyaan retoris.',
+      },
+      {
+        q: 'Semua isim istifham secara i\'rab adalah...',
+        options: ['Mu\'rab', 'Mabni', 'Rofa\' selalu', 'Nashob selalu'],
+        correct: 1,
+        explanation: 'Semua isim istifham mabni — harakat akhirnya tidak berubah. Tapi mahallan bisa rofa\'/nashob/jar.',
+      },
+      {
+        q: 'Pada كَمْ كِتَابًا عِنْدَكَ, kata كِتَابًا adalah...',
+        options: ['Maf\'ul', 'Tamyiz كَمْ', 'Mubtada\'', 'Khobar'],
+        correct: 1,
+        explanation: 'Setelah كَمْ istifham, kata yang dihitung jadi tamyiz mufrad NASHOB.',
+      },
+    ],
+  },
+
+  // ============ PELAJARAN 29 (PREMIUM) ============
+  {
+    id: 'nahwu-29-la-jinsi',
+    order: 29,
+    isFree: false,
+    title: 'La an-Nafyu lil-Jinsi',
+    subtitle: 'لاَ untuk meniadakan jenis (kalimat tauhid)',
+    emoji: '🚫',
+    duration: '6 menit',
+    color: '#a05536',
+    xpReward: 35,
+    theory: {
+      intro: 'La an-Nafyu lil-Jinsi (لَا النَّافِيَةُ لِلْجِنْسِ) adalah لَا yang meniadakan jenis sesuatu SECARA TOTAL. Bekerja seperti إِنَّ: menge-NASHOB isim setelahnya (isim لَا), khobar tetap rofa\'.',
+      sections: [
+        {
+          title: 'Bentuk Standar',
+          body: 'لَا + isim لَا (mansub, biasanya tanpa tanwin) + khobar لَا (rofa\').',
+          examples: [
+            { ar: 'لَا رَجُلَ فِي الْبَيْتِ', latin: 'laa rajula fil-bait', id: 'Tidak ada lelaki di rumah (لَا رَجُلَ — meniadakan semua jenis lelaki)' },
+            { ar: 'لَا شَكَّ فِيهِ', latin: 'laa syakka fiih', id: 'Tidak ada keraguan di dalamnya' },
+          ],
+        },
+        {
+          title: 'Beda dgn لَا Biasa',
+          body: 'لَا biasa: meniadakan SATU. لَا jinsi: meniadakan SEMUA jenis. Tanpa tanwin pada isim لَا adalah penanda.',
+          examples: [
+            { ar: 'لَا رَجُلٌ فِي الْبَيْتِ', latin: 'laa rajulun fil-bait', id: 'Tidak ada satu pria di rumah (لاَ biasa, tanwin)' },
+            { ar: 'لَا رَجُلَ فِي الْبَيْتِ', latin: 'laa rajula fil-bait', id: 'Tidak ada pria sama sekali (لاَ jinsi, tanpa tanwin)' },
+          ],
+        },
+        {
+          title: 'Aplikasi: Kalimat Tauhid',
+          body: 'Kalimat tauhid لَا إِلَهَ إِلَّا اللَّهُ adalah aplikasi paling penting لَا nafiyah lil-jinsi.',
+          examples: [
+            { ar: 'لَا إِلَهَ إِلَّا اللَّهُ', latin: 'laa ilaaha illallaah', id: 'Tidak ada tuhan (jenis apapun) kecuali Allah' },
+            { ar: 'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ', latin: 'laa haula wa laa quwwata illaa billaah', id: 'Tidak ada daya dan kekuatan kecuali dgn Allah' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'ذَلِكَ الْكِتَابُ لَا رَيْبَ فِيهِ',
+        latin: 'dzaalikal-kitaabu laa raiba fiih',
+        surah: 'Al-Baqarah',
+        ayatNum: 2,
+        analysis: [
+          { word: 'ذَلِكَ', type: 'Isim Isyarah', note: 'mubtada\'' },
+          { word: 'الْكِتَابُ', type: 'Khobar / Badal', note: 'rofa\'' },
+          { word: 'لَا', type: 'Harf nafi lil-jinsi', note: 'meniadakan jenis' },
+          { word: 'رَيْبَ', type: 'Isim لَا', note: 'mabni atas fathah; tanpa tanwin' },
+          { word: 'فِيهِ', type: 'Khobar لَا (jar-majrur)', note: 'di dalamnya' },
+        ],
+        explanation: 'لَا رَيْبَ — meniadakan SEMUA JENIS keraguan, bukan satu. رَيْبَ mabni atas fathah (tanpa tanwin) sbg isim لَا nafiyah lil-jinsi. "Tidak ada SEKEDIKIT pun keraguan di dalamnya".',
+      },
+    },
+    quiz: [
+      {
+        q: 'La an-Nafyu lil-Jinsi bekerja seperti...',
+        options: ['كَانَ', 'إِنَّ', 'لَيْتَ', 'هَلْ'],
+        correct: 1,
+        explanation: 'Bekerja seperti إِنَّ: menge-nashob isim, khobar rofa\'.',
+      },
+      {
+        q: 'Ciri isim لَا nafiyah lil-jinsi...',
+        options: ['Ber-tanwin', 'Tanpa tanwin', 'Selalu pakai alif-lam', 'Selalu mu\'annats'],
+        correct: 1,
+        explanation: 'Isim لَا nafiyah lil-jinsi mabni atas fathah, TANPA tanwin — itu cirinya.',
+      },
+      {
+        q: 'Pada لَا إِلَهَ إِلَّا اللَّهُ, kata إِلَهَ adalah...',
+        options: ['Mubtada\'', 'Isim لَا (mabni atas fathah)', 'Khobar', 'Fa\'il'],
+        correct: 1,
+        explanation: 'إِلَهَ adalah isim لَا nafiyah lil-jinsi — mabni atas fathah. اللَّهُ adalah badal dari khobar yg mahdzuf.',
+      },
+      {
+        q: 'لاَ رَجُلَ vs لاَ رَجُلٌ — beda makna?',
+        options: ['Sama saja', 'Yg pertama: meniadakan SEMUA pria; yg kedua: meniadakan SATU pria', 'Yg pertama hanya untuk Qur\'an', 'Tidak ada beda'],
+        correct: 1,
+        explanation: 'لاَ رَجُلَ (tanpa tanwin) = لاَ nafiyah lil-jinsi: meniadakan SEMUA pria. لاَ رَجُلٌ (ber-tanwin) = لاَ biasa: meniadakan satu pria spesifik.',
+      },
+    ],
+  },
+
+  // ============ PELAJARAN 30 (PREMIUM) — CAPSTONE ============
+  {
+    id: 'nahwu-30-capstone',
+    order: 30,
+    isFree: false,
+    title: 'Capstone: I\'rab Ayat Panjang',
+    subtitle: 'Sintesis semua pelajaran',
+    emoji: '🎓',
+    duration: '10 menit',
+    color: '#a05536',
+    xpReward: 60,
+    theory: {
+      intro: 'Pelajaran penutup. Mari gabungkan semua pengetahuan Nahwu yang sudah kita pelajari — dari pembagian kata sampai لَا nafiyah lil-jinsi — untuk meng-i\'rab ayat-ayat panjang Al-Qur\'an. Inilah momen "shoot the moon": dari santri pemula jadi santri kelas baca tafsir.',
+      sections: [
+        {
+          title: 'Ayat 1: Awal Ayat Kursi (Al-Baqarah 255)',
+          body: 'اللَّهُ لَا إِلَهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ — uraian:',
+          examples: [
+            { ar: 'اللَّهُ', latin: 'mubtada\'', id: 'rofa\' dgn dhommah' },
+            { ar: 'لَا إِلَهَ', latin: 'لا nafiyah + isim لا', id: 'mabni atas fathah, tanpa tanwin' },
+            { ar: 'إِلَّا', latin: 'harf istitsna\'', id: 'kecuali' },
+            { ar: 'هُوَ', latin: 'mustasna / badal', id: 'dhomir, mahallan rofa\' (ikut khobar mahdzuf)' },
+            { ar: 'الْحَيُّ الْقَيُّومُ', latin: 'khobar untuk اللَّهُ', id: 'rofa\' dgn dhommah' },
+          ],
+        },
+        {
+          title: 'Ayat 2: Awal Al-Mulk',
+          body: 'تَبَارَكَ الَّذِي بِيَدِهِ الْمُلْكُ — uraian:',
+          examples: [
+            { ar: 'تَبَارَكَ', latin: 'fi\'il madhi', id: 'wazan تَفَاعَلَ; "Maha Suci"' },
+            { ar: 'الَّذِي', latin: 'fa\'il (isim maushul)', id: 'mahallan rofa\'' },
+            { ar: 'بِ', latin: 'harf jar', id: 'di tangan' },
+            { ar: 'يَدِهِ', latin: 'majrur + dhomir', id: 'tangan-Nya' },
+            { ar: 'الْمُلْكُ', latin: 'mubtada\' muakhor', id: 'rofa\'; khobar muqaddam = بِيَدِهِ' },
+          ],
+        },
+        {
+          title: 'Ayat 3: Surat An-Nas',
+          body: 'قُلْ أَعُوذُ بِرَبِّ النَّاسِ مَلِكِ النَّاسِ — uraian:',
+          examples: [
+            { ar: 'قُلْ', latin: 'fi\'il amr', id: 'fi\'il amr mu\'tal ajwaf (asal: قَوَلَ)' },
+            { ar: 'أَعُوذُ', latin: 'fi\'il mudhori\'', id: 'rofa\' dgn dhommah; fa\'il dhomir أَنَا' },
+            { ar: 'بِ', latin: 'harf jar', id: 'dengan/kepada' },
+            { ar: 'رَبِّ', latin: 'majrur + mudhof', id: 'kasroh; mudhof ke النَّاسِ' },
+            { ar: 'مَلِكِ', latin: 'badal', id: 'majrur ikut رَبِّ' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'وَإِلَهُكُمْ إِلَهٌ وَاحِدٌ لَا إِلَهَ إِلَّا هُوَ الرَّحْمَنُ الرَّحِيمُ',
+        latin: 'wa ilaahukum ilaahun waahid laa ilaaha illaa huwar-rahmaanur-rahiim',
+        surah: 'Al-Baqarah',
+        ayatNum: 163,
+        analysis: [
+          { word: 'وَ', type: 'Harf athaf', note: 'dan' },
+          { word: 'إِلَهُ', type: 'Mubtada\'', note: 'rofa\'; mudhof' },
+          { word: 'كُمْ', type: 'Mudhof ilaih', note: 'dhomir muttashil' },
+          { word: 'إِلَهٌ', type: 'Khobar', note: 'rofa\' dgn tanwin' },
+          { word: 'وَاحِدٌ', type: 'Na\'at', note: 'mengikuti khobar; rofa\'' },
+          { word: 'لَا إِلَهَ إِلَّا هُوَ', type: 'Kalimat tauhid', note: 'لاَ + isim لا mabni + istitsna' },
+          { word: 'الرَّحْمَنُ الرَّحِيمُ', type: 'Khobar untuk هُوَ', note: 'badal/khobar; pola mubaalaghah' },
+        ],
+        explanation: 'SATU ayat ini berisi: mubtada\'-khobar (dgn idhofah + dhomir), na\'at, kalimat tauhid komplet, isim istitsna, dan 2 pola mubaalaghah. Kalau kamu bisa urai ayat seperti ini, kamu sudah menguasai fondasi Nahwu untuk MEMBACA TAFSIR. Selamat — kamu sudah lulus level dasar Nahwu! تَهَانِيَّ!',
+      },
+    },
+    quiz: [
+      {
+        q: 'Pada لَا إِلَهَ إِلَّا هُوَ, kata هُوَ ber-i\'rab apa?',
+        options: ['Mabni atas fathah (sbg mustasna)', 'Mahallan rofa\' (ikut khobar لاَ mahdzuf)', 'Mahallan nashob', 'Jar'],
+        correct: 1,
+        explanation: 'هُوَ adalah dhomir mabni, tapi mahallan rofa\' karena ikut khobar لا yang mahdzuf (disembunyikan).',
+      },
+      {
+        q: 'الرَّحْمَنُ dan الرَّحِيمُ pakai pola shorf apa?',
+        options: ['Isim fa\'il biasa', 'Isim maf\'ul', 'Mubaalaghah (penekanan)', 'Mashdar'],
+        correct: 2,
+        explanation: 'الرَّحْمَنُ pola فَعْلَان (mubaalaghah), الرَّحِيمُ pola فَعِيل (mubaalaghah). Keduanya pola penekanan.',
+      },
+      {
+        q: 'Pada تَبَارَكَ الَّذِي بِيَدِهِ الْمُلْكُ, mana fa\'il-nya?',
+        options: ['تَبَارَكَ', 'الَّذِي', 'بِيَدِهِ', 'الْمُلْكُ'],
+        correct: 1,
+        explanation: 'الَّذِي adalah isim maushul yg jadi fa\'il dari تَبَارَكَ. Mahallan rofa\'.',
+      },
+      {
+        q: 'Manfaat utama belajar Nahwu sampai level capstone ini adalah...',
+        options: ['Hafal banyak istilah', 'Bisa menguraikan struktur ayat Qur\'an & teks Arab klasik secara mandiri', 'Hanya kebanggaan', 'Tidak ada manfaat praktis'],
+        correct: 1,
+        explanation: 'Tujuan akhir Nahwu: bisa baca tafsir, kitab kuning, dan paham nuansa Qur\'an secara mandiri — tidak tergantung terjemahan.',
+      },
+    ],
+  },
 ];
 
 // Helper
