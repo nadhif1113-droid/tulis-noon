@@ -255,30 +255,20 @@ function MateriSession({ materi, isUnlocked, coins, onUnlock, onUpgrade, onExit,
   // ---- PAYWALL ----
   if (showPaywall) {
     const remaining = items.length - freeLimit;
-    const enough = coins >= NGOMONG_SESSION_COST;
     const unit = unitLabel;
     return (
       <div className="flex-1 flex flex-col" style={{ height: '100%' }}>
         <SessionHeader title={materi.title} onExit={onExit} onHome={onHome} />
         <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'rgba(201,169,97,0.15)' }}>
-            <Lock size={28} style={{ color: '#c9a961' }} />
+            <Sparkles size={28} style={{ color: '#c9a961' }} />
           </div>
           <h2 className="text-xl font-bold mb-2" style={{ fontFamily: 'Fraunces, serif', color: '#0a4d3c' }}>Sesi lanjutan</h2>
           <p className="text-sm mb-1" style={{ color: '#3d2817' }}>Masih ada <b>{remaining} {unit}</b> lagi yang lebih seru di materi ini.</p>
-          <p className="text-xs mb-5" style={{ color: '#8b6b3d' }}>Buka sesi penuh dengan {NGOMONG_SESSION_COST} koin.</p>
-          {enough ? (
-            <button onClick={handleUnlock} disabled={unlocking} className="w-full max-w-xs py-3.5 rounded-2xl text-white font-bold flex items-center justify-center gap-2 mb-2 disabled:opacity-50" style={{ background: '#0a4d3c' }}>
-              <Coins size={17} /> {unlocking ? 'Membuka...' : `Buka (${NGOMONG_SESSION_COST} koin)`}
-            </button>
-          ) : (
-            <>
-              <p className="text-xs mb-2" style={{ color: '#c0392b' }}>Koinmu kurang (punya {coins}, butuh {NGOMONG_SESSION_COST}).</p>
-              <button onClick={() => onUpgrade?.()} className="w-full max-w-xs py-3.5 rounded-2xl text-white font-bold flex items-center justify-center gap-2 mb-2" style={{ background: '#c9a961' }}>
-                <Coins size={17} /> Top up koin
-              </button>
-            </>
-          )}
+          <p className="text-xs mb-5" style={{ color: '#8b6b3d' }}>Upgrade ke <b>Tulis Noon Mahir</b> untuk buka semua materi tanpa batas.</p>
+          <button onClick={() => onUpgrade?.()} className="w-full max-w-xs py-3.5 rounded-2xl text-white font-bold flex items-center justify-center gap-2 mb-2" style={{ background: 'linear-gradient(135deg, #c9a961, #d4b876)' }}>
+            <Sparkles size={17} /> Upgrade ke Mahir
+          </button>
           <button onClick={() => setIdx(items.length)} className="w-full max-w-xs py-3 rounded-2xl font-semibold" style={{ background: 'rgba(10,77,60,0.08)', color: '#0a4d3c' }}>Cukup, lihat hasil</button>
         </div>
       </div>
