@@ -33,6 +33,7 @@ import CertificatesScreen from '@/components/CertificatesScreen';
 import CertificateEarnedModal from '@/components/CertificateEarnedModal';
 import PersonaGoalModal from '@/components/PersonaGoalModal';
 import OnboardingFlow from '@/components/OnboardingFlow';
+import GamesScreen from '@/components/GamesScreen';
 import { CERTIFICATE_PATHS, getPathProgress, generateCertNumber, MASTER_CERTIFICATE } from '@/lib/certificate';
 import { speakArabic as ttsSpeakArabic } from '@/lib/tts';
 import { postActivity, getCommunityFeed, getLeaderboard, getUserGlobalRank, updatePresence, listenDmThreads, getFriends, getChallengeLeaderboard, getUserChallengeRank } from '@/lib/social';
@@ -727,8 +728,12 @@ export default function TulisNoonApp() {
           <>
             <div className="flex-1 pb-20">
               {tab === 'home' && <HomeTab userName={userName} userProfile={userProfile} location={authProfile?.location} xp={xp} streak={streak} coins={authProfile?.coins || 0} lives={authProfile?.lives ?? 10} maxLives={authProfile?.maxLives ?? 10} hafalanProgress={authProfile?.hafalanProgress || {}} perkenalanCompleted={authProfile?.completedPerkenalanMateri || []} tanyaCepatFreeUsed={authProfile?.tanyaCepatFreeUsed || 0} tanyaCepatBundleQuota={authProfile?.tanyaCepatBundleQuota || 0} onOpenTanyaCepat={() => setScreen('tanya-cepat')} onOpenHafalan={() => setScreen('hafalan')} onShowXpInfo={() => setShowXpModal(true)} onShowCoinInfo={() => setShowCoinModal(true)} onShowStreakInfo={() => setShowStreakModal(true)} onShowLivesInfo={() => setShowLivesModal(true)} onOpenLesson={() => setShowPerkenalanPicker(true)} onOpenGame={(g) => {
+                // Special: single-button hub yang ngebuka GamesScreen
+                if (g.id === 'all-games-hub') {
+                  setScreen('games-hub');
+                  return;
+                }
                 // Special routing untuk game yang punya screen sendiri.
-                // Game lain (image-quiz, video-quiz, story) tetap ke GameScreen placeholder.
                 if (g.id === 'chat-roleplay') {
                   setScreen('roleplay-list');
                   return;
@@ -1039,6 +1044,22 @@ export default function TulisNoonApp() {
             awardXp(earned);
             logCommunity({ type: 'cerita', text: `Cerita Interaktif — quiz selesai (${score}/${totalQuestions}, +${earned} XP)`, emoji: '📖' });
             deductLifeIfLost(score === totalQuestions);
+          }}
+        />}
+
+        {/* Games Hub — semua game di 1 screen, akses dari Home button "Game & Latihan" */}
+        {screen === 'games-hub' && <GamesScreen
+          userProfile={authProfile}
+          onBack={() => { setTab('home'); setScreen('main'); }}
+          onHome={() => { setTab('home'); setScreen('main'); }}
+          onOpenGame={(g) => {
+            if (g.id === 'chat-roleplay') { setScreen('roleplay-list'); return; }
+            if (g.id === 'ngomong') { setScreen('ngomong'); return; }
+            if (g.id === 'tulis-arab') { setScreen('tulis-arab'); return; }
+            if (g.id === 'image-quiz') { setScreen('tebak-gambar'); return; }
+            if (g.id === 'story') { setScreen('cerita'); return; }
+            setSelectedGame(g);
+            setScreen('game');
           }}
         />}
 
@@ -2255,168 +2276,30 @@ function HomeTab({ userName, userProfile, location, xp, streak, coins, lives, ma
         );
       })()}
 
-      {/* Quick Games — di-rekomendasi berdasarkan minat user dari onboarding */}
-      {(() => {
-        // Mapping affinity: setiap game cocok untuk minat-minat tertentu.
-        // Logika rule-based (bukan ML beneran) — cukup untuk v1.
-        // Phase 2 nanti bisa di-upgrade pakai ML beneran yang track behavior user
-        // (mana game yang sering dimainin, completion rate, dll).
-        const allGames = [
-          {
-            id: 'image-quiz', t: 'Tebak Gambar', d: 'Visual',
-            icon: ImageIcon, color: '#0a4d3c', bg: 'rgba(10,77,60,0.1)',
-            interests: ['food', 'travel', 'family', 'sports'],
-            personalizedDesc: {
-              food: 'Tebak makanan Arab',
-              travel: 'Tebak tempat-tempat',
-              family: 'Tebak benda keluarga',
-              sports: 'Tebak olahraga',
-            },
-          },
-          {
-            id: 'video-quiz', t: 'Quiz Video', d: 'Skenario',
-            icon: Play, color: '#7a3d2a', bg: 'rgba(122,61,42,0.1)',
-            comingSoon: true,
-            interests: ['travel', 'business', 'religion', 'family'],
-            personalizedDesc: {
-              travel: 'Segera hadir',
-              business: 'Segera hadir',
-              religion: 'Segera hadir',
-              family: 'Segera hadir',
-            },
-          },
-          {
-            id: 'chat-roleplay', t: 'Latihan Ngobrol', d: 'Ngobrol',
-            icon: Bot, color: '#8b6b3d', bg: 'rgba(139,107,61,0.15)',
-            interests: ['religion', 'business', 'family', 'travel'],
-            personalizedDesc: {
-              religion: 'Ngobrol dgn ustadz',
-              business: 'Ngobrol kerja',
-              family: 'Ngobrol keluarga',
-              travel: 'Ngobrol jamaah',
-            },
-          },
-          {
-            id: 'tulis-arab', t: 'Tulis Arab', d: 'Baca-Tulis',
-            icon: BookOpen, color: '#0a4d3c', bg: 'rgba(10,77,60,0.1)',
-            interests: ['religion', 'family', 'history', 'tech'],
-            personalizedDesc: {
-              religion: 'Baca Quran lancar',
-              family: 'Bisa nulis nama',
-              history: 'Huruf hijaiyah',
-              tech: 'Belajar dari nol',
-            },
-          },
-          {
-            id: 'ngomong', t: 'Belajar Ngomong', d: 'Latihan Bicara',
-            icon: Mic, color: '#a05536', bg: 'rgba(160,85,54,0.12)',
-            interests: ['travel', 'religion', 'business', 'family'],
-            personalizedDesc: {
-              travel: 'Ucapkan barang umrah',
-              religion: 'Latih lidah bicara Arab',
-              business: 'Ngomong nama barang',
-              family: 'Sebut benda sehari-hari',
-            },
-          },
-          {
-            id: 'story', t: 'Cerita', d: 'Interaktif',
-            icon: BookOpen, color: '#0a4d3c', bg: 'rgba(10,77,60,0.1)',
-            interests: ['history', 'movies', 'religion', 'family'],
-            personalizedDesc: {
-              history: 'Sejarah Islam',
-              movies: 'Cerita seru',
-              religion: 'Kisah sahabat',
-              family: 'Cerita keluarga',
-            },
-          },
-        ];
-
-        const userInterests = userProfile?.interests || [];
-
-        // Hitung match score untuk tiap game: jumlah minat user yang overlap dengan
-        // tag interests game itu. Game tanpa match (score 0) tetap ditampilkan tapi
-        // di-posisi terakhir.
-        const scored = allGames.map((g) => {
-          const matchedInterests = g.interests.filter((i) => userInterests.includes(i));
-          // Kustomisasi deskripsi card berdasarkan minat pertama yang match
-          const personalDesc = matchedInterests.length > 0
-            ? g.personalizedDesc[matchedInterests[0]]
-            : g.d;
-          return {
-            ...g,
-            score: matchedInterests.length,
-            displayDesc: personalDesc,
-          };
-        });
-
-        // Sort: skor tertinggi dulu, stable sort by index sebagai tiebreaker
-        scored.sort((a, b) => b.score - a.score);
-
-        const topMatchScore = scored[0]?.score || 0;
-        const hasPersonalization = topMatchScore > 0;
-
-        return (
-          <>
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs tracking-widest uppercase" style={{ color: '#8b6b3d' }}>
-                {hasPersonalization ? 'Direkomendasikan Untukmu' : 'Game Cepat'}
-              </p>
-              {hasPersonalization && (
-                <span className="text-xs" style={{ color: '#c9a961' }}>
-                  ✨ Berdasarkan minatmu
-                </span>
-              )}
-            </div>
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              {scored.map((g) => {
-                const Icon = g.icon;
-                const isTopMatch = hasPersonalization && g.score === topMatchScore && !g.comingSoon;
-                const isComingSoon = !!g.comingSoon;
-                return (
-                  <button
-                    key={g.id}
-                    onClick={() => !isComingSoon && onOpenGame(g)}
-                    disabled={isComingSoon}
-                    className="p-4 rounded-2xl text-left active:scale-[0.98] transition-transform relative disabled:cursor-default"
-                    style={{
-                      background: isComingSoon ? 'rgba(10,77,60,0.04)' : 'white',
-                      border: isComingSoon
-                        ? '1px dashed rgba(10,77,60,0.2)'
-                        : isTopMatch
-                        ? '1.5px solid rgba(201,169,97,0.6)'
-                        : '1px solid rgba(10,77,60,0.08)',
-                      boxShadow: isTopMatch ? '0 4px 16px -8px rgba(201,169,97,0.5)' : 'none',
-                      opacity: isComingSoon ? 0.75 : 1,
-                    }}
-                  >
-                    {isTopMatch && (
-                      <span
-                        className="absolute -top-2 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold"
-                        style={{ background: '#c9a961', color: 'white' }}
-                      >
-                        ✨ Untukmu
-                      </span>
-                    )}
-                    {isComingSoon && (
-                      <span
-                        className="absolute -top-2 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide"
-                        style={{ background: 'rgba(201,169,97,0.25)', color: '#a05536' }}
-                      >
-                        🔒 SOON
-                      </span>
-                    )}
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3" style={{ background: isComingSoon ? 'rgba(10,77,60,0.06)' : g.bg }}>
-                      <Icon size={18} style={{ color: isComingSoon ? '#8b6b3d' : g.color }} />
-                    </div>
-                    <p className="font-semibold text-sm" style={{ color: isComingSoon ? '#8b6b3d' : '#1a1a1a' }}>{g.t}</p>
-                    <p className="text-xs" style={{ color: '#8b6b3d' }}>{isComingSoon ? 'Segera hadir' : g.displayDesc}</p>
-                  </button>
-                );
-              })}
-            </div>
-          </>
-        );
-      })()}
+      {/* Game & Latihan — 1 hero button → buka GamesScreen.
+          Sebelumnya rendering 6 card di Beranda bikin penuh. Konsolidasi jadi 1 entry. */}
+      <button
+        onClick={() => onOpenGame && onOpenGame({ id: 'all-games-hub' })}
+        className="w-full text-left rounded-2xl p-5 mb-6 relative overflow-hidden active:scale-[0.99] transition-transform"
+        style={{ background: 'linear-gradient(135deg, #0a4d3c, #1a6b56)', boxShadow: '0 12px 28px -10px rgba(10,77,60,0.5)' }}
+      >
+        <div className="absolute -right-2 -top-2 text-7xl opacity-15">🎮</div>
+        <div className="relative flex items-center gap-3">
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,0.15)' }}>
+            <span className="text-3xl">🎮</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] tracking-[0.3em] uppercase font-bold mb-0.5" style={{ color: '#c9a961' }}>MAIN SAMBIL BELAJAR</p>
+            <p className="text-base text-white leading-tight mb-0.5" style={{ fontFamily: 'Fraunces, serif', fontWeight: 700 }}>
+              Game & Latihan
+            </p>
+            <p className="text-xs text-white opacity-85 leading-snug">
+              6 permainan edukatif — Tebak Gambar, Ngobrol, Ngomong, Cerita & lainnya
+            </p>
+          </div>
+          <ChevronRight size={18} style={{ color: '#c9a961' }} className="flex-shrink-0" />
+        </div>
+      </button>
 
       {/* Guru / Teacher Card */}
       <button onClick={onOpenGuru} className="w-full text-left rounded-2xl p-5 mb-6 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #7a3d2a, #a05536)' }}>
