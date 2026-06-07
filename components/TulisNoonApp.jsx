@@ -732,6 +732,7 @@ export default function TulisNoonApp() {
             userId={user?.uid || 'anon'}
             onBack={() => setScreen('main')}
             onHome={() => { setTab('home'); setScreen('main'); }}
+            onUpgrade={() => setScreen('premium')}
             onConsumeQuota={async () => {
               // Premium aktif (launch / trial / paid / lifetime) → unlimited,
               // tidak potong free quota maupun bundle.
@@ -767,6 +768,7 @@ export default function TulisNoonApp() {
             userProfile={authProfile}
             onBack={() => setScreen('lessons')}
             onHome={() => { setTab('home'); setScreen('main'); }}
+            onUpgrade={() => setScreen('premium')}
             onComplete={async ({ earned, materiId }) => {
               awardXp(earned);
               // Track completed materi
@@ -930,7 +932,7 @@ export default function TulisNoonApp() {
           hafalanProgress={authProfile?.hafalanProgress || {}}
           userProfile={authProfile}
           coins={authProfile?.coins || 0}
-          onShowUnlockModal={() => setShowUnlockHafalan(true)}
+          onShowUnlockModal={() => setScreen('premium')}
           onBack={() => setScreen('main')}
           onHome={() => { setTab('home'); setScreen('main'); }}
           onChunkComplete={(suratId, chunkIdx, chunkMeta = {}) => {
@@ -1796,16 +1798,10 @@ function HomeTab({ userName, userProfile, location, xp, streak, coins, lives, ma
             <Flame size={12} style={{ color: '#a05536' }} />
             <span className="text-xs font-bold" style={{ color: '#a05536' }}>{streak}</span>
           </button>
-          {/* Coin pill — clickable, buka modal info Koin & paket top-up */}
-          <button
-            onClick={onShowCoinInfo}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-full transition-transform active:scale-95"
-            style={{ background: 'rgba(201,169,97,0.2)', cursor: 'pointer' }}
-            aria-label="Pelajari tentang Koin"
-          >
-            <span style={{ fontSize: '12px' }}>🪙</span>
-            <span className="text-xs font-bold" style={{ color: '#8b6b3d' }}>{coins || 0}</span>
-          </button>
+          {/* Koin pill di-hide setelah pivot ke premium tier (Tulis Noon Mahir).
+              Koin tetap di-track di backend untuk milestone reward & masa depan, tapi
+              di UI nggak dimunculin lagi biar fokus user ke trial/upgrade.
+              Kalau mau dibalikin: restore button onShowCoinInfo + Coins icon. */}
           {/* XP pill — clickable, buka XpLevelInfoModal yg nerangin XP & cara naik level */}
           <button
             onClick={onShowXpInfo}
