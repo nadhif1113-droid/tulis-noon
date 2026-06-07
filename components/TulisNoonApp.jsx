@@ -28,6 +28,7 @@ import FriendsScreen from '@/components/FriendsScreen';
 import CommunityScreen from '@/components/CommunityScreen';
 import ChatScreen from '@/components/ChatScreen';
 import NgomongScreen from '@/components/NgomongScreen';
+import NahwuShorfScreen from '@/components/NahwuShorfScreen';
 import { speakArabic as ttsSpeakArabic } from '@/lib/tts';
 import { postActivity, getCommunityFeed, getLeaderboard, getUserGlobalRank, updatePresence, listenDmThreads, getFriends, getChallengeLeaderboard, getUserChallengeRank } from '@/lib/social';
 import { isChallengeActive, challengeDaysRemaining, challengeTotalDays, CHALLENGE_TITLE, CHALLENGE_TAGLINE, CHALLENGE_PRIZES, challengeTotalPrize } from '@/lib/challenge-launch';
@@ -245,6 +246,7 @@ export default function TulisNoonApp() {
           if (s === 'challenge-levels') { setScreen('main'); return true; }
           if (s === 'game') { setScreen('main'); return true; }
           if (s === 'ngomong') { setScreen('main'); return true; }
+          if (s === 'nahwu' || s === 'shorf') { setTab('belajar'); setScreen('main'); return true; }
           if (s === 'challenge-launch') { setScreen('main'); return true; }
           if (s === 'roleplay') { setScreen('roleplay-list'); return true; }
           if (s === 'roleplay-list') { setScreen('main'); return true; }
@@ -645,7 +647,11 @@ export default function TulisNoonApp() {
                 setSelectedGame(g);
                 setScreen('game');
               }} onOpenChallenge={(scenario) => { setSelectedChallenge(scenario || getTodayChallenge()); setScreen('challenge-levels'); }} onOpenGuru={() => setScreen('guru')} achievements={achievements} onSeeAllActivity={() => setTab('sosial')} featuredChallenge={featuredChallenge} challengeXp={authProfile?.challengeXp || 0} challengeRank={challengeRank} onOpenChallengeLaunch={() => setScreen('challenge-launch')} />}
-              {tab === 'belajar' && <BelajarTab onSelectPath={(p) => { setSelectedPath(p); setScreen('lessons'); }} onOpenGuru={() => setScreen('guru')} progress={progress} />}
+              {tab === 'belajar' && <BelajarTab onSelectPath={(p) => {
+                if (p.id === 'nahwu') { setScreen('nahwu'); return; }
+                if (p.id === 'shorf') { setScreen('shorf'); return; }
+                setSelectedPath(p); setScreen('lessons');
+              }} onOpenGuru={() => setScreen('guru')} progress={progress} />}
               {tab === 'sosial' && <SosialTab achievements={achievements} userName={userName} currentUserId={user?.uid} userProfile={authProfile} dmThreads={dmThreads} onOpenChat={(friend) => { setChatFriend(friend); setScreen('chat'); }} onOpenMatch={() => setScreen('match')} onOpenFriends={() => setScreen('friends')} onOpenCommunity={() => setScreen('community')} onRankComputed={handleRankComputed} />}
               {tab === 'profil' && <ProfilTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} progress={progress} onOpenPremium={() => setScreen('premium')} />}
             </div>
@@ -1035,6 +1041,27 @@ export default function TulisNoonApp() {
           challengeRank={challengeRank}
           onBack={() => setScreen('main')}
           onHome={() => { setTab('home'); setScreen('main'); }}
+        />}
+
+        {(screen === 'nahwu' || screen === 'shorf') && <NahwuShorfScreen
+          pathId={screen}
+          userProfile={authProfile}
+          isPremium={isUserPremium(authProfile)}
+          onBack={() => { setTab('belajar'); setScreen('main'); }}
+          onHome={() => { setTab('home'); setScreen('main'); }}
+          onUpgrade={() => setScreen('premium')}
+          onComplete={async ({ earned, lessonId, pathId }) => {
+            if (earned > 0) {
+              awardXp(earned);
+              logCommunity({ type: pathId, text: `${pathId === 'nahwu' ? 'Nahwu' : 'Shorf'} — selesai pelajaran (+${earned} XP)`, emoji: pathId === 'nahwu' ? '🧮' : '🌿' });
+              // Track completed lessons
+              const completedMap = authProfile?.completedNahwuShorf || {};
+              const arr = completedMap[pathId] || [];
+              if (!arr.includes(lessonId)) {
+                try { await updateUserProfile({ completedNahwuShorf: { ...completedMap, [pathId]: [...arr, lessonId] } }); } catch (e) {}
+              }
+            }
+          }}
         />}
 
         {screen === 'ngomong' && <NgomongScreen
@@ -2224,6 +2251,8 @@ function BelajarTab({ onSelectPath, onOpenGuru, progress }) {
     { id: 'umrah', title: 'Wisatawan & Jamaah Umrah', arabic: 'للزائرين', desc: '15 modul · 1500 kosakata', icon: MapPin, color: '#0a4d3c', lessons: 15, available: true },
     { id: 'profesi', title: 'Profesional & Bisnis', arabic: 'للمهنيين', desc: '20 modul · 2500 kosakata', icon: Briefcase, color: '#8b6b3d', lessons: 20, available: true },
     { id: 'beasiswa', title: 'Pelajar / Siswa / Mahasiswa', arabic: 'للطلاب', desc: '10 modul · 1300 kosakata Fusha', icon: GraduationCap, color: '#7a3d2a', lessons: 10, available: true },
+    { id: 'nahwu', title: 'Nahwu — Sintaksis Arab', arabic: 'النَّحْو', desc: '8 pelajaran · I\'rab, mubtada\', fa\'il, idhofah', icon: BookOpen, color: '#0a4d3c', lessons: 8, available: true },
+    { id: 'shorf', title: 'Shorf — Morfologi Arab', arabic: 'الصَّرْف', desc: '6 pelajaran · Tasrif, wazan, derivasi', icon: Sparkles, color: '#7a3d2a', lessons: 6, available: true },
   ];
 
   return (
