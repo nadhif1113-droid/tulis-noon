@@ -36,7 +36,7 @@ import OnboardingFlow from '@/components/OnboardingFlow';
 import GamesScreen from '@/components/GamesScreen';
 import { CERTIFICATE_PATHS, getPathProgress, generateCertNumber, MASTER_CERTIFICATE } from '@/lib/certificate';
 import { speakArabic as ttsSpeakArabic } from '@/lib/tts';
-import { postActivity, getCommunityFeed, getLeaderboard, getUserGlobalRank, updatePresence, listenDmThreads, getFriends, getChallengeLeaderboard, getUserChallengeRank } from '@/lib/social';
+import { postActivity, getCommunityFeed, getLeaderboard, getUserGlobalRank, updatePresence, listenDmThreads, getFriends, getChallengeLeaderboard, getUserChallengeRank, getUnreadPostCount } from '@/lib/social';
 import { Analytics, setAnalyticsUser, setUserProperties } from '@/lib/analytics';
 import { isChallengeActive, challengeDaysRemaining, challengeTotalDays, CHALLENGE_TITLE, CHALLENGE_TAGLINE, CHALLENGE_PRIZES, challengeTotalPrize } from '@/lib/challenge-launch';
 import { LEARNING_UMRAH } from '@/data/learning-umrah';
@@ -76,6 +76,7 @@ export default function TulisNoonApp() {
   const [chatFriend, setChatFriend] = useState(null); // teman yg lagi di-chat
   const [dmThreads, setDmThreads] = useState([]); // daftar chat (inbox) real-time
   const unreadChats = dmThreads.filter((t) => t.unread).length; // jumlah chat belum dibaca
+  const [unreadCommunity, setUnreadCommunity] = useState(0); // post komunitas baru sejak last check
   const [challengeRank, setChallengeRank] = useState(null); // peringkat di Tantangan Launch
   const [earnedCertPathId, setEarnedCertPathId] = useState(null); // pathId yg baru saja diraih (untuk modal celebration)
   const [showPersonaModal, setShowPersonaModal] = useState(false); // legacy fallback
@@ -487,6 +488,25 @@ export default function TulisNoonApp() {
     return () => { try { unsub && unsub(); } catch (e) {} };
   }, [user?.uid]);
 
+  // Poll unread community posts tiap 60 detik (lighter than realtime listener — saving Firestore reads).
+  useEffect(() => {
+    if (!user?.uid) { setUnreadCommunity(0); return; }
+    let cancelled = false;
+    const check = async () => {
+      const lastCheck = authProfile?.lastCommunityCheck || 0;
+      if (!lastCheck) { setUnreadCommunity(0); return; }
+      try {
+        const friends = await getFriends(user.uid).catch(() => []);
+        const friendIds = friends.map((f) => f.uid).filter(Boolean);
+        const count = await getUnreadPostCount(lastCheck, { currentUserId: user.uid, friendIds });
+        if (!cancelled) setUnreadCommunity(count);
+      } catch {}
+    };
+    check();
+    const iv = setInterval(check, 60000); // 1 menit polling
+    return () => { cancelled = true; clearInterval(iv); };
+  }, [user?.uid, authProfile?.lastCommunityCheck]);
+
   // Hitung peringkat user di Tantangan Launch tiap challengeXp berubah.
   useEffect(() => {
     if (!isChallengeActive()) { setChallengeRank(null); return; }
@@ -765,7 +785,7 @@ export default function TulisNoonApp() {
               {tab === 'sosial' && <SosialTab achievements={achievements} userName={userName} currentUserId={user?.uid} userProfile={authProfile} dmThreads={dmThreads} onOpenChat={(friend) => { setChatFriend(friend); setScreen('chat'); }} onOpenMatch={() => setScreen('match')} onOpenFriends={() => setScreen('friends')} onOpenCommunity={() => setScreen('community')} onRankComputed={handleRankComputed} />}
               {tab === 'profil' && <ProfilTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} progress={progress} onOpenPremium={() => setScreen('premium')} />}
             </div>
-            <BottomNav active={tab} onChange={setTab} router={router} sosialBadge={unreadChats} />
+            <BottomNav active={tab} onChange={setTab} router={router} sosialBadge={unreadChats + unreadCommunity} />
             {/* Floating Tanya Cepat — cuma muncul kalau user di Saudi/Timur Tengah */}
             {shouldShowTanyaCepat(authProfile) && (
               <TanyaCepatFAB
@@ -1270,7 +1290,34 @@ export default function TulisNoonApp() {
           onOpenChat={(friend) => { setChatFriend(friend); setScreen('chat'); }}
         />}
         {screen === 'chat' && <ChatScreen userId={user?.uid} userProfile={authProfile} friend={chatFriend} onBack={() => { setChatFriend(null); setScreen('friends'); }} onHome={() => { setChatFriend(null); setTab('home'); setScreen('main'); }} />}
-        {screen === 'community' && <CommunityScreen userId={user?.uid} userProfile={authProfile} onBack={() => setScreen('main')} onHome={() => { setTab('home'); setScreen('main'); }} />}
+        {screen === 'community' && <CommunityScreen
+          userId={user?.uid}
+          userProfile={authProfile}
+          onBack={() => setScreen('main')}
+          onHome={() => { setTab('home'); setScreen('main'); }}
+          onMarkCommunityRead={async () => {
+            // Reset badge — simpan timestamp last view
+            try { await updateUserProfile({ lastCommunityCheck: Date.now() }); } catch {}
+            setUnreadCommunity(0);
+          }}
+          onAwardCommentXp={async () => {
+            // Award +3 XP per komentar, capped 5/hari
+            const today = new Date().toDateString();
+            const lastDate = authProfile?.commentXpDate;
+            const countToday = lastDate === today ? (authProfile?.commentXpCount || 0) : 0;
+            if (countToday >= 5) return; // capped
+            try {
+              await updateUserProfile({
+                xp: (authProfile?.xp || 0) + 3,
+                commentXpCount: countToday + 1,
+                commentXpDate: today,
+              });
+              setXp((v) => v + 3);
+              Analytics.xpEarned(3, 'comment');
+              setAchievements((a) => [{ id: Date.now(), type: 'comment', text: `💬 Komentar di komunitas (+3 XP)`, emoji: '💬', time: 'baru saja', user: userName || 'Anda' }, ...a]);
+            } catch (e) { console.error('comment xp save error:', e); }
+          }}
+        />}
         {screen === 'guru' && <GuruScreen onBack={() => setScreen('main')} onSelectGuru={(g) => { setSelectedGuru(g); setScreen('guru-detail'); }} />}
         {screen === 'guru-detail' && <GuruDetailScreen guru={selectedGuru} onBack={() => setScreen('guru')} />}
         {screen === 'premium' && <PremiumScreen onBack={() => setScreen('main')} userProfile={userProfile} onSubmit={(motivData) => {

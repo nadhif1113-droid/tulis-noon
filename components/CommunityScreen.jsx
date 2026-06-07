@@ -4,8 +4,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Home, Heart, MessageCircle, Send, Trash2, Loader2, Sparkles, Info, AlertCircle } from 'lucide-react';
-import { createPost, getPosts, toggleLikePost, deletePost, addComment, getComments, validateArabicText } from '@/lib/social';
+import { ArrowLeft, Home, Heart, MessageCircle, Send, Trash2, Loader2, Sparkles, Info, AlertCircle, Globe2, Users } from 'lucide-react';
+import { createPost, getPosts, toggleLikePost, deletePost, addComment, getComments, validateArabicText, getFriends } from '@/lib/social';
 
 // Hanya izinkan huruf Arab, angka, spasi, tanda baca umum (huruf latin diblok).
 const ALLOWED_RE = /[^؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿\s0-9٠-٩.,!?؟،؛:"'()\-]/g;
@@ -19,7 +19,7 @@ function Avatar({ emoji, name, size = 40 }) {
   );
 }
 
-export default function CommunityScreen({ userId, userProfile, onBack, onHome }) {
+export default function CommunityScreen({ userId, userProfile, onBack, onHome, onAwardCommentXp, onMarkCommunityRead }) {
   const me = {
     uid: userId,
     name: userProfile?.displayName || 'Pengguna',
@@ -27,8 +27,10 @@ export default function CommunityScreen({ userId, userProfile, onBack, onHome })
   };
 
   const [posts, setPosts] = useState([]);
+  const [friendIds, setFriendIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState('');
+  const [visibility, setVisibility] = useState('public'); // 'public' | 'friends'
   const [posting, setPosting] = useState(false);
   const [openComments, setOpenComments] = useState(null); // postId
   const [comments, setComments] = useState([]);
@@ -39,12 +41,21 @@ export default function CommunityScreen({ userId, userProfile, onBack, onHome })
   const [commentError, setCommentError] = useState(null);
 
   const loadPosts = async () => {
-    const list = await getPosts(30);
+    // Ambil friend list dulu untuk filter visibility
+    const friends = userId ? await getFriends(userId).catch(() => []) : [];
+    const ids = friends.map((f) => f.uid).filter(Boolean);
+    setFriendIds(ids);
+    const list = await getPosts(30, { currentUserId: userId, friendIds: ids });
     setPosts(list);
     setLoading(false);
   };
 
-  useEffect(() => { loadPosts(); }, []);
+  useEffect(() => {
+    loadPosts();
+    // Mark community as read saat buka screen → reset unread badge
+    if (onMarkCommunityRead) onMarkCommunityRead();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handlePost = async () => {
     const text = draft.trim();
@@ -57,13 +68,13 @@ export default function CommunityScreen({ userId, userProfile, onBack, onHome })
       setPosting(false);
       return;
     }
-    const res = await createPost(me, text);
+    const res = await createPost(me, text, visibility);
     if (res.success) {
       setDraft('');
       // optimistic prepend
       setPosts((p) => [{
         id: res.id, authorId: me.uid, authorName: me.name, authorAvatar: me.avatarEmoji,
-        text, likes: [], likeCount: 0, commentCount: 0, time: 'baru saja',
+        text, visibility, likes: [], likeCount: 0, commentCount: 0, time: 'baru saja',
       }, ...p]);
     }
     setPosting(false);
@@ -110,6 +121,8 @@ export default function CommunityScreen({ userId, userProfile, onBack, onHome })
       setCommentDraft('');
       setComments((c) => [...c, { id: Date.now() + '', authorId: me.uid, authorName: me.name, authorAvatar: me.avatarEmoji, text, time: 'baru saja' }]);
       setPosts((arr) => arr.map((p) => p.id === postId ? { ...p, commentCount: p.commentCount + 1 } : p));
+      // Award XP — parent handle daily cap & ngasih notifikasi
+      if (onAwardCommentXp) onAwardCommentXp();
     }
   };
 
@@ -158,6 +171,34 @@ export default function CommunityScreen({ userId, userProfile, onBack, onHome })
                 <p className="text-[11px]" style={{ color: '#c0392b' }}>{postError}</p>
               </div>
             )}
+            {/* Privacy toggle */}
+            <div className="flex items-center gap-1.5 mt-2 mb-1">
+              <button
+                onClick={() => setVisibility('public')}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all"
+                style={{
+                  background: visibility === 'public' ? 'rgba(10,77,60,0.12)' : 'transparent',
+                  color: visibility === 'public' ? '#0a4d3c' : '#8b6b3d',
+                  border: visibility === 'public' ? '1px solid rgba(10,77,60,0.3)' : '1px solid rgba(139,107,61,0.2)',
+                }}
+              >
+                <Globe2 size={11} /> Publik
+              </button>
+              <button
+                onClick={() => setVisibility('friends')}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all"
+                style={{
+                  background: visibility === 'friends' ? 'rgba(201,169,97,0.18)' : 'transparent',
+                  color: visibility === 'friends' ? '#8b6b3d' : '#8b6b3d',
+                  border: visibility === 'friends' ? '1px solid rgba(201,169,97,0.6)' : '1px solid rgba(139,107,61,0.2)',
+                }}
+              >
+                <Users size={11} /> Teman saja
+              </button>
+              <p className="text-[10px] ml-1" style={{ color: '#a98e5e' }}>
+                {visibility === 'public' ? '· dilihat semua' : `· cuma ${friendIds.length} teman`}
+              </p>
+            </div>
             <div className="flex items-center justify-between mt-2">
               <span className="text-[11px]" style={{ color: '#8b6b3d' }}>{draft.length}/500</span>
               <button
@@ -193,7 +234,14 @@ export default function CommunityScreen({ userId, userProfile, onBack, onHome })
                   <Avatar emoji={post.authorAvatar} name={post.authorName} size={40} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-semibold truncate" style={{ color: '#0a4d3c' }}>{post.authorName}</p>
+                      <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                        <p className="text-sm font-semibold truncate" style={{ color: '#0a4d3c' }}>{post.authorName}</p>
+                        {post.visibility === 'friends' && (
+                          <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold flex-shrink-0" style={{ background: 'rgba(201,169,97,0.15)', color: '#8b6b3d' }}>
+                            <Users size={9} /> Teman
+                          </span>
+                        )}
+                      </div>
                       {isMine && (
                         <button onClick={() => handleDelete(post.id)} className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(192,57,43,0.06)' }}>
                           <Trash2 size={13} style={{ color: '#c0392b' }} />
@@ -240,6 +288,11 @@ export default function CommunityScreen({ userId, userProfile, onBack, onHome })
                             <p className="text-[11px]" style={{ color: '#c0392b' }}>{commentError}</p>
                           </div>
                         )}
+                        {/* XP hint untuk dorong komentar */}
+                        <div className="flex items-center gap-1 mb-1.5 px-2 py-1 rounded-full inline-flex w-fit" style={{ background: 'rgba(201,169,97,0.12)' }}>
+                          <Sparkles size={10} style={{ color: '#c9a961' }} />
+                          <p className="text-[10px] font-semibold" style={{ color: '#8b6b3d' }}>+3 XP/komentar (maks 5/hari)</p>
+                        </div>
                         <div className="flex gap-2 items-center">
                           <input
                             value={commentDraft}
