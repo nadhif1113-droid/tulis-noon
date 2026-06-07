@@ -77,11 +77,11 @@ export default function StreakInfoModal({ streak = 0, onClose }) {
           <p className="text-[10px] tracking-widest uppercase font-bold mb-2" style={{ color: '#c9a961' }}>Reward milestone</p>
           <div className="rounded-2xl p-3.5 mb-4" style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.08)' }}>
             {[
-              { days: 3, reward: 'Badge "Mulai Konsisten" + 2 koin' },
-              { days: 7, reward: 'Badge "Seminggu Penuh" + 5 koin' },
-              { days: 14, reward: 'Badge "Dua Pekan" + 10 koin' },
-              { days: 30, reward: 'Badge "Sebulan Lurus" + 20 koin + 100 XP' },
-              { days: 100, reward: 'Badge "Konsisten" + 100 koin + free 1 bulan Premium' },
+              { days: 3, reward: 'Badge "Mulai Konsisten"' },
+              { days: 7, reward: 'Badge "Seminggu Penuh" + 25 XP' },
+              { days: 14, reward: 'Badge "Dua Pekan" + 50 XP' },
+              { days: 30, reward: 'Badge "Sebulan Lurus" + 100 XP' },
+              { days: 100, reward: 'Badge "Konsisten" + 1 bulan Mahir gratis' },
             ].map((m) => {
               const reached = streak >= m.days;
               return (
