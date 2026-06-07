@@ -1,5 +1,5 @@
 // data/learning-shorf.js
-// Pelajaran Shorf (صرف) — morfologi bahasa Arab klasik.
+// Pelajaran Shorf (صرف) — morfologi bahasa Arab Fasiha.
 // 6 pelajaran fondasi: 3 gratis + 3 Mahir.
 // Struktur sama dgn learning-nahwu.js.
 
@@ -2046,9 +2046,9 @@ export const SHORF_LESSONS = [
       },
       {
         q: 'Apa tujuan utama menyelesaikan kurikulum shorf?',
-        options: ['Hafal banyak istilah', 'Bisa derive sendiri turunan kata dari akar manapun di teks Arab klasik', 'Hanya kebanggaan akademis', 'Tidak ada manfaat'],
+        options: ['Hafal banyak istilah', 'Bisa derive sendiri turunan kata dari akar manapun di teks Arab Fasiha', 'Hanya kebanggaan akademis', 'Tidak ada manfaat'],
         correct: 1,
-        explanation: 'Shorf membuka pintu: dari akar 3-4 huruf manapun, kamu bisa kenali turunan-nya. Itulah modal membaca kitab kuning, tafsir, dan teks Arab klasik dgn mandiri.',
+        explanation: 'Shorf membuka pintu: dari akar 3-4 huruf manapun, kamu bisa kenali turunan-nya. Itulah modal membaca kitab kuning, tafsir, dan teks Arab Fasiha dgn mandiri.',
       },
     ],
   },
