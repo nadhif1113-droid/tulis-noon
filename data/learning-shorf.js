@@ -522,6 +522,344 @@ export const SHORF_LESSONS = [
       },
     ],
   },
+  ,
+  // ============ PELAJARAN 7 (PREMIUM) ============
+  {
+    id: 'shorf-7-tsulatsi-mazid',
+    order: 7,
+    isFree: false,
+    title: 'Fi\'il Tsulatsi Mazid',
+    subtitle: 'Fi\'il 3 huruf dgn tambahan huruf',
+    emoji: '➕',
+    duration: '7 menit',
+    color: '#a05536',
+    xpReward: 35,
+    theory: {
+      intro: 'Fi\'il Tsulatsi Mazid (الثُّلَاثِيُّ الْمَزِيدُ) adalah fi\'il 3 huruf yang ditambah 1-3 huruf di awal/tengah/akhir. Penambahan huruf mengubah makna dasar fi\'il. Sangat penting karena banyak kata Qur\'an pakai wazan ini.',
+      sections: [
+        {
+          title: 'Mazid Tambah 1 Huruf — 3 Wazan',
+          body: 'أَفْعَلَ (penyebaban), فَعَّلَ (intensif/penyebaban), فَاعَلَ (timbal-balik).',
+          examples: [
+            { ar: 'أَكْرَمَ', latin: 'akrama', id: 'memuliakan (dari كَرُمَ — mulia)' },
+            { ar: 'عَلَّمَ', latin: '\'allama', id: 'mengajarkan (dari عَلِمَ — tahu)' },
+            { ar: 'قَاتَلَ', latin: 'qaatala', id: 'saling memerangi (dari قَتَلَ — membunuh)' },
+          ],
+        },
+        {
+          title: 'Mazid Tambah 2 Huruf — Wazan Umum',
+          body: 'انْفَعَلَ (pasif/refleksif), افْتَعَلَ (refleksif/usaha), تَفَعَّلَ (taawwun), تَفَاعَلَ (saling).',
+          examples: [
+            { ar: 'انْكَسَرَ', latin: 'inkasara', id: 'pecah (refleksif dari كَسَرَ)' },
+            { ar: 'اجْتَمَعَ', latin: 'ijtama\'a', id: 'berkumpul (dari جَمَعَ)' },
+            { ar: 'تَعَلَّمَ', latin: 'ta\'allama', id: 'belajar (taawwun dari عَلِمَ)' },
+          ],
+        },
+        {
+          title: 'Mazid Tambah 3 Huruf — Wazan Istif\'al',
+          body: 'اسْتَفْعَلَ — biasanya untuk MEMINTA atau menganggap. Sangat sering muncul.',
+          examples: [
+            { ar: 'اسْتَغْفَرَ', latin: 'istaghfara', id: 'meminta ampun (dari غَفَرَ — mengampuni)' },
+            { ar: 'اسْتَخْرَجَ', latin: 'istakhraja', id: 'mengeluarkan (dari خَرَجَ — keluar)' },
+            { ar: 'اسْتَعَانَ', latin: 'ista\'aana', id: 'meminta tolong (dari عَانَ)' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ',
+        latin: 'iyyaaka na\'budu wa iyyaaka nasta\'iin',
+        surah: 'Al-Fatihah',
+        ayatNum: 5,
+        analysis: [
+          { word: 'إِيَّاكَ', type: 'Maf\'ul bih', note: 'nashob; didahulukan' },
+          { word: 'نَعْبُدُ', type: 'Fi\'il Tsulatsi Mujarrad', note: 'menyembah; wazan فَعَلَ' },
+          { word: 'وَ', type: 'Harf athaf', note: '' },
+          { word: 'نَسْتَعِينُ', type: 'Fi\'il Tsulatsi Mazid', note: 'minta tolong; wazan اسْتَفْعَلَ' },
+        ],
+        explanation: 'نَسْتَعِينُ = اسْتَعَانَ → tambah ن untuk "kami". Wazan اسْتَفْعَلَ artinya MEMINTA — "minta tolong/pertolongan". Bedakan dgn نَعْبُدُ (tsulatsi mujarrad biasa).',
+      },
+    },
+    quiz: [
+      {
+        q: 'اسْتَغْفَرَ artinya...',
+        options: ['Mengampuni', 'Meminta ampun', 'Diampuni', 'Pengampun'],
+        correct: 1,
+        explanation: 'Wazan اسْتَفْعَلَ menunjukkan PERMINTAAN. اسْتَغْفَرَ = meminta ampunan, bukan mengampuni.',
+      },
+      {
+        q: 'Wazan فَعَّلَ biasanya menunjukkan makna...',
+        options: ['Saling', 'Pasif', 'Penyebaban/intensif', 'Permintaan'],
+        correct: 2,
+        explanation: 'فَعَّلَ sering untuk penyebaban atau intensifikasi. عَلِمَ (tahu) → عَلَّمَ (membuat tahu = mengajar).',
+      },
+      {
+        q: 'Manakah dari berikut adalah wazan tsulatsi mazid?',
+        options: ['كَتَبَ', 'يَكْتُبُ', 'اسْتَكْتَبَ', 'كِتَابٌ'],
+        correct: 2,
+        explanation: 'اسْتَكْتَبَ adalah tsulatsi mazid (wazan اسْتَفْعَلَ) — minta untuk ditulis. كَتَبَ tsulatsi mujarrad biasa.',
+      },
+      {
+        q: 'تَعَلَّمَ adalah wazan...',
+        options: ['فَعَّلَ', 'تَفَعَّلَ', 'تَفَاعَلَ', 'اسْتَفْعَلَ'],
+        correct: 1,
+        explanation: 'تَعَلَّمَ pakai wazan تَفَعَّلَ — artinya: belajar (taawwun, mengusahakan). Beda dgn عَلَّمَ (فَعَّلَ — mengajar).',
+      },
+    ],
+  },
+
+  // ============ PELAJARAN 8 (PREMIUM) ============
+  {
+    id: 'shorf-8-wazan-mazid-detail',
+    order: 8,
+    isFree: false,
+    title: 'Wazan Mazid Detail',
+    subtitle: 'Makna khusus tiap wazan tambahan',
+    emoji: '🎼',
+    duration: '7 menit',
+    color: '#a05536',
+    xpReward: 35,
+    theory: {
+      intro: 'Tiap wazan mazid punya makna khas. Memahami makna wazan = membuka rahasia derivasi kata Arab. Inilah yang membedakan paham bahasa Arab tingkat dasar dgn tingkat lanjut.',
+      sections: [
+        {
+          title: 'أَفْعَلَ — Penyebaban (Membuat Jadi)',
+          body: 'Pola: a-f-\'a-la. Membuat orang lain melakukan / membuat sesuatu jadi.',
+          examples: [
+            { ar: 'كَرُمَ → أَكْرَمَ', latin: 'karuma → akrama', id: 'mulia → memuliakan (membuat jadi mulia)' },
+            { ar: 'دَخَلَ → أَدْخَلَ', latin: 'dakhala → adkhala', id: 'masuk → memasukkan' },
+            { ar: 'خَرَجَ → أَخْرَجَ', latin: 'kharaja → akhraja', id: 'keluar → mengeluarkan' },
+          ],
+        },
+        {
+          title: 'تَفَعَّلَ — Mengusahakan Diri',
+          body: 'Pola: ta-fa-\'\'a-la. Berusaha melakukan/memperoleh sifat itu pada diri sendiri (taawwun).',
+          examples: [
+            { ar: 'عَلِمَ → تَعَلَّمَ', latin: '\'alima → ta\'allama', id: 'tahu → belajar (usaha jadi tahu)' },
+            { ar: 'صَبَرَ → تَصَبَّرَ', latin: 'shabara → tashabbara', id: 'sabar → memaksakan diri sabar' },
+            { ar: 'كَبُرَ → تَكَبَّرَ', latin: 'kabura → takabbara', id: 'besar → sombong (membuat diri terlihat besar)' },
+          ],
+        },
+        {
+          title: 'تَفَاعَلَ — Saling',
+          body: 'Pola: ta-faa-\'a-la. Saling melakukan (2 pihak atau lebih).',
+          examples: [
+            { ar: 'كَتَبَ → تَكَاتَبَ', latin: 'kataba → takaataba', id: 'menulis → saling berkirim surat' },
+            { ar: 'قَتَلَ → تَقَاتَلَ', latin: 'qatala → taqaatala', id: 'membunuh → saling memerangi' },
+            { ar: 'عَاوَنَ → تَعَاوَنَ', latin: '\'aawana → ta\'aawana', id: 'menolong → saling tolong-menolong' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'وَتَعَاوَنُوا عَلَى الْبِرِّ وَالتَّقْوَى',
+        latin: 'wa ta\'aawanuu \'alal-birri wat-taqwaa',
+        surah: 'Al-Maidah',
+        ayatNum: 2,
+        analysis: [
+          { word: 'وَ', type: 'Harf athaf', note: '' },
+          { word: 'تَعَاوَنُوا', type: 'Fi\'il Amr (jamak)', note: 'wazan تَفَاعَلَ — saling tolong' },
+          { word: 'عَلَى', type: 'Harf jar', note: 'di atas/dalam' },
+          { word: 'الْبِرِّ', type: 'Majrur', note: 'kebajikan' },
+          { word: 'وَالتَّقْوَى', type: 'Athaf', note: 'ketakwaan' },
+        ],
+        explanation: 'تَعَاوَنُوا dari wazan تَفَاعَلَ — makna "saling". "Tolong-menolong-lah kalian dalam kebajikan dan takwa". Kalau hanya تَعَاوَنَ saja: "saling menolong" (bukan satu pihak menolong yang lain).',
+      },
+    },
+    quiz: [
+      {
+        q: 'Wazan أَفْعَلَ biasanya menunjukkan makna...',
+        options: ['Saling', 'Penyebaban', 'Pasif', 'Permintaan'],
+        correct: 1,
+        explanation: 'أَفْعَلَ = penyebaban (membuat jadi). دَخَلَ (masuk) → أَدْخَلَ (memasukkan).',
+      },
+      {
+        q: 'تَقَاتَلَ artinya...',
+        options: ['Membunuh', 'Saling memerangi', 'Dibunuh', 'Pembunuh'],
+        correct: 1,
+        explanation: 'Wazan تَفَاعَلَ = saling. قَتَلَ (membunuh) → تَقَاتَلَ (saling memerangi).',
+      },
+      {
+        q: 'تَعَلَّمَ menggunakan wazan...',
+        options: ['أَفْعَلَ', 'تَفَعَّلَ', 'تَفَاعَلَ', 'فَعَّلَ'],
+        correct: 1,
+        explanation: 'تَعَلَّمَ pakai wazan تَفَعَّلَ — pola ta-fa-\'\'a-la. Makna: berusaha jadi (tahu).',
+      },
+      {
+        q: 'Apa makna khas wazan تَفَاعَلَ?',
+        options: ['Pasif', 'Penyebaban', 'Saling (timbal balik)', 'Permintaan'],
+        correct: 2,
+        explanation: 'تَفَاعَلَ = saling. Biasanya pelakunya jamak/dua pihak.',
+      },
+    ],
+  },
+
+  // ============ PELAJARAN 9 (PREMIUM) ============
+  {
+    id: 'shorf-9-fiil-mutal',
+    order: 9,
+    isFree: false,
+    title: 'Fi\'il Mu\'tal',
+    subtitle: 'Fi\'il dengan huruf illah (و، ي، ا)',
+    emoji: '〰️',
+    duration: '7 menit',
+    color: '#a05536',
+    xpReward: 40,
+    theory: {
+      intro: 'Fi\'il Mu\'tal (الْفِعْلُ الْمُعْتَلُّ) adalah fi\'il yang salah satu huruf asalnya berupa huruf illah (و، ي، ا). Saat di-tashrif, huruf illah sering berubah/hilang sesuai aturan i\'lal. Ini bagian tersulit shorf — tapi paling banyak muncul.',
+      sections: [
+        {
+          title: 'Mu\'tal Mitsal (و/ي di Awal)',
+          body: 'Huruf illah berada di posisi fa\' (huruf pertama). Contoh: وَعَدَ، وَجَدَ، يَئِسَ.',
+          examples: [
+            { ar: 'وَعَدَ - يَعِدُ', latin: 'wa\'ada - ya\'idu', id: 'berjanji (و hilang di mudhori\')' },
+            { ar: 'وَصَلَ - يَصِلُ', latin: 'washala - yashilu', id: 'sampai/tiba' },
+          ],
+        },
+        {
+          title: 'Mu\'tal Ajwaf (و/ي di Tengah)',
+          body: 'Huruf illah di posisi \'ain (huruf kedua). Contoh: قَالَ (asalnya قَوَلَ), بَاعَ (asalnya بَيَعَ).',
+          examples: [
+            { ar: 'قَالَ - يَقُولُ', latin: 'qaala - yaquulu', id: 'berkata (asal: قَوَلَ - يَقْوُلُ → قَالَ - يَقُولُ)' },
+            { ar: 'بَاعَ - يَبِيعُ', latin: 'baa\'a - yabii\'u', id: 'menjual (asal: بَيَعَ)' },
+            { ar: 'صَامَ - يَصُومُ', latin: 'shaama - yashuumu', id: 'berpuasa' },
+          ],
+        },
+        {
+          title: 'Mu\'tal Naqis (و/ي di Akhir)',
+          body: 'Huruf illah di posisi lam (huruf ketiga). Contoh: دَعَا، رَمَى، نَسِيَ.',
+          examples: [
+            { ar: 'دَعَا - يَدْعُو', latin: 'da\'aa - yad\'uu', id: 'memanggil/berdoa' },
+            { ar: 'رَمَى - يَرْمِي', latin: 'ramaa - yarmii', id: 'melempar' },
+            { ar: 'نَسِيَ - يَنْسَى', latin: 'nasiya - yansaa', id: 'lupa' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'وَمَا رَمَيْتَ إِذْ رَمَيْتَ وَلَكِنَّ اللَّهَ رَمَى',
+        latin: 'wa maa ramaita idz ramaita walaakinnallaha ramaa',
+        surah: 'Al-Anfal',
+        ayatNum: 17,
+        analysis: [
+          { word: 'وَمَا', type: 'Harf nafi', note: 'dan tidaklah' },
+          { word: 'رَمَيْتَ', type: 'Fi\'il Madhi Naqis', note: 'engkau melempar; ya berubah karena tashrif' },
+          { word: 'إِذْ', type: 'Zhorof', note: 'ketika' },
+          { word: 'رَمَيْتَ', type: 'Fi\'il Madhi Naqis', note: 'engkau melempar (lagi)' },
+          { word: 'رَمَى', type: 'Fi\'il Madhi Naqis', note: 'huruf illah ya jadi alif di akhir' },
+        ],
+        explanation: 'رَمَى adalah fi\'il mu\'tal naqis — akhirnya alif (dari asal ya). Saat di-tashrif ke تَ (kamu): jadi رَمَيْتَ — ya muncul kembali. Inilah aturan i\'lal — huruf illah berubah-ubah sesuai posisi.',
+      },
+    },
+    quiz: [
+      {
+        q: 'قَالَ termasuk fi\'il mu\'tal jenis apa?',
+        options: ['Mitsal', 'Ajwaf', 'Naqis', 'Salim'],
+        correct: 1,
+        explanation: 'قَالَ asal-nya قَوَلَ — huruf illah و di tengah (ain fi\'il). Itu mu\'tal AJWAF.',
+      },
+      {
+        q: 'Mu\'tal mitsal artinya huruf illah berada di...',
+        options: ['Awal (fa\' fi\'il)', 'Tengah (\'ain fi\'il)', 'Akhir (lam fi\'il)', 'Bebas'],
+        correct: 0,
+        explanation: 'Mu\'tal mitsal = huruf illah di posisi fa\' (awal). Contoh: وَعَدَ، وَجَدَ.',
+      },
+      {
+        q: 'دَعَا - يَدْعُو termasuk mu\'tal...',
+        options: ['Mitsal', 'Ajwaf', 'Naqis', 'Lafif'],
+        correct: 2,
+        explanation: 'Huruf illah و di akhir (lam fi\'il). Itu mu\'tal NAQIS.',
+      },
+      {
+        q: 'Kenapa fi\'il mu\'tal harus dipelajari khusus?',
+        options: ['Tidak penting', 'Karena huruf illah-nya berubah-ubah saat di-tashrif', 'Karena hanya ada di syair', 'Karena tidak ada di Qur\'an'],
+        correct: 1,
+        explanation: 'Huruf illah mengikuti aturan i\'lal — bisa berubah jadi alif/ya/wau atau hilang. Banyak kata Qur\'an mu\'tal (قَالَ، رَأَى، أَتَى dll).',
+      },
+    ],
+  },
+
+  // ============ PELAJARAN 10 (PREMIUM) ============
+  {
+    id: 'shorf-10-isim-alat-zaman-makan',
+    order: 10,
+    isFree: false,
+    title: 'Isim Alat, Zaman & Makan',
+    subtitle: 'Kata alat, waktu, dan tempat',
+    emoji: '🛠️',
+    duration: '6 menit',
+    color: '#a05536',
+    xpReward: 35,
+    theory: {
+      intro: 'Selain isim fa\'il dan maf\'ul, dari satu akar fi\'il bisa lahir 3 jenis isim turunan: Isim Alat (alat), Isim Zaman (waktu kejadian), dan Isim Makan (tempat kejadian). Polanya hampir mirip — yang membedakan konteks.',
+      sections: [
+        {
+          title: 'Isim Alat (اسْمُ الْآلَةِ)',
+          body: 'Kata benda yang menunjukkan ALAT untuk perbuatan. Pola: مِفْعَلٌ، مِفْعَلَةٌ، مِفْعَالٌ.',
+          examples: [
+            { ar: 'فَتَحَ → مِفْتَاحٌ', latin: 'fataha → miftaah', id: 'membuka → kunci (alat membuka)' },
+            { ar: 'قَصَّ → مِقَصٌّ', latin: 'qashsha → miqashsh', id: 'memotong → gunting' },
+            { ar: 'كَنَسَ → مِكْنَسَةٌ', latin: 'kanasa → miknasah', id: 'menyapu → sapu' },
+          ],
+        },
+        {
+          title: 'Isim Makan (اسْمُ الْمَكَانِ)',
+          body: 'Kata benda yang menunjukkan TEMPAT terjadinya perbuatan. Pola umum: مَفْعَلٌ، مَفْعِلٌ.',
+          examples: [
+            { ar: 'كَتَبَ → مَكْتَبٌ', latin: 'kataba → maktab', id: 'menulis → meja/kantor (tempat menulis)' },
+            { ar: 'سَجَدَ → مَسْجِدٌ', latin: 'sajada → masjid', id: 'sujud → masjid (tempat sujud)' },
+            { ar: 'دَرَسَ → مَدْرَسَةٌ', latin: 'darasa → madrasah', id: 'belajar → sekolah (tempat belajar)' },
+          ],
+        },
+        {
+          title: 'Isim Zaman (اسْمُ الزَّمَانِ)',
+          body: 'Kata benda yang menunjukkan WAKTU terjadinya perbuatan. Pola sama dgn isim makan: مَفْعَلٌ atau مَفْعِلٌ — konteks menentukan.',
+          examples: [
+            { ar: 'وَلَدَ → مَوْلِدٌ', latin: 'walada → maulid', id: 'melahirkan → waktu kelahiran (Maulid Nabi)' },
+            { ar: 'غَرَبَ → مَغْرِبٌ', latin: 'gharaba → maghrib', id: 'terbenam → waktu terbenam (Maghrib)' },
+            { ar: 'طَلَعَ → مَطْلَعٌ', latin: 'thala\'a → mathla\'', id: 'terbit → waktu terbit' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'سُبْحَانَ الَّذِي أَسْرَى بِعَبْدِهِ لَيْلًا مِنَ الْمَسْجِدِ الْحَرَامِ',
+        latin: 'subhaanal-ladzii asraa bi\'abdihi lailan minal-masjidil-haraam',
+        surah: 'Al-Isra',
+        ayatNum: 1,
+        analysis: [
+          { word: 'سُبْحَانَ', type: 'Mashdar', note: 'Maha Suci; mansub' },
+          { word: 'الَّذِي', type: 'Isim maushul', note: 'mudhof ilaih' },
+          { word: 'أَسْرَى', type: 'Fi\'il Madhi', note: 'memperjalankan di malam hari' },
+          { word: 'الْمَسْجِدِ', type: 'Isim Makan', note: 'majrur; tempat sujud (مَسْجِد = isim makan dari سَجَدَ)' },
+          { word: 'الْحَرَامِ', type: 'Na\'at', note: 'mengikuti majrur' },
+        ],
+        explanation: 'الْمَسْجِدِ الْحَرَامِ — مَسْجِد adalah isim makan dari سَجَدَ (sujud), artinya "tempat sujud". Wazan مَفْعِلٌ. Banyak nama tempat di Qur\'an pakai pola ini.',
+      },
+    },
+    quiz: [
+      {
+        q: 'مِفْتَاحٌ adalah isim apa?',
+        options: ['Isim Fa\'il', 'Isim Maf\'ul', 'Isim Alat', 'Isim Makan'],
+        correct: 2,
+        explanation: 'مِفْتَاحٌ pakai wazan مِفْعَالٌ — isim alat (alat untuk membuka = kunci).',
+      },
+      {
+        q: 'مَدْرَسَةٌ artinya...',
+        options: ['Yang mengajar', 'Belajar', 'Tempat belajar (sekolah)', 'Alat belajar'],
+        correct: 2,
+        explanation: 'مَدْرَسَةٌ adalah isim makan dari دَرَسَ — tempat untuk belajar = sekolah.',
+      },
+      {
+        q: 'Pola مِفْعَلٌ، مِفْعَلَةٌ menunjukkan isim apa?',
+        options: ['Fa\'il', 'Maf\'ul', 'Alat', 'Mashdar'],
+        correct: 2,
+        explanation: 'Pola mi-f-\'a-l adalah pola standar isim ALAT.',
+      },
+      {
+        q: 'مَغْرِبٌ adalah isim apa dari akar غَرَبَ?',
+        options: ['Isim Fa\'il', 'Isim Maf\'ul', 'Isim Alat', 'Isim Zaman'],
+        correct: 3,
+        explanation: 'مَغْرِبٌ = waktu terbenamnya matahari → isim zaman.',
+      },
+    ],
+  },
 ];
 
 export function getShorfLesson(id) {
