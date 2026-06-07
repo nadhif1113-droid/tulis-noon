@@ -1,5 +1,5 @@
 // data/learning-nahwu.js
-// Pelajaran Nahwu (نحو) — sintaksis bahasa Arab klasik.
+// Pelajaran Nahwu (نحو) — sintaksis bahasa Arab Fasiha.
 // 8 pelajaran fondasi: 3 gratis untuk preview, 5 sisanya Mahir.
 //
 // Tiap pelajaran:
@@ -664,7 +664,7 @@ export const NAHWU_LESSONS = [
       },
       {
         q: 'Setelah mempelajari Nahwu dasar, manfaat utamanya adalah...',
-        options: ['Hafal kosakata', 'Bisa baca tanpa harakat', 'Memahami struktur ayat & teks Arab klasik', 'Lancar berbicara cepat'],
+        options: ['Hafal kosakata', 'Bisa baca tanpa harakat', 'Memahami struktur ayat & teks Arab Fasiha', 'Lancar berbicara cepat'],
         correct: 2,
         explanation: 'Nahwu menguasai struktur kalimat — pintu untuk baca tafsir, kitab kuning, dan memahami nuansa ayat Al-Qur\'an.',
       },
@@ -2492,7 +2492,7 @@ export const NAHWU_LESSONS = [
       },
       {
         q: 'Manfaat utama belajar Nahwu sampai level capstone ini adalah...',
-        options: ['Hafal banyak istilah', 'Bisa menguraikan struktur ayat Qur\'an & teks Arab klasik secara mandiri', 'Hanya kebanggaan', 'Tidak ada manfaat praktis'],
+        options: ['Hafal banyak istilah', 'Bisa menguraikan struktur ayat Qur\'an & teks Arab Fasiha secara mandiri', 'Hanya kebanggaan', 'Tidak ada manfaat praktis'],
         correct: 1,
         explanation: 'Tujuan akhir Nahwu: bisa baca tafsir, kitab kuning, dan paham nuansa Qur\'an secara mandiri — tidak tergantung terjemahan.',
       },
