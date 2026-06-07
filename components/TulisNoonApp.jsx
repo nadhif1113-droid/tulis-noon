@@ -35,6 +35,7 @@ import PersonaGoalModal from '@/components/PersonaGoalModal';
 import { CERTIFICATE_PATHS, getPathProgress, generateCertNumber, MASTER_CERTIFICATE } from '@/lib/certificate';
 import { speakArabic as ttsSpeakArabic } from '@/lib/tts';
 import { postActivity, getCommunityFeed, getLeaderboard, getUserGlobalRank, updatePresence, listenDmThreads, getFriends, getChallengeLeaderboard, getUserChallengeRank } from '@/lib/social';
+import { Analytics, setAnalyticsUser, setUserProperties } from '@/lib/analytics';
 import { isChallengeActive, challengeDaysRemaining, challengeTotalDays, CHALLENGE_TITLE, CHALLENGE_TAGLINE, CHALLENGE_PRIZES, challengeTotalPrize } from '@/lib/challenge-launch';
 import { LEARNING_UMRAH } from '@/data/learning-umrah';
 import { LEARNING_PELAJAR } from '@/data/learning-pelajar';
@@ -357,6 +358,23 @@ export default function TulisNoonApp() {
     }
   }, [authProfile, user]);
 
+  // Analytics: identify user + set properties + session_started (once per mount)
+  const sessionLoggedRef = useRef(false);
+  useEffect(() => {
+    if (!user?.uid || sessionLoggedRef.current) return;
+    sessionLoggedRef.current = true;
+    setAnalyticsUser(user.uid);
+    Analytics.sessionStarted();
+    if (authProfile) {
+      setUserProperties({
+        persona_goal: authProfile.personaGoal || 'unset',
+        is_premium: !!authProfile.premiumLifetime || !!authProfile.premiumExpiresAt,
+        cert_count: (authProfile.earnedCertificates || []).length,
+        streak: authProfile.streak || 0,
+      });
+    }
+  }, [user?.uid, authProfile]);
+
   // Auto-show Persona Goal Modal kalau user belum set tujuan belajar.
   // Trigger: user udah login + profile ke-load + screen udah 'main' + personaGoal null.
   // Sengaja TIDAK dependency screen biar gak retrigger pas user navigasi.
@@ -495,6 +513,7 @@ export default function TulisNoonApp() {
       }).catch(() => {});
       setEarnedCertPathId(newlyEarned.id);
       logCommunity({ type: 'sertifikat', text: `🎓 Meraih sertifikat: ${newlyEarned.title}`, emoji: '🏅' });
+      Analytics.certEarned(newlyEarned.id);
       return; // satu modal at a time — master detection nyusul di trigger berikutnya
     }
 
@@ -512,6 +531,7 @@ export default function TulisNoonApp() {
         }).catch(() => {});
         setEarnedCertPathId('master');
         logCommunity({ type: 'sertifikat', text: `🏅 Master Tulis Noon — selesai semua 7 sertifikat!`, emoji: '🏅' });
+        Analytics.masterEarned();
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -807,6 +827,8 @@ export default function TulisNoonApp() {
               awardXp(earned);
               setProgress(p => ({ ...p, [selectedLesson.pathId]: Math.max((p[selectedLesson.pathId] || 0), selectedLesson.order) }));
               logCommunity({ type:'lesson', text:`Selesai modul: ${selectedLesson.title} (+${earned} XP)`, emoji: selectedLesson.emoji });
+              Analytics.lessonComplete(selectedLesson.pathId, selectedLesson.id, earned);
+              Analytics.xpEarned(earned, 'lesson');
             }}
             onUnlockConversation={async (moduleId, convIdx) => {
               const pricing = getLearningPricing(selectedLesson.pathId);
@@ -1147,6 +1169,7 @@ export default function TulisNoonApp() {
             try { await updateUserProfile({ personaGoal: goalId }); } catch (e) { console.error(e); }
           }}
           onOpenRecommendation={(rec) => {
+            Analytics.recommendationClicked(rec.pathId);
             // Routing per path → navigate ke screen yg tepat
             const dl = rec.deeplink || {};
             if (rec.pathId === 'nahwu' || rec.pathId === 'shorf') {
@@ -1258,6 +1281,7 @@ export default function TulisNoonApp() {
             onSelect={async (goalId) => {
               try {
                 await updateUserProfile({ personaGoal: goalId });
+                Analytics.personaSet(goalId);
                 setShowPersonaModal(false);
               } catch (e) {
                 console.error('[persona] save error:', e);
