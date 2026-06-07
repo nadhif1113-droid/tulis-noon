@@ -860,6 +860,514 @@ export const SHORF_LESSONS = [
       },
     ],
   },
+  ,
+  // ============ PELAJARAN 11 (PREMIUM) ============
+  {
+    id: 'shorf-11-jamak-taksir',
+    order: 11,
+    isFree: false,
+    title: 'Jamak Taksir',
+    subtitle: 'Bentuk jamak yg merubah pola kata',
+    emoji: '🌾',
+    duration: '7 menit',
+    color: '#a05536',
+    xpReward: 40,
+    theory: {
+      intro: 'Jamak Taksir (جَمْعُ التَّكْسِيرِ) adalah bentuk jamak yang MENGUBAH POLA kata asalnya — bukan sekadar menambah huruf. Berbeda dgn jamak mudzakkar salim (-ūn) dan mu\'annats salim (-āt) yang teratur. Jamak taksir punya banyak pola.',
+      sections: [
+        {
+          title: 'Pola Umum 1: أَفْعَال & أَفْعُل',
+          body: 'Sering untuk kata-kata mufrad bersuku kata pendek.',
+          examples: [
+            { ar: 'قَلَمٌ → أَقْلَامٌ', latin: 'qalam → aqlaam', id: 'pena → pena-pena' },
+            { ar: 'يَوْمٌ → أَيَّامٌ', latin: 'yaum → ayyaam', id: 'hari → hari-hari' },
+            { ar: 'نَهْرٌ → أَنْهَارٌ', latin: 'nahr → anhaar', id: 'sungai → sungai-sungai' },
+          ],
+        },
+        {
+          title: 'Pola Umum 2: فُعُل & فِعَال & فِعَل',
+          body: 'Tiga pola yang sangat sering.',
+          examples: [
+            { ar: 'كِتَابٌ → كُتُبٌ', latin: 'kitaab → kutub', id: 'buku → buku-buku' },
+            { ar: 'جَبَلٌ → جِبَالٌ', latin: 'jabal → jibaal', id: 'gunung → gunung-gunung' },
+            { ar: 'قِطْعَةٌ → قِطَعٌ', latin: 'qith\'ah → qitha\'', id: 'potongan → potongan-potongan' },
+          ],
+        },
+        {
+          title: 'Pola Lanjut: مَفَاعِل، فَوَاعِل، فَعَائِل، فُعَلَاء',
+          body: 'Untuk kata-kata yang lebih kompleks.',
+          examples: [
+            { ar: 'مَسْجِدٌ → مَسَاجِدُ', latin: 'masjid → masaajid', id: 'masjid → masjid-masjid' },
+            { ar: 'عَالِمٌ → عُلَمَاءُ', latin: '\'aalim → \'ulamaa\'', id: 'orang berilmu → ulama' },
+            { ar: 'مَدِينَةٌ → مَدَائِنُ', latin: 'madiinah → madaa\'in', id: 'kota → kota-kota' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'فَاسْأَلُوا أَهْلَ الذِّكْرِ إِنْ كُنْتُمْ لَا تَعْلَمُونَ',
+        latin: 'fas\'aluu ahladz-dzikri in kuntum laa ta\'lamuun',
+        surah: 'An-Nahl',
+        ayatNum: 43,
+        analysis: [
+          { word: 'فَاسْأَلُوا', type: 'Fi\'il Amr jamak', note: 'maka bertanyalah' },
+          { word: 'أَهْلَ', type: 'Maf\'ul bih', note: 'mansub; mudhof' },
+          { word: 'الذِّكْرِ', type: 'Mudhof ilaih', note: 'majrur' },
+          { word: 'إِنْ كُنْتُمْ', type: 'Syarat', note: 'jika kalian' },
+          { word: 'لَا تَعْلَمُونَ', type: 'Jawab syarat', note: 'tidak mengetahui' },
+        ],
+        explanation: 'أَهْلَ adalah mufrad. Jamak-nya: أَهَالٍ atau أَهَالِي (jamak taksir pola فَعَالٍ). Memahami jamak taksir penting agar kita kenali kata yang sama di berbagai bentuknya.',
+      },
+    },
+    quiz: [
+      {
+        q: 'Apa beda jamak taksir dgn jamak salim?',
+        options: ['Sama saja', 'Jamak taksir mengubah pola kata, jamak salim hanya menambah akhiran teratur', 'Jamak taksir hanya untuk perempuan', 'Jamak salim hanya 3 huruf'],
+        correct: 1,
+        explanation: 'Jamak taksir mengubah pola dasar kata (mis. كِتَاب → كُتُب). Jamak salim hanya menambah ون/ين atau ات di akhir.',
+      },
+      {
+        q: 'Jamak taksir dari قَلَم adalah...',
+        options: ['قَلَمَانِ', 'قَلَمَاتٌ', 'أَقْلَامٌ', 'قَالَمُونَ'],
+        correct: 2,
+        explanation: 'قَلَمٌ → أَقْلَامٌ (pola أَفْعَال). Pena-pena.',
+      },
+      {
+        q: 'مَسَاجِدُ adalah jamak taksir dari...',
+        options: ['سَجَدَ', 'مُسَاجِدٌ', 'مَسْجِدٌ', 'مَسْجُودٌ'],
+        correct: 2,
+        explanation: 'مَسْجِدٌ → مَسَاجِدُ — pola مَفَاعِل. Tempat-tempat sujud.',
+      },
+      {
+        q: 'Kenapa harus belajar jamak taksir?',
+        options: ['Tidak penting', 'Karena polanya bervariasi & tidak bisa ditebak — harus dihafal', 'Karena lebih indah', 'Karena ada di syair saja'],
+        correct: 1,
+        explanation: 'Jamak taksir bentuknya tidak bisa ditebak dari mufrad — harus dihafal pola per kata. Banyak kata Qur\'an pakai jamak taksir.',
+      },
+    ],
+  },
+
+  // ============ PELAJARAN 12 (PREMIUM) ============
+  {
+    id: 'shorf-12-isim-mansub',
+    order: 12,
+    isFree: false,
+    title: 'Isim Mansub',
+    subtitle: 'Kata dgn akhiran -iyy (penisbatan)',
+    emoji: '🏷️',
+    duration: '6 menit',
+    color: '#a05536',
+    xpReward: 30,
+    theory: {
+      intro: 'Isim Mansub (الْاِسْمُ الْمَنْسُوبُ) adalah isim yang ditambah akhiran ـِيٌّ (ya\' bertasydid + dhommah) untuk menunjukkan PENISBATAN — asal, jenis, kepunyaan. Sangat sering dipakai untuk nama profesi, asal daerah, mazhab.',
+      sections: [
+        {
+          title: 'Aturan Pembentukan',
+          body: 'Tambah ـِيٌّ di akhir isim. Buang ta marbuta (ة) atau alif (ى) jika ada. Hasil: kata sifat yang menunjukkan "yang berhubungan dengan...".',
+          examples: [
+            { ar: 'مِصْرُ → مِصْرِيٌّ', latin: 'Mishru → Mishriyy', id: 'Mesir → orang Mesir' },
+            { ar: 'مَدِينَةٌ → مَدَنِيٌّ', latin: 'madiinah → madaniyy', id: 'Madinah → orang Madinah' },
+            { ar: 'الْيَوْمُ → الْيَوْمِيٌّ', latin: 'al-yaum → al-yaumiyy', id: 'hari → harian' },
+          ],
+        },
+        {
+          title: 'Untuk Profesi & Mazhab',
+          body: 'Sangat sering untuk menyebutkan profesi (penjual sesuatu) atau pengikut mazhab.',
+          examples: [
+            { ar: 'صَيْدَلِيٌّ', latin: 'shaidaliyy', id: 'apoteker (dari صَيْدَلِيَّةٌ — apotek)' },
+            { ar: 'شَافِعِيٌّ', latin: 'syaafi\'iyy', id: 'pengikut mazhab Syafi\'i' },
+            { ar: 'حَنَفِيٌّ', latin: 'hanafiyy', id: 'pengikut mazhab Hanafi' },
+          ],
+        },
+        {
+          title: 'Beda Mufrad & Jamak',
+          body: 'Mufrad: ـِيٌّ. Jamak mudzakkar salim: ـِيُّونَ. Banyak nama negara di Qur\'an pakai pola jamak ini.',
+          examples: [
+            { ar: 'مُسْلِمٌ → مُسْلِمُونَ', latin: 'muslim → muslimuun', id: 'muslim → kaum muslimin' },
+            { ar: 'إِسْرَائِيلِيٌّ → إِسْرَائِيلِيُّونَ', latin: 'israa\'iiliyy → israa\'iiliyyuun', id: 'Israeli → orang-orang Israel' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'وَإِذْ قَالَ مُوسَى لِقَوْمِهِ يَا قَوْمِ',
+        latin: 'wa idz qaala Muusaa liqaumihi yaa qaum',
+        surah: 'Ash-Shaff',
+        ayatNum: 5,
+        analysis: [
+          { word: 'وَإِذْ', type: 'Zhorof', note: 'dan ketika' },
+          { word: 'قَالَ', type: 'Fi\'il Madhi', note: 'berkata' },
+          { word: 'مُوسَى', type: 'Fa\'il', note: 'rofa\' dgn dhommah muqaddarah' },
+          { word: 'لِقَوْمِهِ', type: 'Jar majrur', note: 'kepada kaumnya' },
+          { word: 'يَا قَوْمِ', type: 'Munada', note: 'wahai kaum-ku!' },
+        ],
+        explanation: 'Konsep yg dekat: قَوْمٌ (kaum). Bentuk nisbat-nya: قَوْمِيٌّ (nasionalis / kebangsaan). Banyak ideologi modern (وَطَنِيٌّ "nasionalis", إِسْلَامِيٌّ "Islamis") pakai pola nisbat ini.',
+      },
+    },
+    quiz: [
+      {
+        q: 'Cara membuat isim mansub adalah dgn menambahkan...',
+        options: ['ـُونَ', 'ـَاتٌ', 'ـِيٌّ', 'ـَانِ'],
+        correct: 2,
+        explanation: 'Tambah ـِيٌّ (ya\' tasydid + dhommah) di akhir untuk membuat isim mansub.',
+      },
+      {
+        q: 'مِصْرِيٌّ artinya...',
+        options: ['Mesir', 'Penduduk Mesir / orang Mesir', 'Ke Mesir', 'Dari Mesir'],
+        correct: 1,
+        explanation: 'Akhiran -iyy menunjukkan penisbatan. مِصْرِيٌّ = "yang dinisbatkan ke Mesir" = orang Mesir.',
+      },
+      {
+        q: 'Pembentukan nisbat dari مَدِينَةٌ adalah...',
+        options: ['مَدِينَتِيٌّ', 'مَدَنِيٌّ', 'مَدِينَاتٌ', 'مَدَائِنُ'],
+        correct: 1,
+        explanation: 'مَدِينَةٌ → buang ة → tambah ـِيٌّ → مَدَنِيٌّ. Buang ta marbuta dulu.',
+      },
+      {
+        q: 'Apa fungsi utama isim mansub?',
+        options: ['Menyatakan jamak', 'Menyatakan asal/jenis/kepunyaan', 'Menyatakan negasi', 'Menyatakan perintah'],
+        correct: 1,
+        explanation: 'Isim mansub menunjukkan PENISBATAN — bisa asal daerah, profesi, mazhab, jenis, kepunyaan.',
+      },
+    ],
+  },
+
+  // ============ PELAJARAN 13 (PREMIUM) ============
+  {
+    id: 'shorf-13-mudzaaf-rubaai',
+    order: 13,
+    isFree: false,
+    title: 'Mudza\'af & Ruba\'i',
+    subtitle: 'Fi\'il berhuruf rangkap & berhuruf 4',
+    emoji: '🎯',
+    duration: '7 menit',
+    color: '#a05536',
+    xpReward: 40,
+    theory: {
+      intro: 'Selain tsulatsi (3 huruf), ada fi\'il jenis lain: Mudza\'af (huruf \'ain & lam sama — rangkap) dan Ruba\'i (4 huruf asli). Keduanya punya aturan tashrif khas.',
+      sections: [
+        {
+          title: 'Fi\'il Mudza\'af',
+          body: 'Fi\'il yang \'ain & lam-nya huruf yg sama, sehingga ditashdid. Contoh: مَدَّ (asalnya مَدَدَ), رَدَّ (asalnya رَدَدَ).',
+          examples: [
+            { ar: 'مَدَّ - يَمُدُّ', latin: 'madda - yamuddu', id: 'memanjangkan' },
+            { ar: 'رَدَّ - يَرُدُّ', latin: 'radda - yaruddu', id: 'mengembalikan' },
+            { ar: 'حَجَّ - يَحُجُّ', latin: 'hajja - yahujju', id: 'berhaji' },
+          ],
+        },
+        {
+          title: 'Aturan Tashrif Mudza\'af',
+          body: 'Saat di-tashrif ke تَ (kamu/aku), tasydid PECAH menjadi 2 huruf. مَدَدْتُ, رَدَدْتُ — bukan مَدَّتُ, رَدَّتُ.',
+          examples: [
+            { ar: 'مَدَّ → مَدَدْتُ', latin: 'madda → madadtu', id: 'memanjangkan → aku panjangkan (tasydid pecah)' },
+            { ar: 'حَجَّ → حَجَجْتُ', latin: 'hajja → hajajtu', id: 'berhaji → aku berhaji' },
+          ],
+        },
+        {
+          title: 'Fi\'il Ruba\'i (4 Huruf Asli)',
+          body: 'Fi\'il yang 4 huruf asalnya tanpa tambahan. Wazan utama: فَعْلَلَ. Tashrif-nya seperti tsulatsi mazid فَعَّلَ.',
+          examples: [
+            { ar: 'دَحْرَجَ - يُدَحْرِجُ', latin: 'dahraja - yudahriju', id: 'menggelinding' },
+            { ar: 'تَرْجَمَ - يُتَرْجِمُ', latin: 'tarjama - yutarjimu', id: 'menerjemahkan' },
+            { ar: 'زَلْزَلَ - يُزَلْزِلُ', latin: 'zalzala - yuzalzilu', id: 'mengguncang' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'إِذَا زُلْزِلَتِ الْأَرْضُ زِلْزَالَهَا',
+        latin: 'idzaa zulzilatil-ardhu zilzaalahaa',
+        surah: 'Az-Zalzalah',
+        ayatNum: 1,
+        analysis: [
+          { word: 'إِذَا', type: 'Zhorof syarat', note: 'apabila' },
+          { word: 'زُلْزِلَتِ', type: 'Fi\'il Madhi Majhul Ruba\'i', note: 'diguncangkan; wazan فُعْلِلَ' },
+          { word: 'الْأَرْضُ', type: 'Naib al-Fa\'il', note: 'rofa\' dgn dhommah' },
+          { word: 'زِلْزَالَ', type: 'Maf\'ul Mutlaq', note: 'mashdar dari زَلْزَلَ; nashob' },
+          { word: 'هَا', type: 'Mudhof ilaih', note: 'majrur' },
+        ],
+        explanation: 'زَلْزَلَ adalah fi\'il ruba\'i (4 huruf: ز-ل-ز-ل). Bentuk majhul-nya زُلْزِلَ. Mashdar-nya زِلْزَال. Lihat: dari 1 akar ruba\'i bisa lahir verbal/passive/mashdar — sama seperti tsulatsi tapi ada 4 huruf asli.',
+      },
+    },
+    quiz: [
+      {
+        q: 'Fi\'il mudza\'af punya ciri...',
+        options: ['4 huruf asli', '\'ain & lam fi\'il sama (tasydid)', 'Huruf illah di akhir', 'Selalu mu\'tal'],
+        correct: 1,
+        explanation: 'Mudza\'af: \'ain & lam fi\'il sama hurufnya — sehingga ditasydid. مَدَّ asalnya مَدَدَ.',
+      },
+      {
+        q: 'Tashrif مَدَّ ke "aku" jadi...',
+        options: ['مَدَّتُ', 'مَدَدْتُ', 'مَدَّاتُ', 'مُدِدْتُ'],
+        correct: 1,
+        explanation: 'Tasydid pecah jadi 2 huruf saat ketemu dhomir mutaharrik (تُ): مَدَّ → مَدَدْتُ.',
+      },
+      {
+        q: 'Wazan dasar fi\'il ruba\'i adalah...',
+        options: ['فَعَلَ', 'فَعَّلَ', 'فَعْلَلَ', 'اسْتَفْعَلَ'],
+        correct: 2,
+        explanation: 'Ruba\'i mujarrad polanya فَعْلَلَ — 4 huruf asli tanpa tambahan. Contoh: دَحْرَجَ، تَرْجَمَ.',
+      },
+      {
+        q: 'تَرْجَمَ artinya...',
+        options: ['Membaca', 'Menulis', 'Menerjemahkan', 'Berkata'],
+        correct: 2,
+        explanation: 'تَرْجَمَ adalah fi\'il ruba\'i — menerjemahkan. Mudhori\': يُتَرْجِمُ.',
+      },
+    ],
+  },
+  ,
+  // ============ PELAJARAN 14 (PREMIUM) ============
+  {
+    id: 'shorf-14-ism-tafdhil',
+    order: 14,
+    isFree: false,
+    title: 'Ism al-Tafdhil',
+    subtitle: 'Komparatif & superlatif (أَفْعَل)',
+    emoji: '⭐',
+    duration: '6 menit',
+    color: '#a05536',
+    xpReward: 35,
+    theory: {
+      intro: 'Ism al-Tafdhil (اسْمُ التَّفْضِيلِ) adalah kata sifat untuk membandingkan: "lebih..." atau "paling...". Polanya: أَفْعَلُ. Dibentuk dari fi\'il tsulatsi mujarrad.',
+      sections: [
+        {
+          title: 'Pola Dasar أَفْعَلُ',
+          body: 'Mengambil 3 huruf akar fi\'il dan diberi hamzah di depan dgn pola أَفْعَلُ.',
+          examples: [
+            { ar: 'كَبُرَ → أَكْبَرُ', latin: 'kabura → akbar', id: 'besar → lebih besar / paling besar' },
+            { ar: 'حَسُنَ → أَحْسَنُ', latin: 'hasuna → ahsan', id: 'baik → lebih baik' },
+            { ar: 'عَلِمَ → أَعْلَمُ', latin: '\'alima → a\'lam', id: 'tahu → lebih tahu' },
+          ],
+        },
+        {
+          title: 'Untuk Komparatif: + مِنْ',
+          body: 'Untuk arti "lebih dari", pakai pola: أَفْعَل + مِنْ + isim majrur.',
+          examples: [
+            { ar: 'زَيْدٌ أَكْبَرُ مِنْ عَمْرٍو', latin: 'Zaidun akbaru min \'Amrin', id: 'Zaid lebih besar daripada Amr' },
+            { ar: 'الْعِلْمُ أَنْفَعُ مِنَ الْمَالِ', latin: 'al-\'ilmu anfa\'u minal-maal', id: 'Ilmu lebih bermanfaat dari harta' },
+          ],
+        },
+        {
+          title: 'Untuk Superlatif: + الـ atau Idhofah',
+          body: 'Untuk arti "paling...", pakai alif-lam (الـ) ATAU sebagai mudhof.',
+          examples: [
+            { ar: 'هُوَ الْأَكْبَرُ', latin: 'huwal-akbar', id: 'Dia yang paling besar' },
+            { ar: 'أَكْبَرُ الطُّلَّابِ', latin: 'akbarut-thullaab', id: 'Yang paling besar di antara para murid' },
+            { ar: 'أَفْضَلُ النَّاسِ', latin: 'afdhalun-naas', id: 'Yang paling utama di antara manusia' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'إِنَّ أَكْرَمَكُمْ عِنْدَ اللَّهِ أَتْقَاكُمْ',
+        latin: 'inna akramakum \'indallaahi atqaakum',
+        surah: 'Al-Hujurat',
+        ayatNum: 13,
+        analysis: [
+          { word: 'إِنَّ', type: 'Harf taukid', note: 'sesungguhnya' },
+          { word: 'أَكْرَمَ', type: 'Ism Tafdhil', note: 'pola أَفْعَل dari كَرُمَ; isim إِنَّ nashob' },
+          { word: 'كُمْ', type: 'Mudhof ilaih', note: 'kalian' },
+          { word: 'عِنْدَ اللَّهِ', type: 'Zhorof + Mudhof ilaih', note: 'di sisi Allah' },
+          { word: 'أَتْقَا', type: 'Ism Tafdhil', note: 'pola أَفْعَل dari تَقِيَ; khobar إِنَّ rofa\'' },
+          { word: 'كُمْ', type: 'Mudhof ilaih', note: 'kalian' },
+        ],
+        explanation: 'Ayat indah dengan DUA isim tafdhil dalam satu kalimat: أَكْرَمَ (paling mulia) dan أَتْقَا (paling takwa). Pola: idhofah. "Sungguh YANG PALING MULIA di antara kalian di sisi Allah adalah YANG PALING TAKWA di antara kalian".',
+      },
+    },
+    quiz: [
+      {
+        q: 'Pola dasar ism tafdhil adalah...',
+        options: ['فَاعِلٌ', 'مَفْعُولٌ', 'أَفْعَلُ', 'مِفْعَالٌ'],
+        correct: 2,
+        explanation: 'Pola أَفْعَلُ — hamzah di depan + 3 huruf akar. أَكْبَرُ، أَحْسَنُ، أَعْلَمُ.',
+      },
+      {
+        q: 'Untuk komparatif "lebih dari", pakai kata...',
+        options: ['فِي', 'إِلَى', 'مِنْ', 'عَلَى'],
+        correct: 2,
+        explanation: 'مِنْ untuk komparatif. زَيْدٌ أَكْبَرُ مِنْ عَمْرٍو = Zaid lebih besar DARI Amr.',
+      },
+      {
+        q: 'أَحْسَنُ النَّاسِ artinya...',
+        options: ['Manusia yang baik', 'Lebih baik dari manusia', 'Manusia paling baik', 'Lawan manusia baik'],
+        correct: 2,
+        explanation: 'Idhofah dgn ism tafdhil → arti SUPERLATIF: "yang PALING BAIK di antara manusia".',
+      },
+      {
+        q: 'Ism tafdhil dibuat dari fi\'il...',
+        options: ['Mazid saja', 'Tsulatsi mujarrad', 'Ruba\'i', 'Sembarang'],
+        correct: 1,
+        explanation: 'Ism tafdhil dibuat dari fi\'il tsulatsi mujarrad (3 huruf). Untuk fi\'il mazid harus pakai kata bantu (أَشَدُّ، أَكْثَرُ + mashdar).',
+      },
+    ],
+  },
+
+  // ============ PELAJARAN 15 (PREMIUM) ============
+  {
+    id: 'shorf-15-jamak-salim',
+    order: 15,
+    isFree: false,
+    title: 'Jamak Salim',
+    subtitle: 'Jamak teratur lk & pr',
+    emoji: '👥',
+    duration: '6 menit',
+    color: '#a05536',
+    xpReward: 30,
+    theory: {
+      intro: 'Berbeda dgn jamak taksir (pola berubah), Jamak Salim (الْجَمْعُ السَّالِمُ) adalah jamak yang DIBENTUK DGN MENAMBAH AKHIRAN tetap. Ada 2 jenis: Jamak Mudzakkar Salim (lk) dan Jamak Mu\'annats Salim (pr).',
+      sections: [
+        {
+          title: 'Jamak Mudzakkar Salim (لك)',
+          body: 'Untuk lk berakal. Akhiran: ـُونَ (rofa\') atau ـِينَ (nashob/jar). Wau & ya\' bertanwin nun.',
+          examples: [
+            { ar: 'مُسْلِمٌ → مُسْلِمُونَ', latin: 'muslim → muslimuun', id: 'muslim → para muslim (rofa\')' },
+            { ar: 'مُؤْمِنٌ → مُؤْمِنِينَ', latin: 'mu\'min → mu\'miniin', id: 'mukmin → para mukmin (nashob/jar)' },
+            { ar: 'مُجْتَهِدٌ → مُجْتَهِدُونَ', latin: 'mujtahid → mujtahiduun', id: 'yang rajin → orang-orang yang rajin' },
+          ],
+        },
+        {
+          title: 'Jamak Mu\'annats Salim (pr)',
+          body: 'Untuk pr atau benda mati. Akhiran: ـَاتٌ. Hilangkan ta marbuta ة jika ada.',
+          examples: [
+            { ar: 'مُسْلِمَةٌ → مُسْلِمَاتٌ', latin: 'muslimah → muslimaat', id: 'muslimah → para muslimah' },
+            { ar: 'طَالِبَةٌ → طَالِبَاتٌ', latin: 'thaalibah → thaalibaat', id: 'siswi → siswi-siswi' },
+            { ar: 'سَاعَةٌ → سَاعَاتٌ', latin: 'saa\'ah → saa\'aat', id: 'jam → jam-jam' },
+          ],
+        },
+        {
+          title: 'I\'rab Jamak Salim',
+          body: 'Jamak Mudzakkar Salim: rofa\' = و, nashob/jar = ي. Jamak Mu\'annats Salim: rofa\' = ـَاتٌ, nashob/jar = ـَاتٍ (kasroh, BUKAN fathah).',
+          examples: [
+            { ar: 'جَاءَ الْمُسْلِمُونَ', latin: 'jaa\'al-muslimuun', id: 'Para muslim datang (rofa\' dgn و)' },
+            { ar: 'رَأَيْتُ الْمُسْلِمَاتِ', latin: 'ra\'aitul-muslimaat', id: 'Aku melihat para muslimah (nashob TAPI ـَاتِ kasroh)' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'إِنَّ الْمُسْلِمِينَ وَالْمُسْلِمَاتِ وَالْمُؤْمِنِينَ وَالْمُؤْمِنَاتِ',
+        latin: 'innal-muslimiina wal-muslimaati wal-mu\'miniina wal-mu\'minaat',
+        surah: 'Al-Ahzab',
+        ayatNum: 35,
+        analysis: [
+          { word: 'إِنَّ', type: 'Harf taukid', note: '' },
+          { word: 'الْمُسْلِمِينَ', type: 'Jamak Mudzakkar Salim', note: 'isim إِنَّ; nashob dgn ya' },
+          { word: 'وَالْمُسْلِمَاتِ', type: 'Jamak Mu\'annats Salim', note: 'athaf; nashob dgn kasroh' },
+          { word: 'وَالْمُؤْمِنِينَ', type: 'Jamak Mudzakkar Salim', note: 'athaf' },
+          { word: 'وَالْمُؤْمِنَاتِ', type: 'Jamak Mu\'annats Salim', note: 'athaf' },
+        ],
+        explanation: 'Lihat: 4 jamak salim berturut-turut. الْمُسْلِمِينَ pakai ي (jamak mudzakkar salim nashob). الْمُسْلِمَاتِ pakai ـَاتِ kasroh (jamak mu\'annats salim — TIDAK fathah meskipun nashob).',
+      },
+    },
+    quiz: [
+      {
+        q: 'Jamak Mudzakkar Salim untuk مُسْلِم saat rofa\' adalah...',
+        options: ['مُسْلِمِينَ', 'مُسْلِمُونَ', 'مُسْلِمَاتٌ', 'مُسَالِمُ'],
+        correct: 1,
+        explanation: 'Rofa\' = ـُونَ. مُسْلِم → مُسْلِمُونَ.',
+      },
+      {
+        q: 'Untuk pr/benda, akhiran jamak salim adalah...',
+        options: ['ـُونَ', 'ـِينَ', 'ـَاتٌ', 'ـَانِ'],
+        correct: 2,
+        explanation: 'Jamak Mu\'annats Salim: tambah ـَاتٌ di akhir (setelah hilangkan ة kalau ada).',
+      },
+      {
+        q: 'I\'rab nashob untuk jamak mu\'annats salim ditandai dgn...',
+        options: ['Fathah', 'Kasroh (ـَاتِ)', 'Dhommah', 'Ya'],
+        correct: 1,
+        explanation: 'Anomali penting: jamak mu\'annats salim saat NASHOB pakai KASROH (ـَاتِ), bukan fathah seperti i\'rab nashob umumnya.',
+      },
+      {
+        q: 'Apa beda mendasar Jamak Salim & Jamak Taksir?',
+        options: ['Sama saja', 'Salim teratur (tambah akhiran), Taksir mengubah pola kata', 'Taksir lebih sopan', 'Salim hanya untuk Qur\'an'],
+        correct: 1,
+        explanation: 'Salim = teratur, tambah akhiran tetap. Taksir = mengubah pola dasar (kitab → kutub bukan kitabuun).',
+      },
+    ],
+  },
+
+  // ============ PELAJARAN 16 (PREMIUM) ============
+  {
+    id: 'shorf-16-tashrif-istilahi',
+    order: 16,
+    isFree: false,
+    title: 'Tashrif Istilahi',
+    subtitle: '6 langkah derivasi kata Arab',
+    emoji: '🪜',
+    duration: '8 menit',
+    color: '#a05536',
+    xpReward: 50,
+    theory: {
+      intro: 'Tashrif Istilahi (التَّصْرِيفُ الْاِصْطِلَاحِيُّ) adalah pengetahuan tentang turunan kata. Dari 1 akar fi\'il, kita derive 6 bentuk utama secara sistematis. Inilah "anak tangga" yang biasa dihafal santri pesantren.',
+      sections: [
+        {
+          title: '6 Langkah Tashrif Istilahi',
+          body: 'Urutan: (1) Madhi (2) Mudhori\' (3) Mashdar (4) Isim Fa\'il (5) Isim Maf\'ul (6) Fi\'il Amr & Nahyi. Untuk akar نَصَرَ:',
+          examples: [
+            { ar: 'نَصَرَ', latin: 'nashara', id: '1. Madhi: telah menolong' },
+            { ar: 'يَنْصُرُ', latin: 'yanshuru', id: '2. Mudhori\': sedang menolong' },
+            { ar: 'نَصْرًا', latin: 'nashran', id: '3. Mashdar: pertolongan' },
+            { ar: 'نَاصِرٌ', latin: 'naashir', id: '4. Isim fa\'il: penolong' },
+            { ar: 'مَنْصُورٌ', latin: 'manshuur', id: '5. Isim maf\'ul: yang ditolong' },
+            { ar: 'اُنْصُرْ / لاَ تَنْصُرْ', latin: 'unshur / laa tanshur', id: '6. Amr & Nahyi: tolonglah / jangan tolong' },
+          ],
+        },
+        {
+          title: 'Tashrif Akar كَتَبَ',
+          body: 'Penerapan ke akar populer كَتَبَ:',
+          examples: [
+            { ar: 'كَتَبَ → يَكْتُبُ → كِتَابَةً', latin: '', id: 'Madhi → Mudhori\' → Mashdar' },
+            { ar: 'كَاتِبٌ → مَكْتُوبٌ', latin: '', id: 'Isim fa\'il → Isim maf\'ul' },
+            { ar: 'اُكْتُبْ → لاَ تَكْتُبْ', latin: '', id: 'Amr → Nahyi' },
+          ],
+        },
+        {
+          title: 'Manfaat Praktis',
+          body: 'Hafalkan 1 akar dgn semua 6 turunan + tashrif lughowi (14 bentuk pelaku). Itu cara santri pesantren bisa cepat baca kitab kuning — karena setiap kata yang ketemu, mereka langsung kenali akar & turunan-nya.',
+          examples: [
+            { ar: 'فَتَحَ', latin: 'akar: ف-ت-ح', id: 'Tashrif: فَتَحَ - يَفْتَحُ - فَتْحًا - فَاتِحٌ - مَفْتُوحٌ - اِفْتَحْ' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'إِذَا جَاءَ نَصْرُ اللَّهِ وَالْفَتْحُ',
+        latin: 'idzaa jaa\'a nashrullaahi wal-fath',
+        surah: 'An-Nashr',
+        ayatNum: 1,
+        analysis: [
+          { word: 'إِذَا', type: 'Zhorof syarat', note: 'apabila' },
+          { word: 'جَاءَ', type: 'Fi\'il Madhi', note: 'datang' },
+          { word: 'نَصْرُ', type: 'Mashdar — Fa\'il', note: 'rofa\'; mashdar dari نَصَرَ' },
+          { word: 'اللَّهِ', type: 'Mudhof ilaih', note: 'majrur' },
+          { word: 'وَالْفَتْحُ', type: 'Mashdar — Athaf', note: 'rofa\'; mashdar dari فَتَحَ' },
+        ],
+        explanation: 'نَصْرُ dan الْفَتْحُ — keduanya MASHDAR (langkah 3 dari tashrif istilahi). نَصْر dari akar نَصَرَ. فَتْح dari akar فَتَحَ. Memahami tashrif istilahi membuka makna ayat lebih dalam: "Apabila datang PERTOLONGAN Allah dan KEMENANGAN".',
+      },
+    },
+    quiz: [
+      {
+        q: 'Urutan 6 langkah tashrif istilahi adalah...',
+        options: ['Madhi → Mudhori\' → Mashdar → Isim Fa\'il → Isim Maf\'ul → Amr/Nahyi', 'Mudhori\' → Madhi → Amr → Mashdar', 'Amr → Madhi → Mashdar', 'Tidak ada urutan baku'],
+        correct: 0,
+        explanation: 'Urutan baku tashrif istilahi: madhi → mudhori\' → mashdar → isim fa\'il → isim maf\'ul → amr/nahyi.',
+      },
+      {
+        q: 'Langkah ke-4 tashrif istilahi adalah...',
+        options: ['Mashdar', 'Isim Fa\'il', 'Isim Maf\'ul', 'Fi\'il Amr'],
+        correct: 1,
+        explanation: 'Langkah ke-4: ISIM FA\'IL (pelaku). Polanya فَاعِلٌ.',
+      },
+      {
+        q: 'Dari akar نَصَرَ, isim maf\'ul-nya adalah...',
+        options: ['نَاصِرٌ', 'مَنْصُورٌ', 'نَصْرٌ', 'يَنْصُرُ'],
+        correct: 1,
+        explanation: 'Pola isim maf\'ul مَفْعُولٌ. نَصَرَ → مَنْصُورٌ — yang ditolong.',
+      },
+      {
+        q: 'Tujuan utama menguasai tashrif istilahi...',
+        options: ['Hafal banyak kata', 'Dari 1 akar bisa kenali semua turunan saat baca teks', 'Hanya tradisi pesantren', 'Tidak penting'],
+        correct: 1,
+        explanation: 'Tashrif istilahi membekali: dari 1 akar 3 huruf, kamu bisa langsung kenali 6 turunan utama. Modal utama membaca kitab klasik.',
+      },
+    ],
+  },
 ];
 
 export function getShorfLesson(id) {
