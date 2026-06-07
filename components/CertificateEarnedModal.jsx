@@ -54,15 +54,20 @@ export default function CertificateEarnedModal({ pathId, recipientName, onClose,
           <Award size={42} color="white" style={{ position: 'relative', zIndex: 2 }} />
         </div>
 
-        {/* Tagline */}
+        {/* Tagline — special untuk Master capstone */}
         <div className="text-center mb-4">
           <p className="text-[10px] tracking-[0.3em] uppercase mb-1 font-bold" style={{ color: '#c9a961' }}>
-            <Sparkles size={11} className="inline mr-1" /> SERTIFIKAT DIRAIH
+            <Sparkles size={11} className="inline mr-1" />
+            {pathId === 'master' ? 'CAPSTONE TULIS NOON' : 'SERTIFIKAT DIRAIH'}
           </p>
           <h2 className="text-2xl mb-1 leading-tight" style={{ fontFamily: 'Fraunces, serif', fontWeight: 700, color: '#0a4d3c' }}>
-            Selamat, {(recipientName || 'Anda').split(' ')[0]}!
+            {pathId === 'master'
+              ? `Mabruk, ${(recipientName || 'Anda').split(' ')[0]}!`
+              : `Selamat, ${(recipientName || 'Anda').split(' ')[0]}!`}
           </h2>
-          <p className="text-sm" style={{ color: '#3d2817' }}>Kamu telah menyelesaikan</p>
+          <p className="text-sm" style={{ color: '#3d2817' }}>
+            {pathId === 'master' ? 'Kamu menyelesaikan seluruh kurikulum' : 'Kamu telah menyelesaikan'}
+          </p>
           <p className="text-base font-bold mt-1" style={{ fontFamily: 'Fraunces, serif', color: meta.color }}>{meta.title}</p>
           <p className="text-sm mt-0.5" style={{ fontFamily: 'Amiri, serif', color: meta.color }} dir="rtl">{meta.arabicTitle}</p>
         </div>

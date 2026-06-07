@@ -52,6 +52,8 @@ const flags = {
   dryRun: false,
   verbose: false,
   doctor: false,
+  // --items "category:itemId,category:itemId,..." → regenerate specific items only
+  items: null,
   // Default 13 detik = ~4.6 RPM (di bawah limit tier-1 = 5 RPM untuk gpt-image-*).
   // Akun yang udah tier-2+ bisa pakai --sleep 4000 (15 RPM).
   sleepMs: 13000,
@@ -63,8 +65,24 @@ for (let i = 0; i < args.length; i++) {
   else if (args[i] === '--dry-run') flags.dryRun = true;
   else if (args[i] === '--verbose' || args[i] === '-v') flags.verbose = true;
   else if (args[i] === '--doctor') flags.doctor = true;
+  else if (args[i] === '--items' && args[i + 1]) flags.items = args[++i];
   else if (args[i] === '--sleep' && args[i + 1]) flags.sleepMs = parseInt(args[++i], 10);
 }
+
+// Parse --items "category:itemId,category:itemId,..."
+// Result: { categoryId: Set([itemIdLower, ...]) }
+function parseItemsFilter(str) {
+  if (!str) return null;
+  const out = {};
+  str.split(',').forEach((pair) => {
+    const [cat, id] = pair.split(':').map(s => s.trim());
+    if (!cat || !id) return;
+    out[cat] = out[cat] || new Set();
+    out[cat].add(id.toLowerCase());
+  });
+  return out;
+}
+const ITEMS_FILTER = parseItemsFilter(flags.items);
 
 // Error log file untuk debug
 const ERROR_LOG = path.join(__dirname, '..', 'tebak-gen-errors.log');
@@ -338,22 +356,168 @@ export const TEBAK_GAMBAR_URLS = ${body};
 
 // ---------- PROMPT BUILDER ----------
 // Goal: konsisten visual style — flat illustration, white bg, no text.
+//
+// PENTING: GPT-image-1 model-nya English-native. Kalau prompt pakai kata
+// Indonesia yang "look like English" (Air = water dalam Indo tapi "Air" =
+// atmosfer dalam English), AI bakal generate gambar yang salah.
+// Solusi: translate Indonesia → English explicit untuk kata-kata ambigu.
+
+const ID_TO_EN = {
+  // Makanan & Buah
+  'Roti': 'bread loaf', 'Kurma': 'date fruit (palm date)', 'Susu': 'glass of milk',
+  'Air': 'glass of water (drinking water)', 'Kopi': 'cup of coffee', 'Teh': 'cup of tea',
+  'Apel': 'apple', 'Jeruk': 'orange fruit', 'Pisang': 'banana', 'Anggur': 'grapes',
+  'Nasi': 'plate of cooked white rice', 'Ayam': 'cooked chicken', 'Daging': 'red meat steak',
+  'Telur': 'eggs', 'Keju': 'cheese wedge', 'Madu': 'jar of honey', 'Kue': 'slice of cake',
+  'Salad': 'fresh salad bowl', 'Sup': 'bowl of soup', 'Makanan': 'plate of food meal',
+
+  // Tempat & Bangunan — visual distinctive (avoid generic "X building" yg semua mirip)
+  'Ka\'bah': 'the Holy Kaaba in Mecca: large black cubic structure draped in black cloth with gold calligraphy band, surrounded by Muslim pilgrims in white ihram',
+  'Masjid': 'classic mosque with one large green dome at center and two tall pencil-shaped minarets on either side, crescent moon on top',
+  'Hotel': 'tall luxury hotel building 8 floors with rows of balcony windows, grand entrance awning with bellhop, swimming pool and palm trees in front',
+  'Pasar': 'busy outdoor traditional bazaar with colorful canopy stalls, baskets of fresh fruits and vegetables, vendors selling produce',
+  'Restoran': 'cozy restaurant scene: a round dining table with two plates of steaming food, wine glasses, chef hat icon floating above',
+  'Rumah Sakit': 'hospital building with huge prominent red cross plus sign on white facade, ambulance with flashing lights parked at entrance',
+  'Bandara': 'airport scene: large white airplane taking off from runway, tall round control tower with windows, terminal building with glass dome',
+  'Rumah': 'small cozy single-family home with triangular red sloped roof, chimney puffing smoke, wooden front door with steps, two windows, picket fence, flower garden',
+  'Sekolah': 'school building scene: classic school house with bell tower, schoolchildren in uniform with backpacks walking in, blackboard and ABC alphabet block visible',
+  'Kota Madinah': 'aerial view of Madinah Saudi Arabia: the iconic Prophet Mosque (Masjid Nabawi) with its distinctive emerald green dome and four tall minarets in the center, city around it',
+  'Bank': 'classical bank building scene: marble columns at entrance, large vault door with combination wheel visible inside, stacks of gold coins and a dollar sign symbol floating',
+  'Air Mancur': 'decorative ornamental water fountain in a plaza: three-tier stone fountain with water spraying upward and cascading down, surrounded by garden',
+  'Taman': 'public garden park scene: green grass lawn, wooden park bench, flower beds with colorful tulips, large shade tree, winding stone pathway',
+  'Jalan Raya': 'aerial view of multi-lane city highway road: cars and trucks driving, white lane dividers, traffic light at intersection, road signs',
+  'Jembatan': 'iconic arched stone bridge spanning a wide river: cars crossing over it, water flowing underneath, mountains in background',
+  'Menara': 'isolated tall slender iconic tower like Eiffel tower silhouette, standing alone against sky background, observation deck visible at top',
+  'Istana': 'grand royal palace from Arabian Nights: golden onion domes, ornate Islamic arches and pillars, royal flag on top, marble steps at entrance',
+  'Stadion': 'large oval sports stadium aerial view: green soccer/football field in center, rows of curved seating tiers around it, floodlight towers, stadium roof',
+  'Kantor Pos': 'post office scene: small building with classic red British-style mailbox in front, mail delivery truck parked, white envelope with stamp icon floating above',
+  'Tenda': 'camping tent in nature: classic triangular A-frame tent pitched on grass, small campfire with logs nearby, pine trees and mountain in background',
+
+  // Hewan & Alam
+  'Unta': 'camel in desert', 'Domba': 'sheep', 'Kuda': 'horse',
+  'Kucing': 'cat', 'Burung': 'small bird', 'Ikan': 'fish',
+  'Matahari': 'sun', 'Bulan': 'crescent moon (the moon in sky)', 'Bintang': 'shining star',
+  'Padang Pasir': 'sandy desert dunes', 'Anjing': 'dog', 'Singa': 'lion',
+  'Gajah': 'elephant', 'Lebah': 'honey bee', 'Kupu-kupu': 'butterfly',
+  'Pohon': 'tree', 'Mawar': 'red rose flower', 'Gunung': 'mountain',
+  'Laut': 'ocean sea waves', 'Sungai': 'river flowing through landscape',
+
+  // Benda
+  'Buku': 'open book', 'Pena': 'writing pen', 'Telepon': 'smartphone',
+  'Komputer': 'laptop computer', 'Jam': 'analog clock', 'Kunci': 'metal key',
+  'Tas': 'backpack bag', 'Uang': 'paper money cash', 'Kacamata': 'eyeglasses',
+  'Cermin': 'hand mirror', 'Kursi': 'wooden chair', 'Tempat Tidur': 'bed with pillow',
+  'Lemari': 'wooden wardrobe cabinet', 'Pintu': 'door', 'Jendela': 'window',
+  'Lampu': 'light bulb lamp', 'Garpu': 'fork', 'Sendok': 'spoon',
+  'Pisau': 'kitchen knife', 'Sabun': 'soap bar',
+
+  // Pakaian & Umrah
+  'Hijab': 'muslim woman wearing hijab headscarf', 'Gaun': 'long dress',
+  'Mantel': 'winter coat', 'Kemeja': 'button-up shirt', 'Celana': 'pants trousers',
+  'Sepatu': 'leather shoes', 'Kaus Kaki': 'pair of socks', 'Topi': 'cap hat',
+  'Tasbih': 'islamic prayer beads (tasbih/misbaha)',
+  'Sujud': 'muslim man in sujood prostration prayer position',
+  'Doa': 'hands raised in prayer dua', 'Mushaf': 'Quran book open',
+  'Menara Masjid': 'mosque minaret tower', 'Wudhu': 'hands performing ablution wudu with water',
+  'Adzan': 'muezzin calling adhan from minaret', 'Bulan Sabit': 'crescent moon symbol',
+  'Hadiah': 'gift box with ribbon', 'Pengantin Pr': 'bride in white modest dress',
+  'Pengantin Lk': 'groom in formal attire',
+
+  // Anggota Tubuh
+  'Mata': 'human eye (the eye organ)', 'Telinga': 'human ear',
+  'Hidung': 'human nose', 'Mulut': 'human mouth lips',
+  'Gigi': 'tooth (white teeth)', 'Lidah': 'tongue',
+  'Otak': 'human brain anatomy', 'Jantung': 'human heart organ (anatomical)',
+  'Hati': 'human liver organ (anatomical)', 'Tangan': 'human hand',
+  'Jari': 'human finger pointing', 'Kaki': 'human leg',
+  'Telapak Kaki': 'foot sole', 'Tulang': 'white bone',
+  'Darah': 'red blood drop', 'Kepala': 'human head',
+  'Wajah': 'human face neutral expression', 'Rambut': 'human hair on head',
+  'Jenggot': 'man with beard face', 'Telapak Tangan': 'open palm of hand',
+
+  // Transportasi
+  'Mobil': 'car', 'Bus': 'public bus', 'Taksi': 'yellow taxi cab',
+  'Sepeda': 'bicycle', 'Motor': 'motorcycle', 'Kereta Api': 'train locomotive',
+  'Kereta Bawah Tanah': 'subway metro train', 'Pesawat': 'airplane in flight',
+  'Helikopter': 'helicopter', 'Kapal': 'large ship boat',
+  'Perahu': 'small wooden boat', 'Yacht': 'luxury yacht', 'Truk': 'cargo truck',
+  'Mobil Polisi': 'police car with siren', 'Ambulans': 'ambulance with red cross',
+  'Mobil Pemadam': 'red fire truck',
+  'Skuter': 'electric scooter', 'Kuda (tunggangan)': 'horse with saddle for riding',
+  'Unta (tunggangan)': 'camel with saddle for riding',
+  'Roket': 'space rocket launching',
+
+  // Cuaca & Waktu
+  'Cerah': 'sunny clear sky', 'Hujan': 'rain falling from clouds',
+  'Salju': 'snowflakes falling', 'Awan': 'fluffy white clouds in blue sky',
+  'Kabut': 'foggy misty landscape', 'Kilat': 'lightning bolt',
+  'Angin': 'wind blowing leaves', 'Pelangi': 'colorful rainbow',
+  'Suhu/Panas': 'thermometer showing high temperature',
+  'Dingin': 'snowflake cold weather icon', 'Panas': 'sun and flame hot weather',
+  'Pagi': 'morning sunrise', 'Sore': 'afternoon evening sky orange sunset',
+  'Malam': 'night sky with moon and stars', 'Siang': 'noon bright sun overhead',
+  'Hari': 'sun representing a day', 'Minggu': 'calendar showing a week',
+  'Bulan (waktu)': 'calendar showing a month',
+  'Tahun': 'calendar year with party celebration',
+  'Waktu': 'hourglass sandglass showing time',
+
+  // Profesi
+  'Dokter': 'doctor with stethoscope wearing white coat',
+  'Guru': 'teacher with book in classroom', 'Programmer': 'programmer at computer coding',
+  'Insinyur': 'engineer with hard hat and blueprints', 'Koki': 'chef with white hat cooking',
+  'Petani': 'farmer in field with crops', 'Polisi': 'police officer in uniform',
+  'Pemadam Kebakaran': 'firefighter in red gear', 'Pilot': 'airplane pilot in cockpit uniform',
+  'Ilmuwan': 'scientist with lab coat and beakers', 'Seniman': 'artist with paintbrush and canvas',
+  'Penyanyi': 'singer with microphone', 'Hakim': 'judge with gavel in courtroom',
+  'Perawat (Pr)': 'female nurse in scrubs', 'Pedagang': 'merchant with goods',
+  'Tukang Cukur': 'barber with scissors', 'Sopir': 'driver behind steering wheel',
+  'Imam': 'mosque imam leading prayer', 'Penulis': 'writer with notebook and pen',
+  'Tukang Kayu': 'carpenter with hammer and wood',
+
+  // Olahraga
+  'Sepak Bola': 'soccer football', 'Bola Basket': 'basketball ball',
+  'Bola Voli': 'volleyball ball', 'Tenis': 'tennis racket and ball',
+  'Renang': 'person swimming in pool', 'Lari': 'person running',
+  'Berjalan': 'person walking', 'Senam': 'gymnast doing exercise',
+  'Yoga': 'person in yoga meditation pose', 'Bersepeda': 'person riding bicycle',
+  'Tinju': 'boxing gloves', 'Anggar': 'fencing sword sport',
+  'Pacuan Kuda': 'horse racing', 'Piala': 'gold trophy cup',
+  'Medali': 'gold medal with ribbon', 'Membaca': 'person reading book',
+  'Menulis': 'hand writing with pen', 'Menggambar': 'hand drawing with pencil',
+  'Musik': 'musical notes and instruments', 'Tidur': 'person sleeping in bed',
+};
+
 function buildPrompt(item, category) {
-  // Map kategori → style hint
+  // Style hint per kategori (untuk context tambahan)
   const categoryHints = {
-    makanan: 'food item',
+    makanan: 'food and drink',
     tempat: 'building or place',
     'hewan-alam': 'animal or nature element',
     benda: 'everyday object',
-    'pakaian-umrah': 'clothing or religious item',
-    tubuh: 'body part',
+    'pakaian-umrah': 'clothing or islamic item',
+    tubuh: 'human body anatomy',
     transportasi: 'vehicle or transportation',
     'cuaca-waktu': 'weather or time concept',
-    profesi: 'person in profession (modest clothing, no faces in detail)',
+    profesi: 'person in profession (modest clothing, simple face)',
     olahraga: 'sport or activity',
   };
-  const hint = categoryHints[category] || 'object';
-  return `A simple, clean, flat vector illustration of "${item.id}" (a ${hint}). Centered composition on solid white background. Soft pastel colors with earthy tones (terracotta, sage green, sandy beige). Minimalist children's book illustration style. NO text, NO captions, NO letters. Iconic and clearly recognizable. Single subject, no clutter.`;
+
+  // Kategori yang butuh SCENE context (rich visual identifier) vs single subject.
+  // tempat = bangunan susah dibedain kalau cuma "building", butuh props/scene.
+  // profesi = orang lebih jelas dengan tools+context.
+  // Lainnya cukup single subject yang clear.
+  const SCENE_CATEGORIES = new Set(['tempat', 'profesi', 'olahraga']);
+  const useScene = SCENE_CATEGORIES.has(category);
+
+  // English description: prefer explicit translation, fallback ke item.id
+  const englishDesc = ID_TO_EN[item.id] || item.id;
+  const categoryContext = categoryHints[category] || 'object';
+
+  const composition = useScene
+    ? 'Detailed scene composition with iconic visual identifiers and supporting context elements that make the subject IMMEDIATELY and UNAMBIGUOUSLY recognizable at a glance — a child or non-reader should know what this represents in 1 second.'
+    : 'Centered composition with single clear subject, no clutter.';
+
+  return `A clean, friendly, flat vector illustration of ${englishDesc} (${categoryContext}). ${composition} Solid white or very light pastel background. Soft warm pastel colors with earthy tones (terracotta, sage green, sandy beige, muted gold). Modern children's storybook illustration style — cute and inviting. NO text, NO captions, NO letters, NO Arabic script anywhere in the image. The subject must be iconic and unmistakable.`;
 }
 
 // ---------- HELPERS ----------
@@ -474,11 +638,25 @@ async function main() {
     console.log(`\n📁 ${level.id} (${level.items.length} items)`);
     urlMap[level.id] = urlMap[level.id] || {};
 
+    // Filter level kalau ada --items mapping
+    const allowedItemsInLevel = ITEMS_FILTER ? ITEMS_FILTER[level.id] : null;
+    if (ITEMS_FILTER && !allowedItemsInLevel) {
+      if (flags.verbose) console.log(`   ⏭️  (no items targeted in ${level.id})`);
+      continue;
+    }
+
     for (const item of level.items) {
       if (totalGenerated >= flags.limit) break;
 
+      // --items filter: skip kalau item ini bukan target
+      if (allowedItemsInLevel && !allowedItemsInLevel.has(item.id.toLowerCase())) {
+        continue;
+      }
+      // Kalau --items match → force regenerate (overwrite)
+      const forceThisItem = !!allowedItemsInLevel || flags.force;
+
       const existing = urlMap[level.id][item.arabic];
-      if (existing && !flags.force) {
+      if (existing && !forceThisItem) {
         if (flags.verbose) console.log(`   ⏭️  ${item.id} (already exists)`);
         totalSkipped++;
         continue;

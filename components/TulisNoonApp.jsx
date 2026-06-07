@@ -31,7 +31,8 @@ import NgomongScreen from '@/components/NgomongScreen';
 import NahwuShorfScreen from '@/components/NahwuShorfScreen';
 import CertificatesScreen from '@/components/CertificatesScreen';
 import CertificateEarnedModal from '@/components/CertificateEarnedModal';
-import { CERTIFICATE_PATHS, getPathProgress, generateCertNumber } from '@/lib/certificate';
+import PersonaGoalModal from '@/components/PersonaGoalModal';
+import { CERTIFICATE_PATHS, getPathProgress, generateCertNumber, MASTER_CERTIFICATE } from '@/lib/certificate';
 import { speakArabic as ttsSpeakArabic } from '@/lib/tts';
 import { postActivity, getCommunityFeed, getLeaderboard, getUserGlobalRank, updatePresence, listenDmThreads, getFriends, getChallengeLeaderboard, getUserChallengeRank } from '@/lib/social';
 import { isChallengeActive, challengeDaysRemaining, challengeTotalDays, CHALLENGE_TITLE, CHALLENGE_TAGLINE, CHALLENGE_PRIZES, challengeTotalPrize } from '@/lib/challenge-launch';
@@ -74,6 +75,7 @@ export default function TulisNoonApp() {
   const unreadChats = dmThreads.filter((t) => t.unread).length; // jumlah chat belum dibaca
   const [challengeRank, setChallengeRank] = useState(null); // peringkat di Tantangan Launch
   const [earnedCertPathId, setEarnedCertPathId] = useState(null); // pathId yg baru saja diraih (untuk modal celebration)
+  const [showPersonaModal, setShowPersonaModal] = useState(false); // tanya tujuan belajar (1x untuk user baru)
   // Level dalam scenario yang dipilih (1-100)
   const [selectedLevel, setSelectedLevel] = useState(1);
   const [progress, setProgress] = useState({ umrah: 1, profesi: 0, beasiswa: 0 });
@@ -355,6 +357,24 @@ export default function TulisNoonApp() {
     }
   }, [authProfile, user]);
 
+  // Auto-show Persona Goal Modal kalau user belum set tujuan belajar.
+  // Trigger: user udah login + profile ke-load + screen udah 'main' + personaGoal null.
+  // Sengaja TIDAK dependency screen biar gak retrigger pas user navigasi.
+  useEffect(() => {
+    if (!authProfile) return;
+    if (authLoading) return;
+    // Hanya kalau user udah onboard ke main (bukan welcome flow)
+    if (screen !== 'main') return;
+    // Hanya kalau personaGoal belum di-set (undefined atau null atau empty string)
+    if (authProfile.personaGoal) return;
+    // Avoid duplicate trigger
+    if (showPersonaModal) return;
+    // Show modal
+    console.log('🎯 Triggering persona goal modal (personaGoal=null)');
+    setShowPersonaModal(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authProfile?.personaGoal, authLoading, screen]);
+
   // Routing logic: HANYA jalan saat screen masih null (initial load).
   // BUG SEBELUMNYA: useEffect ini dependency-nya [authLoading, authProfile],
   // jadi setiap kali authProfile berubah (mis. setelah awardXp/saveChallengeProgress),
@@ -455,28 +475,47 @@ export default function TulisNoonApp() {
 
   // Auto-detect sertifikat yg baru diraih — tampil modal celebration sekali.
   // Persist ke earnedCertificates supaya tidak muncul berulang.
+  // Step 1: Cek 7 regular cert. Step 2: kalau semua 7 udah → cek master capstone.
   useEffect(() => {
     if (!authProfile || !user?.uid) return;
     const earned = authProfile?.earnedCertificates || [];
     const earnedIds = new Set(earned.map((c) => c.pathId));
-    // Cari jalur yang progress 100% TAPI belum tercatat di earnedCertificates.
+
+    // 1) Regular 7 paths
     const newlyEarned = CERTIFICATE_PATHS.find((p) => {
       if (earnedIds.has(p.id)) return false;
       const prog = getPathProgress(p.id, authProfile);
       return prog.isCertified;
     });
-    if (!newlyEarned) return;
-    const earnedAt = Date.now();
-    const certNumber = generateCertNumber(newlyEarned.id, user.uid, earnedAt);
-    // Simpan ke Firestore (supaya nggak ditampilin lagi setelah ini).
-    updateUserProfile({
-      earnedCertificates: [...earned, { pathId: newlyEarned.id, earnedAt, certNumber }],
-    }).catch(() => {});
-    // Tampilkan modal.
-    setEarnedCertPathId(newlyEarned.id);
-    logCommunity({ type: 'sertifikat', text: `🎓 Meraih sertifikat: ${newlyEarned.title}`, emoji: '🏅' });
+    if (newlyEarned) {
+      const earnedAt = Date.now();
+      const certNumber = generateCertNumber(newlyEarned.id, user.uid, earnedAt);
+      updateUserProfile({
+        earnedCertificates: [...earned, { pathId: newlyEarned.id, earnedAt, certNumber }],
+      }).catch(() => {});
+      setEarnedCertPathId(newlyEarned.id);
+      logCommunity({ type: 'sertifikat', text: `🎓 Meraih sertifikat: ${newlyEarned.title}`, emoji: '🏅' });
+      return; // satu modal at a time — master detection nyusul di trigger berikutnya
+    }
+
+    // 2) Master capstone: semua 7 earned + master belum
+    if (!earnedIds.has('master')) {
+      const all7Done = CERTIFICATE_PATHS.every((p) => {
+        if (earnedIds.has(p.id)) return true;
+        return getPathProgress(p.id, authProfile).isCertified;
+      });
+      if (all7Done) {
+        const earnedAt = Date.now();
+        const certNumber = generateCertNumber('master', user.uid, earnedAt);
+        updateUserProfile({
+          earnedCertificates: [...earned, { pathId: 'master', earnedAt, certNumber }],
+        }).catch(() => {});
+        setEarnedCertPathId('master');
+        logCommunity({ type: 'sertifikat', text: `🏅 Master Tulis Noon — selesai semua 7 sertifikat!`, emoji: '🏅' });
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authProfile?.completedNahwuShorf, authProfile?.completedPerkenalanMateri, authProfile?.progress, authProfile?.hafalanProgress]);
+  }, [authProfile?.completedNahwuShorf, authProfile?.completedPerkenalanMateri, authProfile?.progress, authProfile?.hafalanProgress, authProfile?.earnedCertificates]);
 
   // Log 1 aktivitas: tampil instan di feed lokal + persist ke Firestore (community).
   // community=false → cuma lokal (mis. warning koin kurang, ga usah disebar).
@@ -1089,6 +1128,27 @@ export default function TulisNoonApp() {
           userId={user?.uid}
           onBack={() => { router?.replace('/profile'); }}
           onHome={() => { setTab('home'); setScreen('main'); }}
+          onUpdatePersonaGoal={async (goalId) => {
+            try { await updateUserProfile({ personaGoal: goalId }); } catch (e) { console.error(e); }
+          }}
+          onOpenRecommendation={(rec) => {
+            // Routing per path → navigate ke screen yg tepat
+            const dl = rec.deeplink || {};
+            if (rec.pathId === 'nahwu' || rec.pathId === 'shorf') {
+              setScreen(rec.pathId);
+              setTab('belajar');
+            } else if (rec.pathId === 'perkenalan') {
+              setShowPerkenalanPicker(true);
+              setScreen('main');
+              setTab('home');
+            } else if (rec.pathId === 'hafalan-juz30') {
+              setScreen('hafalan');
+            } else if (rec.pathId === 'umrah' || rec.pathId === 'profesi' || rec.pathId === 'beasiswa') {
+              // Open Belajar tab → user pilih lesson di sana
+              setTab('belajar');
+              setScreen('main');
+            }
+          }}
         />}
 
         {(screen === 'nahwu' || screen === 'shorf') && <NahwuShorfScreen
@@ -1174,6 +1234,22 @@ export default function TulisNoonApp() {
                 setTimeout(() => setShowTour(true), 200);
               }
             }}
+          />
+        )}
+
+        {/* Persona goal modal — auto-show 1x kalau user belum set tujuan belajar */}
+        {showPersonaModal && (
+          <PersonaGoalModal
+            onSelect={async (goalId) => {
+              try {
+                await updateUserProfile({ personaGoal: goalId });
+                setShowPersonaModal(false);
+              } catch (e) {
+                console.error('[persona] save error:', e);
+              }
+            }}
+            onClose={() => setShowPersonaModal(false)}
+            allowDismiss={false}
           />
         )}
 
