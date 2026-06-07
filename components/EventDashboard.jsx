@@ -13,8 +13,10 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Home, Trophy, Flame, Target, CheckCircle2, Lock, Sparkles, Award, Users, Calendar, Info, Share2 } from 'lucide-react';
+import { ArrowLeft, Home, Trophy, Flame, Target, CheckCircle2, Lock, Sparkles, Award, Users, Calendar, Info, Share2, ClipboardCheck, FileText } from 'lucide-react';
 import ShareEventModal from '@/components/ShareEventModal';
+import EventRegistrationModal from '@/components/EventRegistrationModal';
+import { isRegisteredForCurrentEvent, getRegisteredName } from '@/lib/event-registration';
 import {
   isChallengeActive, challengeDaysRemaining, challengeTotalDays, challengeDaysUntilStart,
   challengeCurrentDay, challengePercentElapsed,
@@ -29,10 +31,14 @@ import {
 } from '@/lib/event-scoring';
 import { getChallengeLeaderboard } from '@/lib/social';
 
-export default function EventDashboard({ userId, userProfile, onBack, onHome, onShareBonus }) {
+export default function EventDashboard({ userId, userProfile, userEmail, onBack, onHome, onShareBonus, onRegister }) {
   const [leaderboard, setLeaderboard] = useState([]);
   const [lbLoading, setLbLoading] = useState(true);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showRegModal, setShowRegModal] = useState(false);
+
+  const isRegistered = isRegisteredForCurrentEvent(userProfile);
+  const registeredName = getRegisteredName(userProfile);
 
   const isActive = isChallengeActive();
   const isPast = Date.now() > CHALLENGE_END_MS;
@@ -126,6 +132,55 @@ export default function EventDashboard({ userId, userProfile, onBack, onHome, on
           </div>
         </div>
 
+        {/* 📜 REGISTRATION GATE — wajib daftar sebelum bisa kompetisi */}
+        {!isPast && (
+          isRegistered ? (
+            <div className="rounded-2xl p-3 flex items-center gap-3" style={{ background: 'rgba(10,77,60,0.06)', border: '1.5px solid rgba(10,77,60,0.3)' }}>
+              <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: '#0a4d3c' }}>
+                <ClipboardCheck size={17} style={{ color: 'white' }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] tracking-[0.2em] uppercase font-bold" style={{ color: '#0a4d3c' }}>TERDAFTAR ✓</p>
+                <p className="text-xs truncate" style={{ color: '#3d2817' }}>
+                  Atas nama <span className="font-bold">{registeredName}</span>. Siap kompetisi.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowRegModal(true)}
+                className="text-[11px] font-semibold px-2 py-1 rounded-lg"
+                style={{ color: '#0a4d3c', background: 'rgba(10,77,60,0.08)' }}
+              >
+                Lihat
+              </button>
+            </div>
+          ) : (
+            <div className="rounded-2xl p-4 relative overflow-hidden" style={{
+              background: 'linear-gradient(135deg, #a05536 0%, #c46a3f 100%)',
+              boxShadow: '0 4px 16px -4px rgba(160,85,54,0.4)',
+            }}>
+              <div className="absolute -right-4 -top-2 text-7xl opacity-15">📜</div>
+              <div className="relative">
+                <p className="text-[10px] tracking-[0.3em] uppercase font-bold mb-1.5" style={{ color: '#ffeacc' }}>
+                  WAJIB DAFTAR DULU
+                </p>
+                <h3 className="text-lg font-bold text-white mb-1.5" style={{ fontFamily: 'Fraunces, serif' }}>
+                  Belum terdaftar di Event
+                </h3>
+                <p className="text-xs text-white opacity-95 mb-3 leading-relaxed">
+                  Isi data diri (sesuai KTP), info rekening hadiah, dan setujui komitmen anti-curang. <span className="font-bold">Tanpa daftar, XP kamu tidak masuk leaderboard.</span>
+                </p>
+                <button
+                  onClick={() => setShowRegModal(true)}
+                  className="w-full py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 active:scale-[0.98]"
+                  style={{ background: 'white', color: '#a05536' }}
+                >
+                  <FileText size={15} /> Daftar Event Sekarang
+                </button>
+              </div>
+            </div>
+          )
+        )}
+
         {/* PRIZES */}
         <div className="rounded-2xl p-4" style={{ background: 'linear-gradient(135deg, rgba(201,169,97,0.12), rgba(212,184,118,0.08))', border: '1.5px solid rgba(201,169,97,0.4)' }}>
           <p className="text-[10px] tracking-[0.3em] uppercase font-bold mb-2.5 flex items-center gap-1.5" style={{ color: '#8b6b3d' }}>
@@ -181,10 +236,21 @@ export default function EventDashboard({ userId, userProfile, onBack, onHome, on
                 }} />
               </div>
               <p className="text-xs leading-snug">
-                {grandPrize.eligible
+                {!isRegistered
+                  ? '🔒 Daftar event dulu supaya XP-mu dihitung. Tanpa daftar = tidak masuk leaderboard.'
+                  : grandPrize.eligible
                   ? '🎯 Sudah lewat threshold! Pertahankan rank #1 di leaderboard sampai event berakhir.'
                   : `Kurang ${grandPrize.gap.toLocaleString('id-ID')} XP lagi. Maksimal harian: ~410 XP (semua fitur + diversity bonus).`}
               </p>
+              {!isRegistered && (
+                <button
+                  onClick={() => setShowRegModal(true)}
+                  className="mt-2 w-full py-2 rounded-xl font-bold text-xs"
+                  style={{ background: 'white', color: '#a05536' }}
+                >
+                  📜 Daftar Event Sekarang
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -335,6 +401,19 @@ export default function EventDashboard({ userId, userProfile, onBack, onHome, on
           onClose={() => setShowShareModal(false)}
           onShared={(platformId) => {
             if (onShareBonus) onShareBonus(platformId);
+          }}
+        />
+      )}
+
+      {/* 📜 REGISTRATION MODAL */}
+      {showRegModal && (
+        <EventRegistrationModal
+          userProfile={userProfile}
+          userEmail={userEmail}
+          onClose={() => setShowRegModal(false)}
+          onRegistered={async (payload) => {
+            if (onRegister) await onRegister(payload);
+            setShowRegModal(false);
           }}
         />
       )}

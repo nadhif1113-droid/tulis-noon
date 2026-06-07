@@ -1304,8 +1304,23 @@ export default function TulisNoonApp() {
         {screen === 'challenge-launch' && <EventDashboard
           userId={user?.uid}
           userProfile={authProfile}
+          userEmail={user?.email}
           onBack={() => setScreen('main')}
           onHome={() => { setTab('home'); setScreen('main'); }}
+          onRegister={async (payload) => {
+            try {
+              await updateUserProfile({ eventRegistration: payload });
+              Analytics.trackEvent?.('event_register', { eventId: payload.eventId, payoutMethod: payload.payoutMethod });
+              setAchievements((a) => [{
+                id: Date.now(), type: 'event-register',
+                text: `📜 Terdaftar di ${CHALLENGE_TITLE}! Selamat berkompetisi, ${payload.fullName.split(' ')[0]}.`,
+                emoji: '🏆', time: 'baru saja', user: userName || 'Anda',
+              }, ...a]);
+            } catch (e) {
+              console.error('Event registration failed:', e);
+              throw e;
+            }
+          }}
           onShareBonus={async (platformId) => {
             // +10 XP bonus 1x/hari untuk share (anti-spam cap)
             const today = new Date().toDateString();
