@@ -210,15 +210,15 @@ function ListView({ hafalanProgress, userProfile, coins, onBack, onHome, onShowU
           style={{ background: 'linear-gradient(135deg, #c9a961, #d4b876)', boxShadow: '0 10px 30px -10px rgba(201,169,97,0.5)' }}
         >
           <div className="absolute -right-6 -top-4 text-7xl opacity-15">🕌</div>
-          <p className="text-[10px] tracking-[0.3em] uppercase text-white opacity-90 mb-1 font-bold">Premium · Bayar Sekali</p>
+          <p className="text-[10px] tracking-[0.3em] uppercase text-white opacity-90 mb-1 font-bold">Tulis Noon Mahir</p>
           <h3 className="text-xl text-white mb-1 leading-tight" style={{ fontFamily: 'Fraunces, serif', fontWeight: 700 }}>
             Hafal 30 Juz Sampai Bisa
           </h3>
           <p className="text-sm text-white opacity-95 leading-relaxed mb-3">
-            Buka 76 surat lainnya (Juz 1-29) — termasuk Al-Baqarah, Yasin, Ar-Rahman, Al-Mulk. <strong>Akses seumur hidup</strong>, tanpa langganan bulanan.
+            Buka 76 surat lainnya (Juz 1-29) — termasuk Al-Baqarah, Yasin, Ar-Rahman, Al-Mulk. Plus AI Tutor, semua modul belajar, dan Belajar Ngomong tanpa batas.
           </p>
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-white" style={{ color: '#8b6b3d' }}>
-            🪙 {PREMIUM_UNLOCK_COST} koin · Sekali Bayar <ChevronRight size={12} />
+            ✨ Lihat Paket Mahir <ChevronRight size={12} />
           </span>
         </button>
       )}
