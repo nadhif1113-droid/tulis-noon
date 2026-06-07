@@ -30,6 +30,8 @@ import ChatScreen from '@/components/ChatScreen';
 import NgomongScreen from '@/components/NgomongScreen';
 import NahwuShorfScreen from '@/components/NahwuShorfScreen';
 import CertificatesScreen from '@/components/CertificatesScreen';
+import CertificateEarnedModal from '@/components/CertificateEarnedModal';
+import { CERTIFICATE_PATHS, getPathProgress, generateCertNumber } from '@/lib/certificate';
 import { speakArabic as ttsSpeakArabic } from '@/lib/tts';
 import { postActivity, getCommunityFeed, getLeaderboard, getUserGlobalRank, updatePresence, listenDmThreads, getFriends, getChallengeLeaderboard, getUserChallengeRank } from '@/lib/social';
 import { isChallengeActive, challengeDaysRemaining, challengeTotalDays, CHALLENGE_TITLE, CHALLENGE_TAGLINE, CHALLENGE_PRIZES, challengeTotalPrize } from '@/lib/challenge-launch';
@@ -71,6 +73,7 @@ export default function TulisNoonApp() {
   const [dmThreads, setDmThreads] = useState([]); // daftar chat (inbox) real-time
   const unreadChats = dmThreads.filter((t) => t.unread).length; // jumlah chat belum dibaca
   const [challengeRank, setChallengeRank] = useState(null); // peringkat di Tantangan Launch
+  const [earnedCertPathId, setEarnedCertPathId] = useState(null); // pathId yg baru saja diraih (untuk modal celebration)
   // Level dalam scenario yang dipilih (1-100)
   const [selectedLevel, setSelectedLevel] = useState(1);
   const [progress, setProgress] = useState({ umrah: 1, profesi: 0, beasiswa: 0 });
@@ -359,12 +362,17 @@ export default function TulisNoonApp() {
     if (!authProfile) return;
     if (screen !== null) return; // Sudah pernah di-route, jangan override lagi
 
+    // Kalau URL minta screen spesifik (mis. /?screen=certificates), JANGAN override
+    // ke 'main'. Biarkan effect searchParams yg handle.
+    const queryScreen = searchParams?.get('screen');
+    if (queryScreen) return;
+
     if (authProfile.onboardingCompleted) {
       setScreen('main');
     } else {
       setScreen('welcome');
     }
-  }, [authLoading, authProfile, screen]);
+  }, [authLoading, authProfile, screen, searchParams]);
 
   // Helper: deduct 1 nyawa kalau user GAGAL (non-perfect) di game.
   // Otomatis start refresh clock kalau ini life loss pertama dari max.
@@ -441,6 +449,31 @@ export default function TulisNoonApp() {
     getUserChallengeRank(cxp).then((r) => { if (!cancelled) setChallengeRank(r); }).catch(() => {});
     return () => { cancelled = true; };
   }, [authProfile?.challengeXp]);
+
+  // Auto-detect sertifikat yg baru diraih — tampil modal celebration sekali.
+  // Persist ke earnedCertificates supaya tidak muncul berulang.
+  useEffect(() => {
+    if (!authProfile || !user?.uid) return;
+    const earned = authProfile?.earnedCertificates || [];
+    const earnedIds = new Set(earned.map((c) => c.pathId));
+    // Cari jalur yang progress 100% TAPI belum tercatat di earnedCertificates.
+    const newlyEarned = CERTIFICATE_PATHS.find((p) => {
+      if (earnedIds.has(p.id)) return false;
+      const prog = getPathProgress(p.id, authProfile);
+      return prog.isCertified;
+    });
+    if (!newlyEarned) return;
+    const earnedAt = Date.now();
+    const certNumber = generateCertNumber(newlyEarned.id, user.uid, earnedAt);
+    // Simpan ke Firestore (supaya nggak ditampilin lagi setelah ini).
+    updateUserProfile({
+      earnedCertificates: [...earned, { pathId: newlyEarned.id, earnedAt, certNumber }],
+    }).catch(() => {});
+    // Tampilkan modal.
+    setEarnedCertPathId(newlyEarned.id);
+    logCommunity({ type: 'sertifikat', text: `🎓 Meraih sertifikat: ${newlyEarned.title}`, emoji: '🏅' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authProfile?.completedNahwuShorf, authProfile?.completedPerkenalanMateri, authProfile?.progress, authProfile?.hafalanProgress]);
 
   // Log 1 aktivitas: tampil instan di feed lokal + persist ke Firestore (community).
   // community=false → cuma lokal (mis. warning koin kurang, ga usah disebar).
@@ -1142,6 +1175,14 @@ export default function TulisNoonApp() {
         )}
 
         {/* XP/Level info modal — trigger dari XP pill di home */}
+        {earnedCertPathId && (
+          <CertificateEarnedModal
+            pathId={earnedCertPathId}
+            recipientName={authProfile?.displayName || userName}
+            onClose={() => setEarnedCertPathId(null)}
+            onView={() => { setEarnedCertPathId(null); setScreen('certificates'); }}
+          />
+        )}
         {showXpModal && (
           <XpLevelInfoModal xp={xp || 0} onClose={() => setShowXpModal(false)} />
         )}
