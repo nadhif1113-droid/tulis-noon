@@ -670,6 +670,334 @@ export const NAHWU_LESSONS = [
       },
     ],
   },
+  ,
+  // ============ PELAJARAN 9 (PREMIUM) ============
+  {
+    id: 'nahwu-9-kaana-akhowatuha',
+    order: 9,
+    isFree: false,
+    title: 'Kaana wa Akhowatuha',
+    subtitle: 'Saudara-saudara kaana — menge-rofa\' mubtada\' & menge-nashob khobar',
+    emoji: '🌗',
+    duration: '7 menit',
+    color: '#a05536',
+    xpReward: 35,
+    theory: {
+      intro: 'Kaana (كَانَ) dan saudara-saudaranya adalah kelompok fi\'il yang masuk ke jumlah ismiyyah (mubtada\' + khobar). Efeknya: mubtada\' menjadi "isim kaana" (tetap rofa\'), dan khobar menjadi "khobar kaana" (di-NASHOB).',
+      sections: [
+        {
+          title: 'Saudara-saudara Kaana',
+          body: 'Selain كَانَ (telah/menjadi), ada: صَارَ (menjadi), أَصْبَحَ (di pagi hari), أَمْسَى (di sore hari), أَضْحَى (di waktu dhuha), ظَلَّ (sepanjang siang), بَاتَ (sepanjang malam), لَيْسَ (bukan). Semua bekerja sama.',
+          examples: [
+            { ar: 'كَانَ الْجَوُّ بَارِدًا', latin: 'kaanal-jawwu baaridan', id: 'Cuaca telah dingin (الجوّ rofa\' isim كان, باردًا nashob khobar كان)' },
+            { ar: 'لَيْسَ الْكِتَابُ جَدِيدًا', latin: 'laisal-kitaabu jadiidan', id: 'Buku itu bukan baru (khobar nashob)' },
+          ],
+        },
+        {
+          title: 'Cara Mengenali',
+          body: 'Cari fi\'il dari kelompok kaana di awal kalimat. Setelahnya: kata pertama = isim كان (rofa\'), kata kedua = khobar كان (nashob).',
+          examples: [
+            { ar: 'أَصْبَحَ الطَّالِبُ مُجْتَهِدًا', latin: 'ashbahath-thaalibu mujtahidan', id: 'Siswa itu menjadi rajin (di pagi hari)' },
+            { ar: 'صَارَ التِّلْمِيذُ عَالِمًا', latin: 'shaarat-tilmiidzu \'aaliman', id: 'Murid itu menjadi orang berilmu' },
+          ],
+        },
+        {
+          title: 'Beda dgn Fi\'il Biasa',
+          body: 'Bedanya كَانَ dgn fi\'il biasa: كَانَ TIDAK butuh fa\'il aktif — strukturnya tetap mubtada\'+khobar, hanya saja khobar-nya jadi nashob. Sementara fi\'il biasa butuh fa\'il dan bisa punya maf\'ul bih.',
+          examples: [
+            { ar: 'قَرَأَ زَيْدٌ الْكِتَابَ', latin: 'qara\'a Zaidunil-kitaab', id: 'Zaid membaca buku (fi\'il + fa\'il + maf\'ul)' },
+            { ar: 'كَانَ زَيْدٌ قَارِئًا', latin: 'kaana Zaidun qaari\'an', id: 'Zaid adalah seorang pembaca (kaana + isim + khobar)' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'وَكَانَ اللَّهُ غَفُورًا رَحِيمًا',
+        latin: 'wa kaanallahu ghafuuran rahiimaa',
+        surah: 'An-Nisa',
+        ayatNum: 96,
+        analysis: [
+          { word: 'وَ', type: 'Harf athaf', note: '' },
+          { word: 'كَانَ', type: 'Fi\'il Madhi naqis', note: 'salah satu saudara kaana' },
+          { word: 'اللَّهُ', type: 'Isim كَانَ', note: 'rofa\' dgn dhommah' },
+          { word: 'غَفُورًا', type: 'Khobar كَانَ', note: 'nashob dgn fathah/tanwin' },
+          { word: 'رَحِيمًا', type: 'Khobar tsani', note: 'nashob, athaf' },
+        ],
+        explanation: 'Klasik: كَانَ + Allah (rofa\') + ghafuuran (nashob) + rahiiman (nashob). Lihat tanwin fathah di غَفُورًا dan رَحِيمًا — itulah tanda nashob untuk khobar كَانَ.',
+      },
+    },
+    quiz: [
+      {
+        q: 'Pada كَانَ الْجَوُّ بَارِدًا, kata الْجَوُّ adalah...',
+        options: ['Mubtada\'', 'Isim كَانَ', 'Khobar كَانَ', 'Fa\'il'],
+        correct: 1,
+        explanation: 'الْجَوُّ adalah isim كَانَ — tetap rofa\' (dhommah). Posisinya seperti mubtada\' tapi karena dimasuki كَانَ, jadi isim كان.',
+      },
+      {
+        q: 'Khobar كَانَ ber-i\'rab...',
+        options: ['Rofa\'', 'Nashob', 'Jar', 'Jazm'],
+        correct: 1,
+        explanation: 'Khobar كَانَ selalu nashob — itulah ciri kaana wa akhowatuha.',
+      },
+      {
+        q: 'Manakah yang BUKAN saudara كَانَ?',
+        options: ['صَارَ', 'أَصْبَحَ', 'إِنَّ', 'لَيْسَ'],
+        correct: 2,
+        explanation: 'إِنَّ adalah saudara-saudara INNA (kelompok berbeda) — menge-nashob ISIM, bukan khobar.',
+      },
+      {
+        q: 'Pada لَيْسَ زَيْدٌ مُسَافِرًا, mana khobar لَيْسَ?',
+        options: ['لَيْسَ', 'زَيْدٌ', 'مُسَافِرًا', 'Tidak ada'],
+        correct: 2,
+        explanation: 'مُسَافِرًا adalah khobar لَيْسَ, di-nashob dgn fathah/tanwin.',
+      },
+    ],
+  },
+
+  // ============ PELAJARAN 10 (PREMIUM) ============
+  {
+    id: 'nahwu-10-inna-akhowatuha',
+    order: 10,
+    isFree: false,
+    title: 'Inna wa Akhowatuha',
+    subtitle: 'Saudara-saudara inna — menge-nashob isim & menge-rofa\' khobar',
+    emoji: '⚡',
+    duration: '7 menit',
+    color: '#a05536',
+    xpReward: 35,
+    theory: {
+      intro: 'Inna (إِنَّ) dan saudara-saudaranya adalah huruf yang masuk ke jumlah ismiyyah. Efeknya KEBALIKAN كَانَ: mubtada\' jadi "isim inna" (di-NASHOB), khobar jadi "khobar inna" (tetap rofa\').',
+      sections: [
+        {
+          title: 'Saudara-saudara Inna',
+          body: 'Yang termasuk: إِنَّ (sungguh), أَنَّ (bahwasanya), كَأَنَّ (seolah-olah), لَكِنَّ (tetapi), لَيْتَ (semoga/andai), لَعَلَّ (mudah-mudahan).',
+          examples: [
+            { ar: 'إِنَّ اللَّهَ غَفُورٌ', latin: 'innallaaha ghafuur', id: 'Sungguh Allah Maha Pengampun (الله nashob isim inna, غفور rofa\' khobar)' },
+            { ar: 'لَيْتَ الشَّبَابَ يَعُودُ', latin: 'laitasy-syabaaba ya\'uud', id: 'Andai masa muda kembali' },
+          ],
+        },
+        {
+          title: 'Cara Mengenali',
+          body: 'إِنَّ dan saudaranya selalu di awal kalimat. Kata setelahnya = isim إِنَّ (nashob — tandanya fathah). Kata terakhir = khobar إِنَّ (rofa\').',
+          examples: [
+            { ar: 'إِنَّ الْعِلْمَ نُورٌ', latin: 'innal-\'ilma nuurun', id: 'Sungguh ilmu adalah cahaya' },
+            { ar: 'كَأَنَّ الْقَمَرَ لُؤْلُؤٌ', latin: 'ka\'annal-qamara lu\'lu\'un', id: 'Seakan-akan bulan itu mutiara' },
+          ],
+        },
+        {
+          title: 'Beda Inna & Anna',
+          body: 'إِنَّ dipakai di awal kalimat atau setelah "qaala" (berkata). أَنَّ dipakai di tengah kalimat sbg masdar muawwal.',
+          examples: [
+            { ar: 'قَالَ إِنِّي عَبْدُ اللَّهِ', latin: 'qaala innii \'abdullah', id: 'Dia berkata: "Sungguh aku hamba Allah"' },
+            { ar: 'عَلِمْتُ أَنَّكَ صَادِقٌ', latin: '\'alimtu annaka shaadiqun', id: 'Aku tahu bahwa kamu jujur' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'إِنَّ مَعَ الْعُسْرِ يُسْرًا',
+        latin: 'inna ma\'al-\'usri yusran',
+        surah: 'Al-Insyirah',
+        ayatNum: 6,
+        analysis: [
+          { word: 'إِنَّ', type: 'Harf taukid', note: 'menge-nashob isim, rofa\' khobar' },
+          { word: 'مَعَ', type: 'Khobar إِنَّ muqaddam', note: 'zhorof, secara hukum rofa\'' },
+          { word: 'الْعُسْرِ', type: 'Mudhof ilaih', note: 'majrur' },
+          { word: 'يُسْرًا', type: 'Isim إِنَّ muakhor', note: 'nashob dgn fathah/tanwin' },
+        ],
+        explanation: 'يُسْرًا adalah isim إِنَّ — nashob (tanwin fathah). Khobar (مَعَ الْعُسْرِ) didahulukan untuk penekanan. Inilah uslub klasik yang sering di Qur\'an.',
+      },
+    },
+    quiz: [
+      {
+        q: 'Isim إِنَّ ber-i\'rab...',
+        options: ['Rofa\'', 'Nashob', 'Jar', 'Jazm'],
+        correct: 1,
+        explanation: 'إِنَّ menge-nashob isim setelahnya (mubtada\' jadi isim inna nashob).',
+      },
+      {
+        q: 'Pada إِنَّ اللَّهَ غَفُورٌ, kata غَفُورٌ adalah...',
+        options: ['Isim إِنَّ', 'Khobar إِنَّ', 'Fa\'il', 'Maf\'ul'],
+        correct: 1,
+        explanation: 'غَفُورٌ adalah khobar إِنَّ — tetap rofa\' (dhommah/tanwin dhom).',
+      },
+      {
+        q: 'Manakah yang merupakan saudara إِنَّ?',
+        options: ['كَانَ', 'لَيْتَ', 'صَارَ', 'أَصْبَحَ'],
+        correct: 1,
+        explanation: 'لَيْتَ (andai/semoga) adalah saudara إِنَّ. Yang lain adalah saudara كَانَ.',
+      },
+      {
+        q: 'Efek إِنَّ ke khobar adalah...',
+        options: ['Menge-nashob', 'Tetap rofa\'', 'Menge-jar', 'Menge-jazm'],
+        correct: 1,
+        explanation: 'Khobar إِنَّ tetap rofa\' — yang berubah cuma mubtada\' jadi isim inna nashob.',
+      },
+    ],
+  },
+
+  // ============ PELAJARAN 11 (PREMIUM) ============
+  {
+    id: 'nahwu-11-hal',
+    order: 11,
+    isFree: false,
+    title: 'Hal',
+    subtitle: 'Keterangan keadaan pelaku/objek',
+    emoji: '🌬️',
+    duration: '6 menit',
+    color: '#a05536',
+    xpReward: 35,
+    theory: {
+      intro: 'Hal (الْحَالُ) adalah isim yang menjelaskan KEADAAN dari fa\'il (pelaku) atau maf\'ul (objek) saat perbuatan terjadi. Selalu nashob dan biasanya nakirah.',
+      sections: [
+        {
+          title: 'Hal Mufrad',
+          body: 'Bisa berupa satu kata sifat (isim mufrad) — di-nashob untuk menerangkan keadaan.',
+          examples: [
+            { ar: 'جَاءَ زَيْدٌ رَاكِبًا', latin: 'jaa\'a Zaidun raakiban', id: 'Zaid datang dalam keadaan naik (kendaraan)' },
+            { ar: 'قَرَأْتُ الْكِتَابَ مَفْتُوحًا', latin: 'qara\'tul-kitaaba maftuuhan', id: 'Aku baca buku dalam keadaan terbuka' },
+          ],
+        },
+        {
+          title: 'Hal Jumlah',
+          body: 'Bisa juga berupa kalimat (jumlah ismiyyah atau fi\'liyyah) yang dimulai dgn "wawu hal" (وَ).',
+          examples: [
+            { ar: 'جَاءَ زَيْدٌ وَهُوَ يَضْحَكُ', latin: 'jaa\'a Zaidun wa huwa yadhhak', id: 'Zaid datang sambil tertawa' },
+            { ar: 'دَخَلَ الطَّالِبُ وَالْكِتَابُ بِيَدِهِ', latin: 'dakhalath-thaalibu wal-kitaabu biyadih', id: 'Murid masuk sambil buku di tangannya' },
+          ],
+        },
+        {
+          title: 'Sahibul Hal',
+          body: 'Sahibul hal (pemilik keadaan) adalah orang/benda yang sedang di-deskripsikan. Bisa fa\'il atau maf\'ul. Hal dan sahibul hal harus cocok jenis & jumlahnya.',
+          examples: [
+            { ar: 'رَأَيْتُ الطَّالِبَةَ ذَاهِبَةً', latin: 'ra\'aitut-thaalibata dzaahibah', id: 'Aku melihat siswi itu sedang pergi (hal mu\'annats karena sahibul hal-nya pr)' },
+            { ar: 'جَاءَ الطُّلَّابُ ضَاحِكِينَ', latin: 'jaa\'ath-thullaabu dhaahikiin', id: 'Para murid datang dalam keadaan tertawa (jamak)' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'وَلَا تَمْشِ فِي الْأَرْضِ مَرَحًا',
+        latin: 'wa laa tamsyi fil-ardhi marahaa',
+        surah: 'Al-Isra',
+        ayatNum: 37,
+        analysis: [
+          { word: 'وَ', type: 'Harf athaf', note: '' },
+          { word: 'لَا', type: 'Harf nahi', note: 'jangan' },
+          { word: 'تَمْشِ', type: 'Fi\'il Mudhori\'', note: 'majzum karena لا nahi' },
+          { word: 'فِي الْأَرْضِ', type: 'Jar majrur', note: 'di muka bumi' },
+          { word: 'مَرَحًا', type: 'Hal', note: 'nashob dgn fathah; menerangkan keadaan' },
+        ],
+        explanation: 'مَرَحًا (sombong/angkuh) adalah HAL yang menerangkan keadaan pelaku saat berjalan. "Janganlah engkau berjalan di bumi dalam keadaan sombong". Tanda nashob: fathah.',
+      },
+    },
+    quiz: [
+      {
+        q: 'Hal ber-i\'rab...',
+        options: ['Rofa\'', 'Nashob', 'Jar', 'Jazm'],
+        correct: 1,
+        explanation: 'Hal selalu nashob — tandanya fathah.',
+      },
+      {
+        q: 'Pada جَاءَ زَيْدٌ رَاكِبًا, kata رَاكِبًا adalah...',
+        options: ['Fa\'il', 'Maf\'ul', 'Hal', 'Khobar'],
+        correct: 2,
+        explanation: 'رَاكِبًا adalah hal — menerangkan keadaan Zaid (sahibul hal) saat datang.',
+      },
+      {
+        q: 'Hal biasanya berupa isim...',
+        options: ['Ma\'rifat', 'Nakirah', 'Mudhof', 'Tertanwin tanpa harakat'],
+        correct: 1,
+        explanation: 'Hal biasanya nakirah (tidak ada alif-lam). Sahibul hal yang ma\'rifat.',
+      },
+      {
+        q: 'Pada جَاءَ زَيْدٌ وَهُوَ يَضْحَكُ, mana hal-nya?',
+        options: ['زَيْدٌ', 'وَهُوَ يَضْحَكُ', 'يَضْحَكُ saja', 'هُوَ saja'],
+        correct: 1,
+        explanation: 'وَهُوَ يَضْحَكُ adalah hal jumlah ismiyyah yang dimulai dgn wawu hal. Artinya: "sambil tertawa".',
+      },
+    ],
+  },
+
+  // ============ PELAJARAN 12 (PREMIUM) ============
+  {
+    id: 'nahwu-12-naib-fail',
+    order: 12,
+    isFree: false,
+    title: 'Naib al-Fa\'il',
+    subtitle: 'Kalimat pasif (mabni majhul)',
+    emoji: '🔄',
+    duration: '7 menit',
+    color: '#a05536',
+    xpReward: 40,
+    theory: {
+      intro: 'Naib al-Fa\'il (نَائِبُ الْفَاعِلِ) adalah isim yang menggantikan posisi fa\'il dalam kalimat pasif. Saat fi\'il di-pasifkan (mabni majhul), fa\'il dibuang, dan maf\'ul bih naik posisi jadi naib al-fa\'il — i\'rab-nya jadi rofa\'.',
+      sections: [
+        {
+          title: 'Cara Mem-Pasifkan Fi\'il',
+          body: 'Fi\'il MADHI mabni majhul: dhommah huruf pertama + kasroh huruf sebelum akhir. Misal: كَتَبَ → كُتِبَ (ditulis).',
+          examples: [
+            { ar: 'ضَرَبَ → ضُرِبَ', latin: 'dharaba → dhuriba', id: 'memukul → dipukul' },
+            { ar: 'فَتَحَ → فُتِحَ', latin: 'fataha → futiha', id: 'membuka → dibuka' },
+            { ar: 'قَرَأَ → قُرِئَ', latin: 'qara\'a → quri\'a', id: 'membaca → dibaca' },
+          ],
+        },
+        {
+          title: 'Fi\'il Mudhori\' Majhul',
+          body: 'Fi\'il MUDHORI\' mabni majhul: dhommah huruf mudhoro\'ah + fathah huruf sebelum akhir. Misal: يَكْتُبُ → يُكْتَبُ (sedang ditulis).',
+          examples: [
+            { ar: 'يَفْعَلُ → يُفْعَلُ', latin: 'yaf\'alu → yuf\'alu', id: 'sedang dilakukan' },
+            { ar: 'يَقْرَأُ → يُقْرَأُ', latin: 'yaqra\'u → yuqra\'u', id: 'sedang dibaca' },
+          ],
+        },
+        {
+          title: 'Naib al-Fa\'il = Rofa\'',
+          body: 'Setelah fi\'il majhul, isim setelahnya adalah naib al-fa\'il — ber-i\'rab rofa\' (sama seperti fa\'il aktif).',
+          examples: [
+            { ar: 'كُتِبَ الدَّرْسُ', latin: 'kutibad-darsu', id: 'Pelajaran telah ditulis (الدرسُ rofa\' sbg naib al-fa\'il)' },
+            { ar: 'يُقْرَأُ الْقُرْآنُ', latin: 'yuqra\'ul-Qur\'aan', id: 'Al-Qur\'an sedang dibaca' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'وَإِذَا قُرِئَ الْقُرْآنُ فَاسْتَمِعُوا لَهُ',
+        latin: 'wa idzaa quri\'al-Qur\'aanu fastami\'uu lah',
+        surah: 'Al-A\'raf',
+        ayatNum: 204,
+        analysis: [
+          { word: 'وَإِذَا', type: 'Harf syarat', note: 'apabila' },
+          { word: 'قُرِئَ', type: 'Fi\'il Madhi Majhul', note: 'dibacakan; pola فُعِلَ' },
+          { word: 'الْقُرْآنُ', type: 'Naib al-Fa\'il', note: 'rofa\' dgn dhommah' },
+          { word: 'فَ', type: 'Harf jawab', note: 'maka' },
+          { word: 'اسْتَمِعُوا', type: 'Fi\'il Amr', note: 'dengarkanlah (jamak)' },
+        ],
+        explanation: 'قُرِئَ adalah fi\'il madhi mabni majhul (dibacakan). الْقُرْآنُ adalah naib al-fa\'il — rofa\' (dhommah). "Apabila DIBACAKAN Al-Qur\'an, dengarkanlah".',
+      },
+    },
+    quiz: [
+      {
+        q: 'Naib al-Fa\'il ber-i\'rab...',
+        options: ['Rofa\'', 'Nashob', 'Jar', 'Jazm'],
+        correct: 0,
+        explanation: 'Naib al-fa\'il menggantikan posisi fa\'il, jadi rofa\' (dhommah).',
+      },
+      {
+        q: 'Bentuk majhul dari كَتَبَ adalah...',
+        options: ['كَاتِبٌ', 'كُتِبَ', 'مَكْتُوبٌ', 'كِتَابٌ'],
+        correct: 1,
+        explanation: 'كُتِبَ — pola fi\'il madhi majhul: dhommah huruf pertama + kasroh sebelum akhir.',
+      },
+      {
+        q: 'Pada يُقْرَأُ الْقُرْآنُ, kata الْقُرْآنُ adalah...',
+        options: ['Fa\'il', 'Maf\'ul', 'Naib al-Fa\'il', 'Hal'],
+        correct: 2,
+        explanation: 'يُقْرَأُ adalah fi\'il mudhori\' majhul. الْقُرْآنُ menggantikan fa\'il — naib al-fa\'il, rofa\'.',
+      },
+      {
+        q: 'Pola fi\'il mudhori\' majhul adalah...',
+        options: ['يَفْعُلُ', 'يُفْعَلُ', 'فُعِلَ', 'مَفْعُولٌ'],
+        correct: 1,
+        explanation: 'Mudhori\' majhul: dhommah huruf mudhoro\'ah + fathah sebelum akhir. يَكْتُبُ → يُكْتَبُ.',
+      },
+    ],
+  },
 ];
 
 // Helper
