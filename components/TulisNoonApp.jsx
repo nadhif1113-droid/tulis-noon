@@ -163,6 +163,9 @@ export default function TulisNoonApp() {
     } else if (targetScreen === 'certificates') {
       setScreen('certificates');
       router.replace('/', { scroll: false });
+    } else if (targetScreen === 'premium') {
+      setScreen('premium');
+      router.replace('/', { scroll: false });
     }
   }, [searchParams, router]);
 
