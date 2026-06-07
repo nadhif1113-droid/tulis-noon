@@ -65,10 +65,10 @@ export default function DailyBriefingModal({ userName, userProfile, onClose, onS
     streakMessage = 'Mulai streak hari ini — konsisten 5 menit lebih baik dari 1 jam sekali seminggu';
     streakColor = '#8b6b3d';
   } else if (wasYesterday) {
-    streakMessage = `🔥 ${streak} hari berturut! Jangan putus hari ini — sayang banget`;
+    streakMessage = `🔥 ${streak} hari berturut! Jangan putus hari ini, ya habibi`;
     streakColor = '#a05536';
   } else if (streak > 0) {
-    streakMessage = `Streak ${streak} hari kamu kemarin terputus. Mulai lagi dari sini!`;
+    streakMessage = `Streak ${streak} hari kemarin terputus, habibi. Mulai lagi dari sini!`;
     streakColor = '#8b6b3d';
   }
 

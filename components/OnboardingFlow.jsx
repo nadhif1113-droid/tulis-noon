@@ -196,7 +196,7 @@ function StepWelcome({ userName, onNext }) {
         Mulai Perjalanan <ChevronRight size={18} />
       </button>
       <p className="text-xs mt-3" style={{ color: '#8b6b3d' }}>
-        ~3 menit · bisa di-skip tapi sayang lho
+        ~3 menit · bisa di-skip tapi rugi banget lho
       </p>
     </div>
   );
