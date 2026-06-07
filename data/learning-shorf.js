@@ -1368,6 +1368,259 @@ export const SHORF_LESSONS = [
       },
     ],
   },
+  ,
+  // ============ PELAJARAN 17 (PREMIUM) ============
+  {
+    id: 'shorf-17-ilal-ibdal',
+    order: 17,
+    isFree: false,
+    title: 'I\'lal & Ibdal',
+    subtitle: 'Aturan perubahan huruf illah',
+    emoji: '🔧',
+    duration: '7 menit',
+    color: '#a05536',
+    xpReward: 40,
+    theory: {
+      intro: 'I\'lal (الْإِعْلَالُ) adalah aturan perubahan huruf illah (و، ي، ا) untuk memudahkan pengucapan. Ibdal (الْإِبْدَالُ) adalah penggantian huruf dgn huruf lain. Ini bagian paling teknis shorf — tapi membuka penjelasan kenapa banyak kata berbentuk seperti itu.',
+      sections: [
+        {
+          title: 'I\'lal: Wau/Ya jadi Alif',
+          body: 'Aturan paling umum: jika و atau ي ber-harakat dan sebelumnya fathah, maka berubah jadi ا.',
+          examples: [
+            { ar: 'قَوَلَ → قَالَ', latin: 'qawala → qaala', id: 'asal qawala (و fathah, sebelumnya fathah) → qaala' },
+            { ar: 'بَيَعَ → بَاعَ', latin: 'baya\'a → baa\'a', id: 'asal baya\'a → baa\'a (ya jadi alif)' },
+            { ar: 'صَيَمَ → صَامَ', latin: 'shayama → shaama', id: 'puasa' },
+          ],
+        },
+        {
+          title: 'I\'lal: Wau/Ya Hilang',
+          body: 'Saat dua sukun bertemu (illah sukun + huruf sukun), huruf illah dibuang.',
+          examples: [
+            { ar: 'قُلْ', latin: 'qul', id: 'asal qawul → quwul → qul (و dibuang)' },
+            { ar: 'قُمْ', latin: 'qum', id: 'asal qawum → qum' },
+            { ar: 'بِعْ', latin: 'bi\'', id: 'asal biyi\' → bi\' (ي dibuang)' },
+          ],
+        },
+        {
+          title: 'Ibdal: Huruf Diganti Huruf Lain',
+          body: 'Beberapa huruf bertukar untuk pengucapan yang lebih mudah. Contoh: ت → ط dlm افْتَعَلَ jika fa-nya huruf isti\'la (ص ض ط ظ).',
+          examples: [
+            { ar: 'اضْتَرَبَ → اضْطَرَبَ', latin: '', id: 'asal idhtaraba → idhtharaba (ت → ط)' },
+            { ar: 'اصْتَلَحَ → اصْطَلَحَ', latin: '', id: 'ishtalaha → ishthalaha' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'قُلْ هُوَ اللَّهُ أَحَدٌ',
+        latin: 'qul huwallaahu ahad',
+        surah: 'Al-Ikhlas',
+        ayatNum: 1,
+        analysis: [
+          { word: 'قُلْ', type: 'Fi\'il Amr Mu\'tal Ajwaf', note: 'asal qawul; setelah i\'lal: qul' },
+          { word: 'هُوَ', type: 'Dhomir Munfashil', note: 'mubtada\'' },
+          { word: 'اللَّهُ', type: 'Khobar', note: 'rofa\'' },
+          { word: 'أَحَدٌ', type: 'Khobar ke-2 / Badal', note: 'rofa\' dgn tanwin' },
+        ],
+        explanation: 'قُلْ asalnya قَوَلَ (mu\'tal ajwaf). Saat amr: قُول → قُلْ (و dibuang karena bertemu sukun). Inilah hasil dari i\'lal — aturan klasik yang membuat قَالَ dan قُلْ kelihatan beda jauh padahal akarnya sama: ق-و-ل.',
+      },
+    },
+    quiz: [
+      {
+        q: 'I\'lal terjadi pada huruf...',
+        options: ['Semua huruf', 'Huruf illah (و، ي، ا)', 'Huruf isti\'la', 'Huruf jar'],
+        correct: 1,
+        explanation: 'I\'lal khusus huruf illah: و، ي، ا yang berubah/hilang sesuai aturan.',
+      },
+      {
+        q: 'قَالَ asalnya...',
+        options: ['قَلَ', 'قَوَلَ', 'قَيَلَ', 'قَلَا'],
+        correct: 1,
+        explanation: 'قَوَلَ → و berharakat sebelumnya fathah → ا. Jadi قَالَ.',
+      },
+      {
+        q: 'قُلْ adalah hasil i\'lal dari...',
+        options: ['قَوَلَ langsung', 'قُول (asal amr dari mudhori\' يَقُولُ)', 'قَالَ', 'قِيلَ'],
+        correct: 1,
+        explanation: 'Amr dari mudhori\' يَقُولُ → asal-nya قُول → و bertemu sukun → dibuang → قُلْ.',
+      },
+      {
+        q: 'Mengapa penting belajar i\'lal?',
+        options: ['Tidak penting', 'Membuka penjelasan kenapa kata-kata mu\'tal berbentuk seperti itu', 'Hanya untuk syair', 'Hafalan saja'],
+        correct: 1,
+        explanation: 'I\'lal menjelaskan KENAPA satu akar bisa terlihat berbeda di berbagai bentuk (قَالَ، قُلْ، قِيلَ). Tanpa i\'lal sulit memahami pola.',
+      },
+    ],
+  },
+
+  // ============ PELAJARAN 18 (PREMIUM) ============
+  {
+    id: 'shorf-18-mubaalaghah',
+    order: 18,
+    isFree: false,
+    title: 'Asma\' al-Mubaalaghah',
+    subtitle: 'Penekanan: fa\'\'aal, mif\'aal, fa\'uul',
+    emoji: '🔊',
+    duration: '6 menit',
+    color: '#a05536',
+    xpReward: 35,
+    theory: {
+      intro: 'Asma\' al-Mubaalaghah (أَسْمَاءُ الْمُبَالَغَةِ) adalah pola isim fa\'il yang DIPERKUAT untuk menunjukkan sifat yg sangat kuat / sering dilakukan. 5 pola utama. Banyak nama Allah pakai pola ini.',
+      sections: [
+        {
+          title: 'Pola 1: فَعَّالٌ (Sangat sering)',
+          body: 'Menunjukkan SERING melakukan / sangat. Pola: f-\'a-\'\'a-l.',
+          examples: [
+            { ar: 'كَذَبَ → كَذَّابٌ', latin: 'kadzaba → kadzdzaab', id: 'berbohong → pendusta besar' },
+            { ar: 'غَفَرَ → غَفَّارٌ', latin: 'ghafara → ghaffaar', id: 'mengampuni → Maha Pengampun' },
+            { ar: 'رَزَقَ → رَزَّاقٌ', latin: 'razaqa → razzaaq', id: 'memberi rezeki → Maha Pemberi Rezeki' },
+          ],
+        },
+        {
+          title: 'Pola 2: فَعُولٌ (Sangat)',
+          body: 'Menunjukkan SANGAT. Pola: f-\'a-uu-l.',
+          examples: [
+            { ar: 'شَكَرَ → شَكُورٌ', latin: 'syakara → syakuur', id: 'bersyukur → Maha Mensyukuri' },
+            { ar: 'صَبَرَ → صَبُورٌ', latin: 'shabara → shabuur', id: 'sabar → Maha Penyabar' },
+            { ar: 'غَفَرَ → غَفُورٌ', latin: 'ghafara → ghafuur', id: 'mengampuni → Maha Pengampun' },
+          ],
+        },
+        {
+          title: 'Pola 3-5: فَعِيلٌ، مِفْعَالٌ، فَعِلٌ',
+          body: 'Pola lain yang juga berarti penekanan.',
+          examples: [
+            { ar: 'عَلِمَ → عَلِيمٌ', latin: '\'alima → \'aliim', id: 'tahu → Maha Mengetahui (pola fa\'iil)' },
+            { ar: 'قَدَرَ → مِقْدَارٌ', latin: 'qadara → miqdaar', id: 'sangat mampu (mif\'aal)' },
+            { ar: 'حَذِرَ → حَذِرٌ', latin: 'hadzira → hadzir', id: 'sangat berhati-hati (fa\'il)' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'إِنَّ اللَّهَ غَفُورٌ رَحِيمٌ',
+        latin: 'innallaaha ghafuurur-rahiim',
+        surah: 'Al-Baqarah',
+        ayatNum: 173,
+        analysis: [
+          { word: 'إِنَّ', type: 'Harf taukid', note: '' },
+          { word: 'اللَّهَ', type: 'Isim إِنَّ', note: 'nashob' },
+          { word: 'غَفُورٌ', type: 'Mubaalaghah فَعُولٌ', note: 'khobar; rofa\'' },
+          { word: 'رَحِيمٌ', type: 'Mubaalaghah فَعِيلٌ', note: 'athaf; rofa\'' },
+        ],
+        explanation: 'غَفُورٌ (pola fa\'uul) dan رَحِيمٌ (pola fa\'iil) — DUA pola mubaalaghah berturut-turut. Bedakan dgn غَافِرٌ biasa (yang mengampuni) — غَفُورٌ artinya: Maha Pengampun, SANGAT mengampuni. Banyak nama Allah pakai pola ini.',
+      },
+    },
+    quiz: [
+      {
+        q: 'غَفَّارٌ menunjukkan...',
+        options: ['Yang mengampuni', 'Yang sering/banyak mengampuni (penekanan)', 'Yang diampuni', 'Pengampunan'],
+        correct: 1,
+        explanation: 'Pola فَعَّال menunjukkan PENEKANAN/SERING. غَفَّارٌ = Maha Pengampun yang sangat sering mengampuni.',
+      },
+      {
+        q: 'صَبُورٌ menggunakan pola...',
+        options: ['فَعَّال', 'فَعُول', 'فَعِيل', 'مِفْعَال'],
+        correct: 1,
+        explanation: 'صَبُورٌ pakai pola فَعُول (f-a-uu-l). Artinya: sangat sabar.',
+      },
+      {
+        q: 'Beda كَاتِبٌ dgn كَتَّابٌ?',
+        options: ['Sama saja', 'كَاتِبٌ = penulis biasa; كَتَّابٌ = sangat banyak menulis', 'كَتَّابٌ pasif', 'Tidak ada beda makna'],
+        correct: 1,
+        explanation: 'كَاتِبٌ = isim fa\'il biasa (penulis). كَتَّابٌ = mubaalaghah (sangat banyak menulis / penulis ulung).',
+      },
+      {
+        q: 'Mengapa banyak nama Allah pakai pola mubaalaghah?',
+        options: ['Kebetulan', 'Untuk menunjukkan kesempurnaan & ke-Mutlak-an sifat Allah', 'Hanya tradisi', 'Tidak signifikan'],
+        correct: 1,
+        explanation: 'Pola mubaalaghah menekankan KESEMPURNAAN sifat. غَفُورٌ = bukan sekedar mengampuni, tapi MAHA Pengampun secara mutlak.',
+      },
+    ],
+  },
+
+  // ============ PELAJARAN 19 (PREMIUM) ============
+  {
+    id: 'shorf-19-tashghir',
+    order: 19,
+    isFree: false,
+    title: 'Isim Tashghir',
+    subtitle: 'Diminutif: pengecilan kata',
+    emoji: '🪴',
+    duration: '5 menit',
+    color: '#a05536',
+    xpReward: 30,
+    theory: {
+      intro: 'Isim Tashghir (اسْمُ التَّصْغِيرِ) adalah perubahan isim untuk menunjukkan ARTI KECIL, sayang, atau merendahkan. Pola dasar: فُعَيْلٌ untuk 3 huruf, فُعَيْعِلٌ untuk 4 huruf.',
+      sections: [
+        {
+          title: 'Pola فُعَيْلٌ — Untuk 3 Huruf',
+          body: 'Huruf 1 di-dhommah, huruf 2 di-fathah, tambah ya\' sukun, lalu huruf 3.',
+          examples: [
+            { ar: 'رَجُلٌ → رُجَيْلٌ', latin: 'rajul → rujail', id: 'lelaki → lelaki kecil' },
+            { ar: 'كَلْبٌ → كُلَيْبٌ', latin: 'kalb → kulaib', id: 'anjing → anjing kecil' },
+            { ar: 'حَسَنٌ → حُسَيْنٌ', latin: 'hasan → husain', id: 'baik → Husain (anak baik)' },
+          ],
+        },
+        {
+          title: 'Makna Tashghir',
+          body: '(1) Pengecilan fisik. (2) Penghinaan/meremehkan. (3) Kasih sayang. (4) Mendekatkan waktu/jarak.',
+          examples: [
+            { ar: 'بَيْتٌ → بُيَيْتٌ', latin: 'bait → buyait', id: 'rumah → rumah kecil (fisik)' },
+            { ar: 'شَاعِرٌ → شُوَيْعِرٌ', latin: 'syaa\'ir → syuwai\'ir', id: 'penyair → penyair kelas rendah (penghinaan)' },
+            { ar: 'وَلَدٌ → وُلَيْدٌ', latin: 'walad → wulaid', id: 'anak → anak kesayangan (kasih sayang)' },
+            { ar: 'قَبْلَ → قُبَيْلَ', latin: 'qabla → qubail', id: 'sebelum → sebentar sebelum (mendekat)' },
+          ],
+        },
+        {
+          title: 'Nama-Nama Populer dari Tashghir',
+          body: 'Banyak nama orang Arab ternyata bentuk tashghir.',
+          examples: [
+            { ar: 'حُسَيْنٌ', latin: 'Husain', id: 'tashghir dari حَسَن (baik)' },
+            { ar: 'زُبَيْرٌ', latin: 'Zubair', id: 'tashghir dari زَبْر (kuat)' },
+            { ar: 'عُمَيْرٌ', latin: 'Umair', id: 'tashghir dari عَمْر (umur)' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'لَا يَدْخُلُ الْجَنَّةَ إِلَّا نَفْسٌ مُسْلِمَةٌ',
+        latin: 'laa yadkhulul-jannata illaa nafsun muslimah',
+        surah: 'Hadits',
+        ayatNum: '-',
+        analysis: [
+          { word: 'لَا يَدْخُلُ', type: 'Nahyi (fi\'il majzum)', note: '' },
+          { word: 'الْجَنَّةَ', type: 'Maf\'ul bih', note: 'nashob' },
+          { word: 'إِلَّا', type: 'Harf istitsna\'', note: 'kecuali' },
+          { word: 'نَفْسٌ', type: 'Naib fa\'il / mustasna', note: 'jiwa' },
+          { word: 'مُسْلِمَةٌ', type: 'Na\'at', note: 'yang muslim' },
+        ],
+        explanation: 'Bonus: kata "Husain" (cucu Nabi) adalah TASHGHIR dari "Hasan". Hasan & Husain — kakak adik. Hasan = "yang baik", Husain = "yang baik sekali / yang kecil yang baik" (bentuk afektif). Pengetahuan tashghir membuka makna nama-nama yang sering kita dengar.',
+      },
+    },
+    quiz: [
+      {
+        q: 'Pola dasar tashghir untuk 3 huruf adalah...',
+        options: ['فَاعِلٌ', 'فُعَيْلٌ', 'مَفْعُولٌ', 'فَعَّالٌ'],
+        correct: 1,
+        explanation: 'Pola tashghir 3 huruf: فُعَيْلٌ — dhommah, fathah, ya\' sukun, huruf 3.',
+      },
+      {
+        q: 'Tashghir dari رَجُل adalah...',
+        options: ['رَاجِل', 'رُجَيْل', 'مَرْجُول', 'رَجُول'],
+        correct: 1,
+        explanation: 'رَجُل → رُجَيْل (lelaki kecil) — pola فُعَيْل.',
+      },
+      {
+        q: 'Husain adalah tashghir dari...',
+        options: ['Hassan', 'Hasan', 'Husnu', 'Husna'],
+        correct: 1,
+        explanation: 'حُسَيْن adalah tashghir dari حَسَن — pola fu\'ail. Diberikan untuk adik dari Hasan.',
+      },
+      {
+        q: 'Tashghir TIDAK bisa berarti...',
+        options: ['Pengecilan fisik', 'Kasih sayang', 'Pertanyaan', 'Mendekatkan jarak/waktu'],
+        correct: 2,
+        explanation: 'Tashghir untuk: pengecilan, penghinaan, kasih sayang, mendekatkan. BUKAN untuk pertanyaan.',
+      },
+    ],
+  },
 ];
 
 export function getShorfLesson(id) {
