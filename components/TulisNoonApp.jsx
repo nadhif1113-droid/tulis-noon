@@ -35,11 +35,13 @@ import PersonaGoalModal from '@/components/PersonaGoalModal';
 import OnboardingFlow from '@/components/OnboardingFlow';
 import GamesScreen from '@/components/GamesScreen';
 import DailyBriefingModal from '@/components/DailyBriefingModal';
+import EventDashboard from '@/components/EventDashboard';
 import { CERTIFICATE_PATHS, getPathProgress, generateCertNumber, MASTER_CERTIFICATE } from '@/lib/certificate';
 import { speakArabic as ttsSpeakArabic } from '@/lib/tts';
 import { postActivity, getCommunityFeed, getLeaderboard, getUserGlobalRank, updatePresence, listenDmThreads, getFriends, getChallengeLeaderboard, getUserChallengeRank, getUnreadPostCount } from '@/lib/social';
 import { Analytics, setAnalyticsUser, setUserProperties } from '@/lib/analytics';
-import { isChallengeActive, challengeDaysRemaining, challengeTotalDays, CHALLENGE_TITLE, CHALLENGE_TAGLINE, CHALLENGE_PRIZES, challengeTotalPrize } from '@/lib/challenge-launch';
+import { isChallengeActive, challengeDaysRemaining, challengeTotalDays, CHALLENGE_TITLE, CHALLENGE_TAGLINE, CHALLENGE_PRIZES, challengeTotalPrize, EVENT_ID, CHALLENGE_START_MS } from '@/lib/challenge-launch';
+import { applyEventXp, EVENT_FEATURES } from '@/lib/event-scoring';
 import { LEARNING_UMRAH } from '@/data/learning-umrah';
 import { LEARNING_PELAJAR } from '@/data/learning-pelajar';
 import { LEARNING_PROFESIONAL } from '@/data/learning-profesional';
@@ -364,6 +366,18 @@ export default function TulisNoonApp() {
     }
   }, [authProfile, user]);
 
+  // Auto-cleanup legacy interests — hapus 'music' kalau masih ada di Firestore (one-time migration)
+  useEffect(() => {
+    if (!authProfile?.interests) return;
+    const LEGACY_REMOVED = ['music'];
+    const cleaned = authProfile.interests.filter((id) => !LEGACY_REMOVED.includes(id));
+    if (cleaned.length !== authProfile.interests.length) {
+      console.log('🧹 Cleaning legacy interests:', authProfile.interests, '→', cleaned);
+      updateUserProfile({ interests: cleaned }).catch(() => {});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authProfile?.interests]);
+
   // Analytics: identify user + set properties + session_started (once per mount)
   const sessionLoggedRef = useRef(false);
   useEffect(() => {
@@ -641,17 +655,33 @@ export default function TulisNoonApp() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screen, user?.uid]);
 
-  const awardXp = (earned) => {
+  // awardXp(earned, feature)
+  //   - earned: jumlah XP standard yang user dapat (untuk total XP profile)
+  //   - feature: optional, salah satu key di EVENT_FEATURES (lesson/hafalan/
+  //     nahwu_shorf/perkenalan/game/tanya_cepat/community/friend)
+  //     Kalau provided + event lagi aktif → ikut hitung event score (capped per fitur)
+  const awardXp = (earned, feature = null) => {
     if (!earned || earned <= 0) return;
     const newXp = (xp || 0) + earned;
-    console.log('💎 awardXp:', { earned, oldXp: xp, newXp });
+    console.log('💎 awardXp:', { earned, feature, oldXp: xp, newXp });
     setXp(newXp);
 
     const updates = { xp: newXp };
 
-    // Tantangan Launch 15 Hari — increment challengeXp kalau periode aktif.
+    // Tantangan Launch — increment challengeXp + apply event scoring kalau aktif
     if (isChallengeActive()) {
       updates.challengeXp = (authProfile?.challengeXp || 0) + earned;
+      // Event scoring engine (multi-feature dgn cap per fitur)
+      if (feature && EVENT_FEATURES[feature]) {
+        const updatedStats = applyEventXp(
+          authProfile?.eventStats,
+          feature,
+          earned,
+          EVENT_ID,
+          Date.now()
+        );
+        if (updatedStats) updates.eventStats = updatedStats;
+      }
     }
 
     // 1. Update streak — kalau hari baru, increment atau reset
@@ -876,7 +906,7 @@ export default function TulisNoonApp() {
             onBack={() => setScreen('lessons')}
             onHome={() => { setTab('home'); setScreen('main'); }}
             onComplete={(earned) => {
-              awardXp(earned);
+              awardXp(earned, 'lesson');
               setProgress(p => ({ ...p, [selectedLesson.pathId]: Math.max((p[selectedLesson.pathId] || 0), selectedLesson.order) }));
               logCommunity({ type:'lesson', text:`Selesai modul: ${selectedLesson.title} (+${earned} XP)`, emoji: selectedLesson.emoji });
               Analytics.lessonComplete(selectedLesson.pathId, selectedLesson.id, earned);
@@ -945,7 +975,7 @@ export default function TulisNoonApp() {
             onHome={() => { setTab('home'); setScreen('main'); }}
             onUpgrade={() => setScreen('premium')}
             onComplete={async ({ earned, materiId }) => {
-              awardXp(earned);
+              awardXp(earned, 'perkenalan');
               // Track completed materi
               const completed = authProfile?.completedPerkenalanMateri || [];
               if (!completed.includes(materiId)) {
@@ -1083,7 +1113,7 @@ export default function TulisNoonApp() {
           onBack={() => setScreen('main')}
           onHome={() => { setTab('home'); setScreen('main'); }}
           onComplete={({ earned, score, totalQuestions }) => {
-            awardXp(earned);
+            awardXp(earned, 'game');
             logCommunity({ type: 'cerita', text: `Cerita Interaktif — quiz selesai (${score}/${totalQuestions}, +${earned} XP)`, emoji: '📖' });
             deductLifeIfLost(score === totalQuestions);
           }}
@@ -1112,7 +1142,7 @@ export default function TulisNoonApp() {
           onBack={() => setScreen('main')}
           onHome={() => { setTab('home'); setScreen('main'); }}
           onComplete={({ earned, score, totalQuestions }) => {
-            awardXp(earned);
+            awardXp(earned, 'game');
             logCommunity({ type: 'tebak-gambar', text: `Tebak Gambar — selesai (${score}/${totalQuestions}, +${earned} XP)`, emoji: '🖼️' });
             deductLifeIfLost(score === totalQuestions);
           }}
@@ -1155,7 +1185,7 @@ export default function TulisNoonApp() {
               coins: curCoins + rewardCoin,
             })
               .then(() => {
-                awardXp(rewardXp);
+                awardXp(rewardXp, 'hafalan');
                 logCommunity({ type: 'hafalan-chunk', text: `${label} — +${rewardXp} XP, +${rewardCoin} 🪙`, emoji: chunkMeta.isFinalRecap ? '🏆' : chunkMeta.isFullSurat ? '📚' : '🌟' });
               })
               .catch((err) => console.error('Hafalan chunk complete error:', err));
@@ -1211,7 +1241,7 @@ export default function TulisNoonApp() {
           onBack={() => setScreen('main')}
           onHome={() => { setTab('home'); setScreen('main'); }}
           onComplete={({ earned, score, totalQuestions }) => {
-            awardXp(earned);
+            awardXp(earned, 'game');
             logCommunity({ type: 'tulis-arab', text: `Tulis Arab — selesai level (${score}/${totalQuestions}, +${earned} XP)`, emoji: '✍️' });
             // Deduct nyawa kalau non-perfect
             deductLifeIfLost(score === totalQuestions);
@@ -1219,11 +1249,9 @@ export default function TulisNoonApp() {
           onUpgrade={() => setScreen('premium')}
         />}
 
-        {screen === 'challenge-launch' && <ChallengeLaunchScreen
+        {screen === 'challenge-launch' && <EventDashboard
           userId={user?.uid}
           userProfile={authProfile}
-          challengeXp={authProfile?.challengeXp || 0}
-          challengeRank={challengeRank}
           onBack={() => setScreen('main')}
           onHome={() => { setTab('home'); setScreen('main'); }}
         />}
@@ -1266,7 +1294,7 @@ export default function TulisNoonApp() {
           onUpgrade={() => setScreen('premium')}
           onComplete={async ({ earned, lessonId, pathId }) => {
             if (earned > 0) {
-              awardXp(earned);
+              awardXp(earned, 'nahwu_shorf');
               logCommunity({ type: pathId, text: `${pathId === 'nahwu' ? 'Nahwu' : 'Shorf'} — selesai pelajaran (+${earned} XP)`, emoji: pathId === 'nahwu' ? '🧮' : '🌿' });
               // Track completed lessons
               const completedMap = authProfile?.completedNahwuShorf || {};
@@ -1297,7 +1325,7 @@ export default function TulisNoonApp() {
           onHome={() => { setTab('home'); setScreen('main'); }}
           onComplete={(earned) => {
             if (earned > 0) {
-              awardXp(earned);
+              awardXp(earned, 'game');
               logCommunity({ type: 'ngomong', text: `Latihan bicara — pengucapan benar (+${earned} XP)`, emoji: '🗣️' });
             }
           }}
@@ -1329,12 +1357,12 @@ export default function TulisNoonApp() {
             const countToday = lastDate === today ? (authProfile?.commentXpCount || 0) : 0;
             if (countToday >= 5) return; // capped
             try {
+              // Pakai awardXp dgn feature 'community' biar ikut event scoring
+              awardXp(3, 'community');
               await updateUserProfile({
-                xp: (authProfile?.xp || 0) + 3,
                 commentXpCount: countToday + 1,
                 commentXpDate: today,
               });
-              setXp((v) => v + 3);
               Analytics.xpEarned(3, 'comment');
               setAchievements((a) => [{ id: Date.now(), type: 'comment', text: `💬 Komentar di komunitas (+3 XP)`, emoji: '💬', time: 'baru saja', user: userName || 'Anda' }, ...a]);
             } catch (e) { console.error('comment xp save error:', e); }
@@ -2829,18 +2857,23 @@ function ProfilTab({ userName, userProfile, xp, streak, progress, onOpenPremium 
       </div>
 
       {/* Display user's interests if available */}
-      {userProfile?.interests?.length > 0 && (
-        <div className="rounded-2xl p-4 mb-4" style={{ background: 'white', border: '1px solid rgba(10,77,60,0.08)' }}>
-          <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#8b6b3d' }}>Minatmu</p>
-          <div className="flex flex-wrap gap-2">
-            {userProfile.interests.map((id) => (
-              <span key={id} className="px-3 py-1.5 rounded-full text-xs font-medium" style={{ background: 'rgba(10,77,60,0.08)', color: '#0a4d3c' }}>
-                {interestLabels[id] || id}
-              </span>
-            ))}
+      {userProfile?.interests?.length > 0 && (() => {
+        // Filter interests yang masih valid (skip legacy ID kayak 'music' yg udah dihapus)
+        const validInterests = userProfile.interests.filter((id) => interestLabels[id]);
+        if (validInterests.length === 0) return null;
+        return (
+          <div className="rounded-2xl p-4 mb-4" style={{ background: 'white', border: '1px solid rgba(10,77,60,0.08)' }}>
+            <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#8b6b3d' }}>Minatmu</p>
+            <div className="flex flex-wrap gap-2">
+              {validInterests.map((id) => (
+                <span key={id} className="px-3 py-1.5 rounded-full text-xs font-medium" style={{ background: 'rgba(10,77,60,0.08)', color: '#0a4d3c' }}>
+                  {interestLabels[id]}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Premium Card */}
       <button onClick={onOpenPremium} className="w-full text-left rounded-2xl p-5 mb-4 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #c9a961, #d4b876)' }}>

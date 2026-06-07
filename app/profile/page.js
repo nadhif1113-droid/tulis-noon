@@ -237,20 +237,25 @@ export default function ProfilePage() {
         </div>
 
         {/* Interest tags */}
-        {userProfile?.interests?.length > 0 && (
-          <div className="px-5 mb-4">
-            <div className="rounded-2xl p-4" style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.08)' }}>
-              <p className="text-[10px] tracking-widest uppercase font-bold mb-2.5" style={{ color: '#c9a961' }}>Minatmu</p>
-              <div className="flex flex-wrap gap-1.5">
-                {userProfile.interests.map((id) => (
-                  <span key={id} className="px-3 py-1 rounded-full text-xs font-medium" style={{ background: 'rgba(10,77,60,0.06)', color: '#0a4d3c' }}>
-                    {INTEREST_LABELS[id] || id}
-                  </span>
-                ))}
+        {userProfile?.interests?.length > 0 && (() => {
+          // Filter interests yang masih valid (skip legacy ID kayak 'music' yg udah dihapus)
+          const validInterests = userProfile.interests.filter((id) => INTEREST_LABELS[id]);
+          if (validInterests.length === 0) return null;
+          return (
+            <div className="px-5 mb-4">
+              <div className="rounded-2xl p-4" style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.08)' }}>
+                <p className="text-[10px] tracking-widest uppercase font-bold mb-2.5" style={{ color: '#c9a961' }}>Minatmu</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {validInterests.map((id) => (
+                    <span key={id} className="px-3 py-1 rounded-full text-xs font-medium" style={{ background: 'rgba(10,77,60,0.06)', color: '#0a4d3c' }}>
+                      {INTEREST_LABELS[id]}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Arabic level + dailyTime + accent — kalau ada */}
         {(userProfile?.arabicLevel || userProfile?.accent || userProfile?.dailyTime) && (
