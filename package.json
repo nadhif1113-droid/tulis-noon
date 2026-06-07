@@ -16,7 +16,9 @@
     "android:build": "npx cap sync android && npx cap open android",
     "mobile:setup": "bash scripts/setup-mobile.sh",
     "tebak:gen": "node scripts/generate-tebak-images.js",
-    "tebak:gen:dry": "node scripts/generate-tebak-images.js --dry-run --limit 5"
+    "tebak:gen:dry": "node scripts/generate-tebak-images.js --dry-run --limit 5",
+    "tebak:doctor": "node scripts/generate-tebak-images.js --doctor",
+    "tebak:test": "node scripts/generate-tebak-images.js --limit 1 --verbose"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.21.1",

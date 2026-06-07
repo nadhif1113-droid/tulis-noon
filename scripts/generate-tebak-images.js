@@ -50,22 +50,206 @@ const flags = {
   limit: Infinity,
   force: false,
   dryRun: false,
+  verbose: false,
+  doctor: false,
+  // Default 13 detik = ~4.6 RPM (di bawah limit tier-1 = 5 RPM untuk gpt-image-*).
+  // Akun yang udah tier-2+ bisa pakai --sleep 4000 (15 RPM).
+  sleepMs: 13000,
 };
 for (let i = 0; i < args.length; i++) {
   if (args[i] === '--category' && args[i + 1]) flags.category = args[++i];
   else if (args[i] === '--limit' && args[i + 1]) flags.limit = parseInt(args[++i], 10);
   else if (args[i] === '--force') flags.force = true;
   else if (args[i] === '--dry-run') flags.dryRun = true;
+  else if (args[i] === '--verbose' || args[i] === '-v') flags.verbose = true;
+  else if (args[i] === '--doctor') flags.doctor = true;
+  else if (args[i] === '--sleep' && args[i + 1]) flags.sleepMs = parseInt(args[++i], 10);
+}
+
+// Error log file untuk debug
+const ERROR_LOG = path.join(__dirname, '..', 'tebak-gen-errors.log');
+function logError(item, level, err) {
+  const ts = new Date().toISOString();
+  const line = `[${ts}] ${level}/${item.id} (${item.arabic}): ${err.message}\n${err.stack ? err.stack + '\n' : ''}\n`;
+  fs.appendFileSync(ERROR_LOG, line);
 }
 
 // ---------- VALIDATION ----------
 const REQUIRED = ['OPENAI_API_KEY'];
-if (!flags.dryRun) REQUIRED.push('FIREBASE_SERVICE_ACCOUNT', 'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET');
+if (!flags.dryRun && !flags.doctor) REQUIRED.push('FIREBASE_SERVICE_ACCOUNT', 'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET');
 for (const k of REQUIRED) {
   if (!process.env[k]) {
     console.error(`❌ Missing env var: ${k}`);
+    console.error(`   Pastiin .env.local punya baris: ${k}=...`);
+    console.error(`   Atau export di shell: export ${k}=...`);
     process.exit(1);
   }
+}
+
+// ---------- DOCTOR: diagnose env tanpa generate ----------
+async function runDoctor() {
+  console.log('🩺 Doctor — diagnose environment\n');
+  let allOk = true;
+
+  // 1. Check OPENAI_API_KEY format
+  const oai = process.env.OPENAI_API_KEY;
+  if (!oai) {
+    console.log('❌ OPENAI_API_KEY: NOT SET');
+    allOk = false;
+  } else if (!oai.startsWith('sk-')) {
+    console.log(`⚠️  OPENAI_API_KEY: format aneh — mulai dengan "${oai.substring(0, 6)}..." (expect "sk-...")`);
+    allOk = false;
+  } else {
+    console.log(`✅ OPENAI_API_KEY: set (${oai.substring(0, 7)}...${oai.substring(oai.length - 4)})`);
+  }
+  console.log(`📦 OPENAI_IMAGE_MODEL: ${IMAGE_MODEL}`);
+
+  // 2. Test OpenAI API connectivity + cek model tersedia
+  if (oai) {
+    process.stdout.write('   → testing OpenAI API... ');
+    try {
+      const res = await fetch('https://api.openai.com/v1/models', {
+        headers: { 'Authorization': `Bearer ${oai}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const targetModel = data.data?.find(m => m.id === IMAGE_MODEL);
+        const dalle3 = data.data?.find(m => m.id === 'dall-e-3');
+        const gptImage = data.data?.find(m => m.id === 'gpt-image-1');
+        const dalle2 = data.data?.find(m => m.id === 'dall-e-2');
+
+        if (targetModel) {
+          console.log(`✅ OK (${IMAGE_MODEL} available)`);
+        } else {
+          console.log(`⚠️  ${IMAGE_MODEL} tidak ada — model yang available untuk image:`);
+          if (gptImage) console.log(`      • gpt-image-1 ✓ (set OPENAI_IMAGE_MODEL=gpt-image-1)`);
+          if (dalle3) console.log(`      • dall-e-3 ✓`);
+          if (dalle2) console.log(`      • dall-e-2 ✓`);
+          if (!gptImage && !dalle3 && !dalle2) {
+            console.log(`      ❌ TIDAK ADA model image — kemungkinan saldo $0 atau project key gak punya akses image`);
+          }
+          allOk = false;
+        }
+      } else {
+        const errText = await res.text();
+        console.log(`❌ HTTP ${res.status}`);
+        console.log(`   Response: ${errText.substring(0, 200)}`);
+        allOk = false;
+      }
+    } catch (e) {
+      console.log(`❌ ${e.message}`);
+      allOk = false;
+    }
+  }
+
+  // 3. Test billing — generate 1 dummy image
+  if (oai) {
+    process.stdout.write(`   → test generate 1 image (${IMAGE_MODEL})... `);
+    try {
+      const isGpt = IS_GPT_IMAGE;
+      const testBody = isGpt ? {
+        model: IMAGE_MODEL,
+        prompt: 'A simple red apple on white background, flat illustration',
+        n: 1,
+        size: '1024x1024',
+        quality: 'low',
+      } : {
+        model: IMAGE_MODEL,
+        prompt: 'A simple red apple on white background, flat illustration',
+        n: 1,
+        size: '1024x1024',
+        quality: 'standard',
+      };
+      const res = await fetch('https://api.openai.com/v1/images/generations', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${oai}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(testBody),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        console.log(`✅ Berhasil generate`);
+        const sample = isGpt ? `[b64 image, ${data.data[0].b64_json?.length || 0} bytes]` : data.data[0].url.substring(0, 80) + '...';
+        console.log(`   Sample: ${sample}`);
+      } else {
+        const errText = await res.text();
+        console.log(`❌ HTTP ${res.status}`);
+        console.log(`   Response: ${errText.substring(0, 400)}`);
+        // Common errors
+        if (errText.includes('billing')) console.log(`   💡 Solusi: top-up credit di platform.openai.com/account/billing`);
+        if (errText.includes('rate_limit')) console.log(`   💡 Solusi: tunggu 1 menit atau upgrade tier`);
+        if (errText.includes('invalid_api_key')) console.log(`   💡 Solusi: API key salah/expired, generate baru di platform.openai.com/api-keys`);
+        if (errText.includes('content_policy')) console.log(`   💡 Solusi: prompt ke-filter, tapi prompt apel harusnya safe`);
+        if (errText.includes('insufficient_quota')) console.log(`   💡 Solusi: saldo abis, top-up di platform.openai.com/account/billing`);
+        allOk = false;
+      }
+    } catch (e) {
+      console.log(`❌ ${e.message}`);
+      allOk = false;
+    }
+  }
+
+  // 4. Check Firebase config
+  console.log('');
+  const fbSa = process.env.FIREBASE_SERVICE_ACCOUNT;
+  const fbBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
+  if (!fbSa) {
+    console.log('❌ FIREBASE_SERVICE_ACCOUNT: NOT SET');
+    allOk = false;
+  } else {
+    try {
+      const sa = JSON.parse(fbSa);
+      console.log(`✅ FIREBASE_SERVICE_ACCOUNT: parse OK (project: ${sa.project_id})`);
+      if (!sa.private_key) {
+        console.log(`   ⚠️  private_key kosong — JSON malformed?`);
+        allOk = false;
+      } else if (!sa.private_key.includes('BEGIN PRIVATE KEY')) {
+        console.log(`   ⚠️  private_key format aneh — pastiin \\n udah jadi newline asli`);
+      }
+    } catch (e) {
+      console.log(`❌ FIREBASE_SERVICE_ACCOUNT: parse error — ${e.message}`);
+      console.log(`   💡 Pastiin JSON valid 1 baris. Coba: echo $FIREBASE_SERVICE_ACCOUNT | jq .`);
+      allOk = false;
+    }
+  }
+
+  if (!fbBucket) {
+    console.log('❌ NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: NOT SET');
+    allOk = false;
+  } else {
+    console.log(`✅ NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${fbBucket}`);
+    if (!fbBucket.match(/\.(appspot\.com|firebasestorage\.app)$/)) {
+      console.log(`   ⚠️  Format aneh — biasanya: xxx.firebasestorage.app atau xxx.appspot.com`);
+    }
+  }
+
+  // 5. Test Firebase Storage upload
+  if (fbSa && fbBucket) {
+    process.stdout.write('   → test upload ke Firebase Storage... ');
+    try {
+      const bucket = initFirebase();
+      const testFile = bucket.file('tebak-gambar/_doctor-test.txt');
+      await testFile.save(Buffer.from('doctor test ' + Date.now()), {
+        metadata: { contentType: 'text/plain' },
+      });
+      await testFile.makePublic();
+      console.log(`✅ Upload OK`);
+      console.log(`   File: https://storage.googleapis.com/${bucket.name}/tebak-gambar/_doctor-test.txt`);
+      // Cleanup
+      await testFile.delete().catch(() => {});
+    } catch (e) {
+      console.log(`❌ ${e.message}`);
+      if (e.message.includes('does not exist')) console.log(`   💡 Bucket "${fbBucket}" tidak ada — cek di Firebase Console > Storage`);
+      if (e.message.includes('permission')) console.log(`   💡 Service Account butuh role "Storage Admin" — atur di IAM Firebase`);
+      if (e.message.includes('uniform bucket-level access')) console.log(`   💡 Bucket pakai uniform access — makePublic() gak work. Solusi: pakai signed URL atau matiin uniform access`);
+      allOk = false;
+    }
+  }
+
+  console.log('\n' + (allOk ? '✅ Semua OK — siap run generator' : '❌ Ada yang fail — fix dulu sebelum lanjut'));
+  return allOk;
 }
 
 // ---------- FIREBASE INIT (lazy) ----------
@@ -196,28 +380,57 @@ function downloadBuffer(url) {
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // ---------- OPENAI GENERATE ----------
+// Model bisa diatur via env: OPENAI_IMAGE_MODEL
+// Default: gpt-image-1 (modern, available di semua akun baru OpenAI).
+// Kalau akun lama yang masih punya DALL-E 3: set OPENAI_IMAGE_MODEL=dall-e-3
+const IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1';
+
+// Detect family — gpt-image-* family vs dall-e-* family
+const IS_GPT_IMAGE = IMAGE_MODEL.startsWith('gpt-image') || IMAGE_MODEL.startsWith('chatgpt-image');
+
 async function generateImage(prompt) {
+  const body = IS_GPT_IMAGE ? {
+    model: IMAGE_MODEL,
+    prompt,
+    n: 1,
+    size: '1024x1024',
+    // gpt-image-1 family: quality = "low" | "medium" | "high" | "auto"
+    quality: 'medium',  // ~$0.04, sweet spot
+  } : {
+    model: IMAGE_MODEL,
+    prompt,
+    n: 1,
+    size: '1024x1024',
+    quality: 'standard',
+    response_format: 'url',
+  };
+
   const res = await fetch('https://api.openai.com/v1/images/generations', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      model: 'dall-e-3',
-      prompt,
-      n: 1,
-      size: '1024x1024',
-      quality: 'standard',
-      response_format: 'url',
-    }),
+    body: JSON.stringify(body),
   });
   if (!res.ok) {
     const errText = await res.text();
     throw new Error(`OpenAI error ${res.status}: ${errText}`);
   }
   const data = await res.json();
-  return data.data[0].url;
+  // gpt-image-1 returns b64_json, dall-e-3 returns url
+  if (IS_GPT_IMAGE) {
+    return { type: 'b64', data: data.data[0].b64_json };
+  }
+  return { type: 'url', data: data.data[0].url };
+}
+
+// Wrapper: get buffer from either URL or b64
+async function getImageBuffer(result) {
+  if (result.type === 'b64') {
+    return Buffer.from(result.data, 'base64');
+  }
+  return downloadBuffer(result.data);
 }
 
 // ---------- FIREBASE UPLOAD ----------
@@ -235,8 +448,17 @@ async function uploadToStorage(buffer, storagePath) {
 
 // ---------- MAIN ----------
 async function main() {
+  // Doctor mode — diagnose env tanpa generate
+  if (flags.doctor) {
+    const ok = await runDoctor();
+    process.exit(ok ? 0 : 1);
+  }
+
   console.log('🎨 Tebak Gambar — AI Image Generator');
   console.log('=====================================\n');
+
+  // Reset error log
+  if (fs.existsSync(ERROR_LOG)) fs.unlinkSync(ERROR_LOG);
 
   const levels = parseDataFile();
   console.log(`📦 Parsed ${levels.length} categories, ${levels.reduce((s, l) => s + l.items.length, 0)} items total`);
@@ -245,6 +467,7 @@ async function main() {
   let totalGenerated = 0;
   let totalSkipped = 0;
   let totalErrors = 0;
+  const errorSummary = []; // first few errors untuk summary
 
   for (const level of levels) {
     if (flags.category && level.id !== flags.category) continue;
@@ -256,7 +479,7 @@ async function main() {
 
       const existing = urlMap[level.id][item.arabic];
       if (existing && !flags.force) {
-        console.log(`   ⏭️  ${item.id} (already exists)`);
+        if (flags.verbose) console.log(`   ⏭️  ${item.id} (already exists)`);
         totalSkipped++;
         continue;
       }
@@ -267,29 +490,49 @@ async function main() {
 
       if (flags.dryRun) {
         console.log(`   📝 [DRY] ${item.id} → ${storagePath}`);
-        console.log(`        prompt: ${prompt.substring(0, 80)}...`);
+        if (flags.verbose) console.log(`        prompt: ${prompt}`);
         totalGenerated++;
         continue;
       }
 
+      let stage = 'init';
       try {
-        console.log(`   🎨 ${item.id}...`);
-        // 1. Generate via DALL-E
-        const dalleUrl = await generateImage(prompt);
-        // 2. Download
-        const buffer = await downloadBuffer(dalleUrl);
+        process.stdout.write(`   🎨 ${item.id}... `);
+        // 1. Generate via OpenAI
+        stage = 'openai-generate';
+        if (flags.verbose) process.stdout.write(`[${IMAGE_MODEL}] `);
+        const imgResult = await generateImage(prompt);
+        // 2. Get buffer (b64 decode atau download URL)
+        stage = 'fetch-buffer';
+        if (flags.verbose) process.stdout.write('[fetch] ');
+        const buffer = await getImageBuffer(imgResult);
         // 3. Upload to Firebase
+        stage = 'firebase-upload';
+        if (flags.verbose) process.stdout.write('[upload] ');
         const publicUrl = await uploadToStorage(buffer, storagePath);
         // 4. Save to map (incremental — save after EVERY item for crash safety)
+        stage = 'save-map';
         urlMap[level.id][item.arabic] = publicUrl;
         saveUrlMap(urlMap);
-        console.log(`      ✅ ${publicUrl.substring(0, 60)}...`);
+        console.log(`✅`);
+        if (flags.verbose) console.log(`      → ${publicUrl}`);
         totalGenerated++;
         // Polite rate limit (DALL-E 3 = 7 RPM tier 1, 15 RPM tier 2)
-        await sleep(2000);
+        await sleep(flags.sleepMs);
       } catch (err) {
-        console.error(`      ❌ ${err.message}`);
+        console.log(`❌ [${stage}]`);
+        console.log(`      → ${err.message.substring(0, 200)}`);
+        logError(item, stage, err);
+        if (errorSummary.length < 3) {
+          errorSummary.push({ item: item.id, stage, message: err.message });
+        }
         totalErrors++;
+        // Kalau 5 error pertama berturut-turut, kemungkinan systemic issue — kasih saran
+        if (totalErrors === 5 && totalGenerated === 0) {
+          console.log(`\n💡 5 error berturut-turut tanpa sukses → kemungkinan systemic issue.`);
+          console.log(`   Coba: node scripts/generate-tebak-images.js --doctor`);
+          console.log(`   Atau cek file: tebak-gen-errors.log\n`);
+        }
       }
     }
     if (totalGenerated >= flags.limit) break;
@@ -299,6 +542,14 @@ async function main() {
   console.log(`✅ Generated: ${totalGenerated}`);
   console.log(`⏭️  Skipped:   ${totalSkipped}`);
   console.log(`❌ Errors:    ${totalErrors}`);
+  if (totalErrors > 0) {
+    console.log(`\n📋 Sample errors (first 3):`);
+    errorSummary.forEach((e, i) => {
+      console.log(`   ${i + 1}. ${e.item} [${e.stage}]: ${e.message.substring(0, 150)}`);
+    });
+    console.log(`\n   Full log: ${ERROR_LOG}`);
+    console.log(`   Diagnose: node scripts/generate-tebak-images.js --doctor`);
+  }
   console.log(`\n💾 URL map saved to: data/tebak-gambar-urls.js`);
   console.log(`\n📲 Frontend will auto-load URLs via the JSON map.`);
 }
