@@ -32,6 +32,7 @@ import NahwuShorfScreen from '@/components/NahwuShorfScreen';
 import CertificatesScreen from '@/components/CertificatesScreen';
 import CertificateEarnedModal from '@/components/CertificateEarnedModal';
 import PersonaGoalModal from '@/components/PersonaGoalModal';
+import OnboardingFlow from '@/components/OnboardingFlow';
 import { CERTIFICATE_PATHS, getPathProgress, generateCertNumber, MASTER_CERTIFICATE } from '@/lib/certificate';
 import { speakArabic as ttsSpeakArabic } from '@/lib/tts';
 import { postActivity, getCommunityFeed, getLeaderboard, getUserGlobalRank, updatePresence, listenDmThreads, getFriends, getChallengeLeaderboard, getUserChallengeRank } from '@/lib/social';
@@ -76,7 +77,8 @@ export default function TulisNoonApp() {
   const unreadChats = dmThreads.filter((t) => t.unread).length; // jumlah chat belum dibaca
   const [challengeRank, setChallengeRank] = useState(null); // peringkat di Tantangan Launch
   const [earnedCertPathId, setEarnedCertPathId] = useState(null); // pathId yg baru saja diraih (untuk modal celebration)
-  const [showPersonaModal, setShowPersonaModal] = useState(false); // tanya tujuan belajar (1x untuk user baru)
+  const [showPersonaModal, setShowPersonaModal] = useState(false); // legacy fallback
+  const [showOnboarding, setShowOnboarding] = useState(false); // wizard 7-step onboarding
   // Level dalam scenario yang dipilih (1-100)
   const [selectedLevel, setSelectedLevel] = useState(1);
   const [progress, setProgress] = useState({ umrah: 1, profesi: 0, beasiswa: 0 });
@@ -375,23 +377,26 @@ export default function TulisNoonApp() {
     }
   }, [user?.uid, authProfile]);
 
-  // Auto-show Persona Goal Modal kalau user belum set tujuan belajar.
-  // Trigger: user udah login + profile ke-load + screen udah 'main' + personaGoal null.
-  // Sengaja TIDAK dependency screen biar gak retrigger pas user navigasi.
+  // Auto-show Onboarding Flow kalau user belum selesai onboarding.
+  // Logic:
+  //   - User udah login + profile ke-load + screen 'main'
+  //   - onboardingCompleted falsy → show full 7-step wizard
+  //   - Backward compat: kalau ada personaGoal tapi gak ada onboardingCompleted,
+  //     anggap udah lewat → skip (user lama dari sebelum flow ini)
   useEffect(() => {
     if (!authProfile) return;
     if (authLoading) return;
-    // Hanya kalau user udah onboard ke main (bukan welcome flow)
     if (screen !== 'main') return;
-    // Hanya kalau personaGoal belum di-set (undefined atau null atau empty string)
-    if (authProfile.personaGoal) return;
+    // Skip kalau udah lengkap onboarding
+    if (authProfile.onboardingCompleted) return;
+    // Backward compat: user lama yang punya personaGoal sebelum onboarding flow
+    if (authProfile.personaGoal && authProfile.xp > 0) return;
     // Avoid duplicate trigger
-    if (showPersonaModal) return;
-    // Show modal
-    console.log('🎯 Triggering persona goal modal (personaGoal=null)');
-    setShowPersonaModal(true);
+    if (showOnboarding) return;
+    console.log('🚪 Triggering onboarding flow (onboardingCompleted=false)');
+    setShowOnboarding(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authProfile?.personaGoal, authLoading, screen]);
+  }, [authProfile?.onboardingCompleted, authProfile?.personaGoal, authLoading, screen]);
 
   // Routing logic: HANYA jalan saat screen masih null (initial load).
   // BUG SEBELUMNYA: useEffect ini dependency-nya [authLoading, authProfile],
@@ -1275,7 +1280,35 @@ export default function TulisNoonApp() {
           />
         )}
 
-        {/* Persona goal modal — auto-show 1x kalau user belum set tujuan belajar */}
+        {/* Onboarding wizard 7-step — muncul 1x untuk user baru */}
+        {showOnboarding && (
+          <OnboardingFlow
+            userName={userName || authProfile?.displayName || user?.displayName}
+            onComplete={async (finalData) => {
+              try {
+                await updateUserProfile({
+                  personaGoal: finalData.personaGoal || 'all',
+                  dailyGoalMinutes: finalData.dailyGoalMinutes || 10,
+                  reminderTime: finalData.reminderTime || null,
+                  onboardingCompleted: true,
+                  onboardingCompletedAt: Date.now(),
+                  // First win bonus +20 XP — udah dijanjiin di Step 5
+                  xp: (authProfile?.xp || 0) + 20,
+                  streak: Math.max(authProfile?.streak || 0, 1),
+                });
+                Analytics.personaSet(finalData.personaGoal || 'all');
+                Analytics.dailyGoalSet(finalData.dailyGoalMinutes);
+                Analytics.xpEarned(20, 'onboarding');
+                setShowOnboarding(false);
+              } catch (e) {
+                console.error('[onboarding] save error:', e);
+                setShowOnboarding(false);
+              }
+            }}
+          />
+        )}
+
+        {/* Legacy persona modal — backward compat (gak triggered lagi by default) */}
         {showPersonaModal && (
           <PersonaGoalModal
             onSelect={async (goalId) => {
