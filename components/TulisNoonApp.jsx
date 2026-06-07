@@ -29,6 +29,7 @@ import CommunityScreen from '@/components/CommunityScreen';
 import ChatScreen from '@/components/ChatScreen';
 import NgomongScreen from '@/components/NgomongScreen';
 import NahwuShorfScreen from '@/components/NahwuShorfScreen';
+import CertificatesScreen from '@/components/CertificatesScreen';
 import { speakArabic as ttsSpeakArabic } from '@/lib/tts';
 import { postActivity, getCommunityFeed, getLeaderboard, getUserGlobalRank, updatePresence, listenDmThreads, getFriends, getChallengeLeaderboard, getUserChallengeRank } from '@/lib/social';
 import { isChallengeActive, challengeDaysRemaining, challengeTotalDays, CHALLENGE_TITLE, CHALLENGE_TAGLINE, CHALLENGE_PRIZES, challengeTotalPrize } from '@/lib/challenge-launch';
@@ -156,6 +157,9 @@ export default function TulisNoonApp() {
       setScreen('tanya-cepat');
       // Bersihin query param dari URL biar gak nyangkut
       router.replace('/', { scroll: false });
+    } else if (targetScreen === 'certificates') {
+      setScreen('certificates');
+      router.replace('/', { scroll: false });
     }
   }, [searchParams, router]);
 
@@ -247,6 +251,7 @@ export default function TulisNoonApp() {
           if (s === 'game') { setScreen('main'); return true; }
           if (s === 'ngomong') { setScreen('main'); return true; }
           if (s === 'nahwu' || s === 'shorf') { setTab('belajar'); setScreen('main'); return true; }
+          if (s === 'certificates') { router?.replace('/profile'); return true; }
           if (s === 'challenge-launch') { setScreen('main'); return true; }
           if (s === 'roleplay') { setScreen('roleplay-list'); return true; }
           if (s === 'roleplay-list') { setScreen('main'); return true; }
@@ -1040,6 +1045,13 @@ export default function TulisNoonApp() {
           challengeXp={authProfile?.challengeXp || 0}
           challengeRank={challengeRank}
           onBack={() => setScreen('main')}
+          onHome={() => { setTab('home'); setScreen('main'); }}
+        />}
+
+        {screen === 'certificates' && <CertificatesScreen
+          userProfile={authProfile}
+          userId={user?.uid}
+          onBack={() => { router?.replace('/profile'); }}
           onHome={() => { setTab('home'); setScreen('main'); }}
         />}
 
