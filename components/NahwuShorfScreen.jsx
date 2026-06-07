@@ -121,7 +121,7 @@ export default function NahwuShorfScreen({ pathId = 'nahwu', userProfile, isPrem
           {/* HERO */}
           <div className="rounded-3xl p-5 mb-4 relative overflow-hidden" style={{ background: meta.gradient }}>
             <div className="absolute -right-6 -top-4 text-7xl opacity-15">{meta.emoji}</div>
-            <p className="text-[10px] tracking-[0.3em] uppercase text-white opacity-90 mb-1 font-bold">Pondasi Arab Klasik</p>
+            <p className="text-[10px] tracking-[0.3em] uppercase text-white opacity-90 mb-1 font-bold">Pondasi Arab Fasiha</p>
             <h2 className="text-2xl text-white mb-2" style={{ fontFamily: 'Fraunces, serif', fontWeight: 700 }}>{meta.title}</h2>
             <p className="text-sm text-white opacity-90 leading-relaxed">{meta.desc}</p>
             <div className="flex items-center gap-3 mt-3">
