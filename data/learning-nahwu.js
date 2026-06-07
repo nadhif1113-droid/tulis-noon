@@ -998,6 +998,668 @@ export const NAHWU_LESSONS = [
       },
     ],
   },
+  ,
+  // ============ PELAJARAN 13 (PREMIUM) ============
+  {
+    id: 'nahwu-13-maful-mutlaq',
+    order: 13,
+    isFree: false,
+    title: 'Maf\'ul Mutlaq',
+    subtitle: 'Penekanan kata kerja dgn mashdar',
+    emoji: '✊',
+    duration: '6 menit',
+    color: '#a05536',
+    xpReward: 35,
+    theory: {
+      intro: 'Maf\'ul Mutlaq (الْمَفْعُولُ الْمُطْلَقُ) adalah mashdar yang muncul setelah fi\'il-nya — fungsinya untuk MENEGASKAN, MENJELASKAN JENIS, atau MENGHITUNG JUMLAH perbuatan. Selalu nashob.',
+      sections: [
+        {
+          title: 'Untuk Menegaskan (Taukid)',
+          body: 'Mashdar dari fi\'il diulang untuk menekankan. Pola: fi\'il + mashdar-nya sebagai maf\'ul mutlaq.',
+          examples: [
+            { ar: 'ضَرَبَ زَيْدٌ ضَرْبًا', latin: 'dharaba Zaidun dharban', id: 'Zaid memukul dengan keras-kerasnya' },
+            { ar: 'ذَكَرْتُ الْأَمْرَ ذِكْرًا', latin: 'dzakartul-amra dzikran', id: 'Aku menyebut perkara itu sungguh-sungguh' },
+          ],
+        },
+        {
+          title: 'Untuk Menjelaskan Jenis (Naw\')',
+          body: 'Mashdar diberi tambahan sifat untuk menunjukkan BAGAIMANA perbuatan dilakukan.',
+          examples: [
+            { ar: 'ضَرَبْتُهُ ضَرْبًا شَدِيدًا', latin: 'dharabtuhu dharban syadiidan', id: 'Aku memukulnya dengan pukulan keras' },
+            { ar: 'سَارَ السَّيْرَ الْجَمِيلَ', latin: 'saaras-sairal-jamiil', id: 'Dia berjalan dgn jalan yang indah' },
+          ],
+        },
+        {
+          title: 'Untuk Menghitung (\'Adad)',
+          body: 'Mashdar muncul dgn angka untuk menunjukkan BERAPA KALI perbuatan terjadi.',
+          examples: [
+            { ar: 'ضَرَبْتُهُ ضَرْبَتَيْنِ', latin: 'dharabtuhu dharbataini', id: 'Aku memukulnya dua kali' },
+            { ar: 'سَبَّحْتُ ثَلاَثَ تَسْبِيحَاتٍ', latin: 'sabbahtu tsalaata tasbiihaat', id: 'Aku bertasbih tiga kali' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'وَكَلَّمَ اللَّهُ مُوسَى تَكْلِيمًا',
+        latin: 'wa kallamallahu Muusaa takliimaa',
+        surah: 'An-Nisa',
+        ayatNum: 164,
+        analysis: [
+          { word: 'وَ', type: 'Harf athaf', note: '' },
+          { word: 'كَلَّمَ', type: 'Fi\'il Madhi', note: 'berbicara; wazan فَعَّلَ' },
+          { word: 'اللَّهُ', type: 'Fa\'il', note: 'rofa\' dgn dhommah' },
+          { word: 'مُوسَى', type: 'Maf\'ul bih', note: 'nashob dgn fathah muqaddarah' },
+          { word: 'تَكْلِيمًا', type: 'Maf\'ul Mutlaq', note: 'mashdar dari كَلَّمَ; nashob — penegasan' },
+        ],
+        explanation: 'تَكْلِيمًا adalah mashdar dari كَلَّمَ yang berfungsi sebagai maf\'ul mutlaq. Artinya: "Allah BENAR-BENAR berbicara kepada Musa secara langsung". Penegasan untuk membantah keraguan bahwa Allah hanya berbicara melalui perantara.',
+      },
+    },
+    quiz: [
+      {
+        q: 'Maf\'ul Mutlaq selalu berupa...',
+        options: ['Fi\'il', 'Mashdar', 'Isim fa\'il', 'Huruf jar'],
+        correct: 1,
+        explanation: 'Maf\'ul mutlaq selalu mashdar dari fi\'il yang menyertainya.',
+      },
+      {
+        q: 'I\'rab maf\'ul mutlaq adalah...',
+        options: ['Rofa\'', 'Nashob', 'Jar', 'Jazm'],
+        correct: 1,
+        explanation: 'Maf\'ul mutlaq selalu nashob — tandanya fathah/tanwin fathah.',
+      },
+      {
+        q: 'Pada ضَرَبْتُهُ ضَرْبَتَيْنِ, maf\'ul mutlaq berfungsi untuk...',
+        options: ['Menegaskan', 'Menjelaskan jenis', 'Menghitung jumlah', 'Tidak ada fungsi'],
+        correct: 2,
+        explanation: 'ضَرْبَتَيْنِ artinya "dua kali pukulan" — menunjukkan JUMLAH (\'adad). Mutsanna dari ضَرْبَةٌ.',
+      },
+      {
+        q: 'تَسْبِيحًا dalam فَسَبِّحْهُ تَسْبِيحًا adalah...',
+        options: ['Fa\'il', 'Maf\'ul bih', 'Maf\'ul Mutlaq', 'Hal'],
+        correct: 2,
+        explanation: 'تَسْبِيحًا adalah mashdar dari سَبَّحَ — di sini fungsinya sebagai maf\'ul mutlaq untuk taukid: "bertasbih-lah dgn sungguh-sungguh".',
+      },
+    ],
+  },
+
+  // ============ PELAJARAN 14 (PREMIUM) ============
+  {
+    id: 'nahwu-14-zhorof',
+    order: 14,
+    isFree: false,
+    title: 'Zhorof Zaman & Makan',
+    subtitle: 'Keterangan waktu & tempat',
+    emoji: '🕰️',
+    duration: '6 menit',
+    color: '#a05536',
+    xpReward: 35,
+    theory: {
+      intro: 'Zhorof (الظَّرْفُ) adalah isim yang menunjukkan WAKTU (zhorof zaman) atau TEMPAT (zhorof makan) terjadinya perbuatan. Secara teknis disebut juga Maf\'ul Fiih — selalu nashob.',
+      sections: [
+        {
+          title: 'Zhorof Zaman (Waktu)',
+          body: 'Menjawab "kapan?". Contoh kata: يَوْمَ، لَيْلَةَ، صَبَاحَ، مَسَاءَ، قَبْلَ، بَعْدَ، حِينَ، الآنَ.',
+          examples: [
+            { ar: 'صَلَّى الْعِشَاءَ لَيْلًا', latin: 'shallal-\'isyaa\'a lailan', id: 'Dia salat Isya pada malam hari' },
+            { ar: 'سَأَزُورُكَ غَدًا', latin: 'sa\'azuuruka ghadan', id: 'Aku akan mengunjungimu besok' },
+            { ar: 'قَرَأْتُ الْكِتَابَ صَبَاحَ الْجُمْعَةِ', latin: 'qara\'tul-kitaaba shabaahal-jumu\'ah', id: 'Aku baca buku Jumat pagi' },
+          ],
+        },
+        {
+          title: 'Zhorof Makan (Tempat)',
+          body: 'Menjawab "di mana?". Contoh: أَمَامَ (di depan), وَرَاءَ (di belakang), فَوْقَ (di atas), تَحْتَ (di bawah), عِنْدَ (di sisi), حَوْلَ (sekitar).',
+          examples: [
+            { ar: 'جَلَسْتُ أَمَامَ الْأُسْتَاذِ', latin: 'jalastu amaamal-ustaadz', id: 'Aku duduk di depan ustadz' },
+            { ar: 'الْكِتَابُ فَوْقَ الْمَكْتَبِ', latin: 'al-kitaabu fauqal-maktab', id: 'Buku di atas meja' },
+          ],
+        },
+        {
+          title: 'Beda Zhorof & Jar-Majrur',
+          body: 'Zhorof TANPA huruf jar — langsung nashob. Sementara كلمة dgn huruf jar (فِي، عَلَى، عِنْدَ pakai في) jadi jar-majrur. Banyak yang keliru.',
+          examples: [
+            { ar: 'جَلَسْتُ أَمَامَ', latin: 'jalastu amaama', id: 'Aku duduk DI DEPAN (zhorof — nashob)' },
+            { ar: 'جَلَسْتُ فِي الْبَيْتِ', latin: 'jalastu fil-bait', id: 'Aku duduk DI rumah (jar-majrur)' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'فَاذْكُرُوا اللَّهَ كَذِكْرِكُمْ آبَاءَكُمْ أَوْ أَشَدَّ ذِكْرًا',
+        latin: 'fadzkurullaaha kadzikrikum aabaa\'akum au asyadda dzikran',
+        surah: 'Al-Baqarah',
+        ayatNum: 200,
+        analysis: [
+          { word: 'فَاذْكُرُوا', type: 'Fi\'il Amr', note: 'maka ingatlah' },
+          { word: 'اللَّهَ', type: 'Maf\'ul bih', note: 'nashob' },
+          { word: 'كَذِكْرِكُمْ', type: 'Jar majrur', note: 'seperti pengingatan kalian' },
+          { word: 'آبَاءَكُمْ', type: 'Maf\'ul bih dari mashdar', note: 'nashob' },
+          { word: 'أَشَدَّ', type: 'Hal/Zhorof', note: 'lebih kuat lagi' },
+          { word: 'ذِكْرًا', type: 'Tamyiz/Maf\'ul Mutlaq', note: 'nashob' },
+        ],
+        explanation: 'Ayat ini gabungan banyak konsep yang sudah kita pelajari — termasuk pemakaian zhorof seperti أَشَدَّ. Sebagai ulangan: perhatikan i\'rab tiap kata.',
+      },
+    },
+    quiz: [
+      {
+        q: 'Zhorof selalu ber-i\'rab...',
+        options: ['Rofa\'', 'Nashob', 'Jar', 'Jazm'],
+        correct: 1,
+        explanation: 'Zhorof zaman dan makan keduanya selalu nashob.',
+      },
+      {
+        q: 'فَوْقَ termasuk zhorof apa?',
+        options: ['Zaman', 'Makan', 'Hal', 'Tamyiz'],
+        correct: 1,
+        explanation: 'فَوْقَ (di atas) menunjukkan TEMPAT — zhorof makan.',
+      },
+      {
+        q: 'Pada سَأَزُورُكَ غَدًا, kata غَدًا adalah...',
+        options: ['Maf\'ul bih', 'Hal', 'Zhorof Zaman', 'Mubtada\''],
+        correct: 2,
+        explanation: 'غَدًا (besok) menunjukkan WAKTU — zhorof zaman, nashob.',
+      },
+      {
+        q: 'Apa beda أَمَامَ dgn فِي?',
+        options: ['Sama saja', 'أَمَامَ zhorof (langsung nashob); فِي huruf jar', 'فِي zhorof; أَمَامَ huruf jar', 'Keduanya huruf jar'],
+        correct: 1,
+        explanation: 'أَمَامَ adalah zhorof (isim yg menunjukkan tempat — nashob langsung). فِي adalah huruf jar yang membuat isim setelahnya majrur.',
+      },
+    ],
+  },
+
+  // ============ PELAJARAN 15 (PREMIUM) ============
+  {
+    id: 'nahwu-15-munada',
+    order: 15,
+    isFree: false,
+    title: 'Munada',
+    subtitle: 'Panggilan dengan يَا',
+    emoji: '📣',
+    duration: '6 menit',
+    color: '#a05536',
+    xpReward: 30,
+    theory: {
+      intro: 'Munada (الْمُنَادَى) adalah isim yang dipanggil — biasanya didahului huruf nida\' (yang paling sering: يَا). Hukum i\'rab-nya tergantung jenis isim: ada yang mansub, ada yang dibinasakan dgn dhommah.',
+      sections: [
+        {
+          title: 'Munada Mufrad Ma\'rifat — Dibinasakan dgn Dhommah',
+          body: 'Kalau munada-nya nama orang atau isim mufrad ma\'rifat, dibinasakan (mabni) dgn dhommah. Tidak ada tanwin.',
+          examples: [
+            { ar: 'يَا زَيْدُ', latin: 'yaa Zaidu', id: 'Wahai Zaid!' },
+            { ar: 'يَا مُحَمَّدُ', latin: 'yaa Muhammadu', id: 'Wahai Muhammad!' },
+            { ar: 'يَا اللَّهُ', latin: 'yaa Allaahu', id: 'Wahai Allah!' },
+          ],
+        },
+        {
+          title: 'Munada Mudhof — Nashob',
+          body: 'Kalau munada-nya mudhof (idhofah), maka di-NASHOB.',
+          examples: [
+            { ar: 'يَا عَبْدَ اللَّهِ', latin: 'yaa \'abdallaah', id: 'Wahai hamba Allah! (nashob)' },
+            { ar: 'يَا رَسُولَ اللَّهِ', latin: 'yaa rasuulallaah', id: 'Wahai Rasul Allah!' },
+          ],
+        },
+        {
+          title: 'Munada Nakirah & Syabihul Mudhof — Nashob',
+          body: 'Kalau munada-nya nakirah (umum) atau nakirah yang menyerupai mudhof, juga nashob.',
+          examples: [
+            { ar: 'يَا رَجُلًا', latin: 'yaa rajulan', id: 'Wahai seorang lelaki! (memanggil umum)' },
+            { ar: 'يَا حَافِظًا كَلَامَ اللَّهِ', latin: 'yaa haafizhan kalaamallaah', id: 'Wahai penghafal Kalam Allah!' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'يَا أَيُّهَا الَّذِينَ آمَنُوا اتَّقُوا اللَّهَ',
+        latin: 'yaa ayyuhal-ladziina aamanut-taqullaah',
+        surah: 'Al-Maidah',
+        ayatNum: 35,
+        analysis: [
+          { word: 'يَا', type: 'Harf nida\'', note: 'untuk panggilan' },
+          { word: 'أَيُّ', type: 'Munada', note: 'dibinasakan dgn dhommah' },
+          { word: 'هَا', type: 'Harf tanbih', note: 'penambah peringatan' },
+          { word: 'الَّذِينَ آمَنُوا', type: 'Sifat munada', note: 'orang-orang yang beriman' },
+          { word: 'اتَّقُوا', type: 'Fi\'il Amr', note: 'bertakwalah' },
+        ],
+        explanation: 'يَا أَيُّهَا adalah formula panggilan klasik yg sangat sering di Qur\'an. أَيُّ adalah munada mufrad — dibinasakan dgn dhommah. Diperkuat dgn هَا (penegasan: "kalian yang beriman, perhatikanlah!").',
+      },
+    },
+    quiz: [
+      {
+        q: 'Munada mufrad ma\'rifat seperti يَا زَيْدُ ber-i\'rab...',
+        options: ['Rofa\' dgn dhommah', 'Mabni atas dhommah (tanpa tanwin)', 'Nashob dgn fathah', 'Jar dgn kasroh'],
+        correct: 1,
+        explanation: 'Munada nama orang dibinasakan (mabni) atas dhommah — tidak punya tanwin, tidak berubah i\'rab-nya.',
+      },
+      {
+        q: 'Pada يَا عَبْدَ اللَّهِ, kata عَبْدَ ber-i\'rab apa?',
+        options: ['Mabni dhommah', 'Mansub (nashob)', 'Majrur', 'Marfu\''],
+        correct: 1,
+        explanation: 'عَبْدَ adalah mudhof — kalau munada-nya mudhof, di-nashob dgn fathah.',
+      },
+      {
+        q: 'Huruf nida\' yang paling sering dipakai adalah...',
+        options: ['فِي', 'يَا', 'إِنَّ', 'هَلْ'],
+        correct: 1,
+        explanation: 'يَا adalah huruf nida\' paling umum. Yang lain: أَيَا، هَيَا (jauh), أَيْ (dekat).',
+      },
+      {
+        q: 'Apa peran هَا dalam يَا أَيُّهَا?',
+        options: ['Mudhof ilaih', 'Harf tanbih (penegasan/peringatan)', 'Maf\'ul', 'Dhomir'],
+        correct: 1,
+        explanation: 'هَا di sini adalah harf tanbih — memperingatkan / menarik perhatian pendengar.',
+      },
+    ],
+  },
+
+  // ============ PELAJARAN 16 (PREMIUM) ============
+  {
+    id: 'nahwu-16-isim-maushul',
+    order: 16,
+    isFree: false,
+    title: 'Isim Maushul',
+    subtitle: 'Kata sambung الذي، التي، ما، من',
+    emoji: '🔗',
+    duration: '7 menit',
+    color: '#a05536',
+    xpReward: 40,
+    theory: {
+      intro: 'Isim Maushul (الْاِسْمُ الْمَوْصُولُ) adalah kata yang menghubungkan dgn kalimat berikutnya (silah). Mirip "yang" / "siapa" / "apa" dlm bahasa Indonesia. Mabni — tidak berubah harakat akhirnya.',
+      sections: [
+        {
+          title: 'Isim Maushul Khusus',
+          body: 'Berdasarkan jenis & jumlah: الَّذِي (lk mufrad), الَّتِي (pr mufrad), اللَّذَانِ (lk mutsanna), اللَّتَانِ (pr mutsanna), الَّذِينَ (lk jamak), اللَّاتِي / اللَّوَاتِي (pr jamak).',
+          examples: [
+            { ar: 'الطَّالِبُ الَّذِي يَدْرُسُ', latin: 'ath-thaalibul-ladzii yadrus', id: 'Murid yang sedang belajar' },
+            { ar: 'الطَّالِبَةُ الَّتِي قَرَأَتْ', latin: 'ath-thaalibatul-latii qara\'at', id: 'Siswi yang membaca' },
+            { ar: 'الْمُسْلِمُونَ الَّذِينَ آمَنُوا', latin: 'al-muslimuunal-ladziina aamanuu', id: 'Muslim yang beriman' },
+          ],
+        },
+        {
+          title: 'Silah al-Maushul',
+          body: 'Setiap isim maushul WAJIB diikuti silah — kalimat lengkap (bisa jumlah ismiyyah, fi\'liyyah, atau syibhul jumlah) yang mengandung dhomir kembali (\'aaid) ke maushul.',
+          examples: [
+            { ar: 'الْكِتَابُ الَّذِي اشْتَرَيْتُهُ', latin: 'al-kitaabul-ladziisytaraituh', id: 'Buku yang aku beli (هُ kembali ke kitaab)' },
+            { ar: 'الْأَمْرُ الَّذِي تَحَدَّثْنَا عَنْهُ', latin: 'al-amrul-ladzii tahaddatsnaa \'anh', id: 'Perkara yang kita bicarakan tentangnya' },
+          ],
+        },
+        {
+          title: 'Isim Maushul Umum: مَا & مَنْ',
+          body: 'مَنْ untuk yang BERAKAL (siapa). مَا untuk yang TIDAK BERAKAL (apa). Mabni — tidak berubah.',
+          examples: [
+            { ar: 'مَنْ يَجْتَهِدْ يَنْجَحْ', latin: 'man yajtahid yanjah', id: 'Siapa yang bersungguh-sungguh, dia akan sukses' },
+            { ar: 'لِلَّهِ مَا فِي السَّمَاوَاتِ', latin: 'lillaahi maa fis-samaawaat', id: 'Milik Allah apa yang ada di langit' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'الْحَمْدُ لِلَّهِ الَّذِي خَلَقَ السَّمَاوَاتِ وَالْأَرْضَ',
+        latin: 'al-hamdu lillaahil-ladzii khalaqas-samaawaati wal-ardh',
+        surah: 'Al-An\'am',
+        ayatNum: 1,
+        analysis: [
+          { word: 'الْحَمْدُ', type: 'Mubtada\'', note: 'rofa\'' },
+          { word: 'لِلَّهِ', type: 'Khobar (jar-majrur)', note: 'untuk Allah' },
+          { word: 'الَّذِي', type: 'Isim Maushul', note: 'na\'at dari lafdz Allah; mabni' },
+          { word: 'خَلَقَ', type: 'Silah (Fi\'il)', note: 'menciptakan; fa\'il dhomir هُوَ kembali ke الَّذِي' },
+          { word: 'السَّمَاوَاتِ', type: 'Maf\'ul bih', note: 'nashob dgn kasroh (jamak mu\'annats salim)' },
+        ],
+        explanation: 'الَّذِي خَلَقَ — isim maushul + silah-nya. خَلَقَ adalah silah, dgn dhomir mustatir (هُوَ) sbg fa\'il yang kembali ke الَّذِي. Pola ini SANGAT sering di Qur\'an untuk menyifati Allah.',
+      },
+    },
+    quiz: [
+      {
+        q: 'Isim maushul untuk pelaku perempuan tunggal adalah...',
+        options: ['الَّذِي', 'الَّتِي', 'الَّذِينَ', 'مَنْ'],
+        correct: 1,
+        explanation: 'الَّتِي untuk perempuan mufrad. الَّذِي untuk laki-laki mufrad.',
+      },
+      {
+        q: 'Setelah isim maushul WAJIB ada...',
+        options: ['Huruf jar', 'Silah (kalimat lengkap dgn dhomir kembali)', 'Mashdar', 'Maf\'ul'],
+        correct: 1,
+        explanation: 'Setelah isim maushul harus ada silah — kalimat yang melengkapi maknanya, mengandung dhomir kembali ke maushul.',
+      },
+      {
+        q: 'Kapan dipakai مَنْ vs مَا?',
+        options: ['Sama saja', 'مَنْ untuk berakal, مَا untuk tidak berakal', 'مَا untuk pertanyaan saja', 'مَنْ hanya untuk Allah'],
+        correct: 1,
+        explanation: 'مَنْ untuk berakal (manusia, malaikat, jin). مَا untuk tidak berakal (benda, hewan, abstrak).',
+      },
+      {
+        q: 'Pada الْكِتَابُ الَّذِي اشْتَرَيْتُهُ, dhomir هُ kembali ke...',
+        options: ['الَّذِي', 'الْكِتَابُ', 'تُ', 'Tidak ada'],
+        correct: 1,
+        explanation: 'هُ adalah dhomir \'aaid (kembali) ke الْكِتَابُ — buku yang aku beli IT.',
+      },
+    ],
+  },
+  ,
+  // ============ PELAJARAN 17 (PREMIUM) ============
+  {
+    id: 'nahwu-17-tamyiz',
+    order: 17,
+    isFree: false,
+    title: 'Tamyiz',
+    subtitle: 'Spesifikasi & penjelas',
+    emoji: '🎯',
+    duration: '6 menit',
+    color: '#a05536',
+    xpReward: 35,
+    theory: {
+      intro: 'Tamyiz (التَّمْيِيزُ) adalah isim nakirah yang muncul setelah kata yang umum/samar untuk MENJELASKAN. Mirip "dalam hal apa?" Selalu nashob.',
+      sections: [
+        {
+          title: 'Tamyiz Bilangan',
+          body: 'Setelah bilangan tertentu (11-99), kata yang dihitung jadi tamyiz nashob mufrad.',
+          examples: [
+            { ar: 'عِشْرُونَ طَالِبًا', latin: '\'isyruuna thaaliban', id: 'dua puluh murid (طَالِبًا nashob tamyiz)' },
+            { ar: 'تِسْعَةٌ وَتِسْعُونَ كِتَابًا', latin: 'tis\'atun wa tis\'uuna kitaaban', id: 'sembilan puluh sembilan buku' },
+          ],
+        },
+        {
+          title: 'Tamyiz Penjelas Kalimat',
+          body: 'Untuk menjelaskan kekaburan dalam kalimat. Misal: "lebih besar" — DALAM HAL apa? Tamyiz menjawab.',
+          examples: [
+            { ar: 'هُوَ أَكْبَرُ مِنْكَ سِنًّا', latin: 'huwa akbaru minka sinnan', id: 'Dia lebih besar darimu dalam hal usia (سِنًّا nashob tamyiz)' },
+            { ar: 'فَجَّرْنَا الْأَرْضَ عُيُونًا', latin: 'fajjarnal-ardha \'uyuunan', id: 'Kami pancarkan bumi (dgn) mata-air-mata-air' },
+          ],
+        },
+        {
+          title: 'Tamyiz Mashdar',
+          body: 'Setelah mashdar atau angka mashdar untuk specifikasi.',
+          examples: [
+            { ar: 'لِي مِثْلُهُ كِتَابًا', latin: 'lii mitsluhu kitaaban', id: 'Aku punya semisalnya berupa buku' },
+            { ar: 'طَابَ زَيْدٌ نَفْسًا', latin: 'thaaba Zaidun nafsan', id: 'Zaid baik dalam hal jiwa' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'وَاشْتَعَلَ الرَّأْسُ شَيْبًا',
+        latin: 'wasy-ta\'alar-ra\'su syaiba',
+        surah: 'Maryam',
+        ayatNum: 4,
+        analysis: [
+          { word: 'وَ', type: 'Harf athaf', note: '' },
+          { word: 'اشْتَعَلَ', type: 'Fi\'il Madhi', note: 'menyala/memutih; wazan افْتَعَلَ' },
+          { word: 'الرَّأْسُ', type: 'Fa\'il', note: 'rofa\' dgn dhommah; kepala' },
+          { word: 'شَيْبًا', type: 'Tamyiz', note: 'nashob dgn fathah/tanwin; uban' },
+        ],
+        explanation: 'شَيْبًا adalah tamyiz — kepala memutih DALAM HAL apa? UBAN. Doa Nabi Zakaria: "Dan kepalaku telah memutih (oleh) uban". Konstruksi yang sangat indah secara sastra.',
+      },
+    },
+    quiz: [
+      {
+        q: 'Tamyiz ber-i\'rab...',
+        options: ['Rofa\'', 'Nashob', 'Jar', 'Jazm'],
+        correct: 1,
+        explanation: 'Tamyiz selalu nashob — tandanya fathah/tanwin fathah.',
+      },
+      {
+        q: 'Pada عِشْرُونَ طَالِبًا, kata طَالِبًا adalah...',
+        options: ['Maf\'ul', 'Hal', 'Tamyiz', 'Mubtada\''],
+        correct: 2,
+        explanation: 'Setelah bilangan 11-99, yang dihitung jadi tamyiz nashob mufrad.',
+      },
+      {
+        q: 'Tamyiz biasanya berupa isim...',
+        options: ['Ma\'rifat', 'Nakirah', 'Mudhof', 'Berupa fi\'il'],
+        correct: 1,
+        explanation: 'Tamyiz hampir selalu nakirah (tidak ada alif-lam).',
+      },
+      {
+        q: 'Fungsi utama tamyiz adalah...',
+        options: ['Menggantikan fa\'il', 'Menjelaskan/spesifikasi sesuatu yang samar', 'Menyebut waktu', 'Memanggil orang'],
+        correct: 1,
+        explanation: 'Tamyiz menjawab "dalam hal apa?" — menjelaskan dimensi atau spesifikasi yang sebelumnya samar.',
+      },
+    ],
+  },
+
+  // ============ PELAJARAN 18 (PREMIUM) ============
+  {
+    id: 'nahwu-18-mustasna',
+    order: 18,
+    isFree: false,
+    title: 'Mustasna',
+    subtitle: 'Pengecualian dgn إِلَّا',
+    emoji: '➖',
+    duration: '6 menit',
+    color: '#a05536',
+    xpReward: 35,
+    theory: {
+      intro: 'Mustasna (الْمُسْتَثْنَى) adalah isim yang dikecualikan setelah huruf istitsna\' (paling sering: إِلَّا). I\'rab-nya tergantung apakah kalimat positif/negatif dan apakah mustasna minhu disebutkan atau tidak.',
+      sections: [
+        {
+          title: 'Kalimat Positif Lengkap — Mustasna Nashob',
+          body: 'Kalau kalimatnya positif (mujab) dan mustasna minhu disebutkan, mustasna WAJIB nashob.',
+          examples: [
+            { ar: 'جَاءَ الطُّلَّابُ إِلَّا زَيْدًا', latin: 'jaa\'ath-thullaabu illaa Zaidan', id: 'Murid-murid datang kecuali Zaid (Zaid nashob)' },
+            { ar: 'قَرَأْتُ الْكُتُبَ إِلَّا وَاحِدًا', latin: 'qara\'tul-kutuba illaa waahidan', id: 'Aku baca buku-buku kecuali satu' },
+          ],
+        },
+        {
+          title: 'Kalimat Negatif — Mustasna Mengikuti Mustasna Minhu',
+          body: 'Kalau kalimatnya negatif (manfi) dan mustasna minhu disebutkan, mustasna boleh mengikuti i\'rab mustasna minhu (badal) atau nashob.',
+          examples: [
+            { ar: 'مَا جَاءَ أَحَدٌ إِلَّا زَيْدٌ', latin: 'maa jaa\'a ahadun illaa Zaidun', id: 'Tidak datang seorangpun kecuali Zaid (Zaid rofa\' ikut أَحَدٌ)' },
+          ],
+        },
+        {
+          title: 'Mustasna Minhu Tidak Disebutkan — Sesuai Kebutuhan',
+          body: 'Kalau mustasna minhu tidak ada, mustasna ber-i\'rab sesuai kebutuhan kalimat. Sering disebut "istitsna\' mufarragh".',
+          examples: [
+            { ar: 'مَا جَاءَ إِلَّا زَيْدٌ', latin: 'maa jaa\'a illaa Zaidun', id: 'Tidak ada yang datang kecuali Zaid (Zaid jadi fa\'il, rofa\')' },
+            { ar: 'مَا قَرَأْتُ إِلَّا الْكِتَابَ', latin: 'maa qara\'tu illal-kitaab', id: 'Aku tidak baca kecuali buku (buku jadi maf\'ul, nashob)' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'لَا إِلَهَ إِلَّا اللَّهُ',
+        latin: 'laa ilaaha illallaah',
+        surah: 'Muhammad',
+        ayatNum: 19,
+        analysis: [
+          { word: 'لَا', type: 'Harf nafi jinsi', note: 'tidak ada sama sekali' },
+          { word: 'إِلَهَ', type: 'Isim لَا', note: 'mansub atas fathah; "tuhan"' },
+          { word: 'إِلَّا', type: 'Harf istitsna\'', note: 'kecuali' },
+          { word: 'اللَّهُ', type: 'Mustasna / Badal', note: 'rofa\' ikut khobar لَا yg mahdzuf' },
+        ],
+        explanation: 'Kalimat tauhid paling masyhur. Pola: لَا + isim لَا + إِلَّا + mustasna. اللَّهُ rofa\' karena mengikuti badal dari khobar لَا yang mahdzuf (disembunyikan). "Tidak ada tuhan KECUALI Allah".',
+      },
+    },
+    quiz: [
+      {
+        q: 'Pada جَاءَ الطُّلَّابُ إِلَّا زَيْدًا, kenapa زَيْدًا nashob?',
+        options: ['Karena kalimat negatif', 'Karena maf\'ul bih', 'Karena mustasna di kalimat positif lengkap', 'Karena tamyiz'],
+        correct: 2,
+        explanation: 'Di kalimat positif (mujab) dgn mustasna minhu disebutkan, mustasna WAJIB nashob.',
+      },
+      {
+        q: 'Huruf istitsna\' yang paling umum adalah...',
+        options: ['فِي', 'إِلَّا', 'إِنَّ', 'لَيْتَ'],
+        correct: 1,
+        explanation: 'إِلَّا (kecuali) adalah huruf istitsna\' paling sering dipakai.',
+      },
+      {
+        q: 'Pada مَا جَاءَ إِلَّا زَيْدٌ, kata زَيْدٌ ber-i\'rab apa?',
+        options: ['Rofa\' (jadi fa\'il)', 'Nashob mustasna', 'Jar', 'Mabni'],
+        correct: 0,
+        explanation: 'Karena ini istitsna\' mufarragh (tanpa mustasna minhu), زَيْدٌ jadi fa\'il dari جَاءَ — rofa\'.',
+      },
+      {
+        q: 'Pada لَا إِلَهَ إِلَّا اللَّهُ, kenapa اللَّهُ rofa\' bukan nashob?',
+        options: ['Karena fa\'il', 'Karena badal/mengikuti khobar yg mahdzuf', 'Karena selalu rofa\'', 'Salah harakat'],
+        correct: 1,
+        explanation: 'اللَّهُ adalah badal dari khobar لَا yang disembunyikan (mahdzuf). Mengikuti i\'rab-nya yang rofa\'.',
+      },
+    ],
+  },
+
+  // ============ PELAJARAN 19 (PREMIUM) ============
+  {
+    id: 'nahwu-19-asma-isyarah',
+    order: 19,
+    isFree: false,
+    title: 'Asma\' al-Isyarah',
+    subtitle: 'Kata tunjuk هَذَا، تِلْكَ، أُولَئِكَ',
+    emoji: '👉',
+    duration: '6 menit',
+    color: '#a05536',
+    xpReward: 30,
+    theory: {
+      intro: 'Asma\' al-Isyarah (أَسْمَاءُ الْإِشَارَةِ) adalah kata-kata tunjuk: "ini", "itu", "ini kedua-duanya", dst. Semuanya MABNI (harakatnya tidak berubah). Sangat sering di Qur\'an.',
+      sections: [
+        {
+          title: 'Untuk yang Dekat',
+          body: 'هَذَا (lk mufrad), هَذِهِ (pr mufrad), هَذَانِ (lk mutsanna), هَاتَانِ (pr mutsanna), هَؤُلَاءِ (jamak — lk & pr berakal).',
+          examples: [
+            { ar: 'هَذَا كِتَابٌ', latin: 'haadzaa kitaab', id: 'Ini adalah buku' },
+            { ar: 'هَذِهِ مَدْرَسَةٌ', latin: 'haadzihi madrasah', id: 'Ini adalah sekolah (pr)' },
+            { ar: 'هَؤُلَاءِ طُلَّابٌ', latin: 'haa\'ulaa\'i thullaab', id: 'Mereka ini adalah para murid' },
+          ],
+        },
+        {
+          title: 'Untuk yang Jauh',
+          body: 'ذَلِكَ (lk mufrad), تِلْكَ (pr mufrad), أُولَئِكَ (jamak). Ada tambahan ل yang menunjukkan jauh.',
+          examples: [
+            { ar: 'ذَلِكَ الْكِتَابُ', latin: 'dzaalikal-kitaab', id: 'Itu (yang jauh) adalah buku itu' },
+            { ar: 'تِلْكَ الْجَنَّةُ', latin: 'tilkal-jannah', id: 'Itu adalah surga' },
+            { ar: 'أُولَئِكَ الْمُؤْمِنُونَ', latin: 'ulaa\'ikal-mu\'minuun', id: 'Mereka itulah orang-orang beriman' },
+          ],
+        },
+        {
+          title: 'I\'rab Isim Isyarah',
+          body: 'Isim isyarah MABNI — tidak berubah harakat akhirnya. Tapi posisi-nya dalam kalimat bisa rofa\'/nashob/jar (mahallan).',
+          examples: [
+            { ar: 'هَذَا مُحَمَّدٌ', latin: 'haadzaa Muhammad', id: 'Ini Muhammad (هذا mahallan rofa\' sbg mubtada\')' },
+            { ar: 'أَكْرَمْتُ هَذَا الطَّالِبَ', latin: 'akramtu haadzath-thaalib', id: 'Aku memuliakan murid ini (هذا mahallan nashob)' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'ذَلِكَ الْكِتَابُ لَا رَيْبَ فِيهِ',
+        latin: 'dzaalikal-kitaabu laa raiba fiih',
+        surah: 'Al-Baqarah',
+        ayatNum: 2,
+        analysis: [
+          { word: 'ذَلِكَ', type: 'Isim Isyarah', note: 'mabni; mubtada\'' },
+          { word: 'الْكِتَابُ', type: 'Khobar / Badal', note: 'rofa\' dgn dhommah' },
+          { word: 'لَا', type: 'Harf nafi jinsi', note: '' },
+          { word: 'رَيْبَ', type: 'Isim لَا', note: 'mabni atas fathah' },
+          { word: 'فِيهِ', type: 'Khobar لَا (jar-majrur)', note: 'di dalamnya' },
+        ],
+        explanation: 'Ayat kedua Al-Baqarah pakai ذَلِكَ — kata tunjuk untuk yang JAUH. Mengapa "jauh"? Para mufassir: menunjukkan KEMULIAAN — Kitab ini begitu agung sampai seakan jauh, tinggi tidak terjangkau. Sastra yang indah.',
+      },
+    },
+    quiz: [
+      {
+        q: 'هَذَا dipakai untuk menunjukkan...',
+        options: ['Yang jauh, lk, mufrad', 'Yang dekat, lk, mufrad', 'Yang dekat, pr, mufrad', 'Jamak'],
+        correct: 1,
+        explanation: 'هَذَا = "ini" — untuk laki-laki tunggal yang dekat.',
+      },
+      {
+        q: 'تِلْكَ artinya...',
+        options: ['Itu (lk jauh)', 'Itu (pr jauh)', 'Ini (lk)', 'Ini (pr)'],
+        correct: 1,
+        explanation: 'تِلْكَ = "itu" untuk PEREMPUAN tunggal yang JAUH. ذَلِكَ untuk lk.',
+      },
+      {
+        q: 'Apa beda هَؤُلَاءِ dgn أُولَئِكَ?',
+        options: ['Sama saja', 'هَؤُلَاءِ untuk dekat, أُولَئِكَ untuk jauh', 'هَؤُلَاءِ jamak pr saja', 'أُولَئِكَ tidak dipakai'],
+        correct: 1,
+        explanation: 'Keduanya jamak (untuk yang berakal), tapi هَؤُلَاءِ = ini (dekat), أُولَئِكَ = itu (jauh).',
+      },
+      {
+        q: 'Isim isyarah secara umum...',
+        options: ['Mu\'rab (berubah harakat)', 'Mabni (tidak berubah harakat)', 'Selalu rofa\'', 'Selalu nashob'],
+        correct: 1,
+        explanation: 'Isim isyarah adalah MABNI — harakat akhirnya tidak berubah. Tapi posisi mahalli-nya bisa rofa\'/nashob/jar.',
+      },
+    ],
+  },
+
+  // ============ PELAJARAN 20 (PREMIUM) ============
+  {
+    id: 'nahwu-20-adad',
+    order: 20,
+    isFree: false,
+    title: 'Adad & Ma\'dud',
+    subtitle: 'Bilangan dan yang dihitung',
+    emoji: '🔢',
+    duration: '7 menit',
+    color: '#a05536',
+    xpReward: 40,
+    theory: {
+      intro: 'Adad (الْعَدَدُ) adalah bilangan, Ma\'dud (الْمَعْدُودُ) adalah yang dihitung. Aturannya unik: kadang bilangan dan ma\'dud satu jenis, kadang berkebalikan jenis. Penting agar bisa hitung & sebut waktu dlm bahasa Arab.',
+      sections: [
+        {
+          title: 'Bilangan 1 & 2: Sesuai Ma\'dud',
+          body: 'وَاحِدٌ (1) dan اثْنَانِ (2) MENGIKUTI jenis ma\'dud (lk/pr). Posisinya biasanya SETELAH ma\'dud sebagai sifat.',
+          examples: [
+            { ar: 'كِتَابٌ وَاحِدٌ', latin: 'kitaabun waahid', id: '1 buku (lk)' },
+            { ar: 'طَالِبَةٌ وَاحِدَةٌ', latin: 'thaalibatun waahidah', id: '1 siswi (pr)' },
+            { ar: 'كِتَابَانِ اثْنَانِ', latin: 'kitaabaani-tsnaan', id: '2 buku (mutsanna)' },
+          ],
+        },
+        {
+          title: 'Bilangan 3-10: Berbeda Jenis dgn Ma\'dud',
+          body: 'Bilangan 3-10 KEBALIKAN jenisnya dgn ma\'dud (mukholaf). Ma\'dud jamak majrur sbg mudhof ilaih.',
+          examples: [
+            { ar: 'ثَلَاثَةُ كُتُبٍ', latin: 'tsalaatsatu kutub', id: '3 buku (ثَلَاثَةُ pr karena كُتُب lk)' },
+            { ar: 'ثَلَاثُ طَالِبَاتٍ', latin: 'tsalaatsu thaalibaat', id: '3 siswi (ثَلَاثُ lk karena طَالِبَات pr)' },
+            { ar: 'خَمْسَةُ أَيَّامٍ', latin: 'khamsatu ayyaam', id: '5 hari (أَيَّامٍ jamak majrur)' },
+          ],
+        },
+        {
+          title: 'Bilangan 11-99: Tamyiz Nashob Mufrad',
+          body: 'Setelah bilangan 11-99, ma\'dud (tamyiz) mufrad dan NASHOB. Bilangan 11-12 ikut jenis ma\'dud; 13-19 mukholaf.',
+          examples: [
+            { ar: 'إِحْدَى عَشْرَةَ سَاعَةً', latin: 'ihdaa \'asyrata saa\'ah', id: '11 jam (ساعة mufrad nashob)' },
+            { ar: 'عِشْرُونَ طَالِبًا', latin: '\'isyruuna thaaliban', id: '20 murid (طَالِبًا nashob)' },
+            { ar: 'تِسْعَةٌ وَتِسْعُونَ كِتَابًا', latin: 'tis\'atun wa tis\'uuna kitaaban', id: '99 buku' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'إِنَّ عِدَّةَ الشُّهُورِ عِنْدَ اللَّهِ اثْنَا عَشَرَ شَهْرًا',
+        latin: 'inna \'iddatasy-syuhuuri \'indallaahi-tsnaa \'asyara syahran',
+        surah: 'At-Taubah',
+        ayatNum: 36,
+        analysis: [
+          { word: 'إِنَّ', type: 'Harf taukid', note: 'sesungguhnya' },
+          { word: 'عِدَّةَ', type: 'Isim إِنَّ', note: 'nashob; jumlah/bilangan' },
+          { word: 'الشُّهُورِ', type: 'Mudhof ilaih', note: 'majrur; bulan-bulan' },
+          { word: 'اثْنَا عَشَرَ', type: 'Khobar إِنَّ', note: 'bilangan 12 — mabni' },
+          { word: 'شَهْرًا', type: 'Tamyiz', note: 'nashob; bulan (mufrad)' },
+        ],
+        explanation: 'اثْنَا عَشَرَ شَهْرًا — bilangan 12 + tamyiz mufrad nashob (شَهْرًا). Inilah aturan klasik adad 11-99. Kata شَهْر (bulan) mufrad bukan jamak karena polanya begitu.',
+      },
+    },
+    quiz: [
+      {
+        q: 'Bilangan 3-10 SECARA JENIS dgn ma\'dud-nya...',
+        options: ['Selalu sama', 'Berkebalikan (mukholaf)', 'Bebas', 'Tidak terkait'],
+        correct: 1,
+        explanation: 'Bilangan 3-10 punya aturan unik: jenis bilangan KEBALIKAN dari jenis ma\'dud (mukholaf).',
+      },
+      {
+        q: 'Bagaimana mengatakan "3 siswi" dalam bahasa Arab?',
+        options: ['ثَلَاثَةُ طَالِبَاتٍ', 'ثَلَاثُ طَالِبَاتٍ', 'ثَلَاثَةُ طَالِبَةٍ', 'ثَلَاثٌ طَالِبَةٌ'],
+        correct: 1,
+        explanation: 'ثَلَاثُ (tanpa ة) karena ma\'dud-nya pr — kebalikan. طَالِبَاتٍ jamak majrur sbg mudhof ilaih.',
+      },
+      {
+        q: 'Setelah bilangan 11-99, ma\'dud-nya berupa...',
+        options: ['Jamak rofa\'', 'Jamak majrur', 'Mufrad nashob (tamyiz)', 'Mufrad rofa\''],
+        correct: 2,
+        explanation: 'Setelah 11-99, ma\'dud jadi tamyiz: MUFRAD dan NASHOB.',
+      },
+      {
+        q: 'Bilangan 1 dan 2 jenisnya...',
+        options: ['Mukholaf ma\'dud', 'Sama dgn ma\'dud', 'Bebas', 'Selalu lk'],
+        correct: 1,
+        explanation: '1 (وَاحِدٌ/وَاحِدَةٌ) dan 2 (اثْنَانِ/اثْنَتَانِ) MENGIKUTI jenis ma\'dud — sebagai sifat.',
+      },
+    ],
+  },
 ];
 
 // Helper
