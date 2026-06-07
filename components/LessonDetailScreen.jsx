@@ -4,10 +4,11 @@
 
 'use client';
 
-import { useState, useRef } from 'react';
-import { ArrowLeft, ArrowRight, Home, Volume2, Sparkles, BookOpen, MessageCircle, ChevronRight, Star, Lock, Coins, X } from 'lucide-react';
+import { useState, useRef, useMemo } from 'react';
+import { ArrowLeft, ArrowRight, Home, Volume2, Sparkles, BookOpen, MessageCircle, ChevronRight, Star, Lock, Coins, X, Award, Check, RotateCcw } from 'lucide-react';
 import { isConversationFree, isConversationUnlocked, getPricing } from '@/lib/learning-pricing';
 import { speakArabic as ttsSpeakArabic } from '@/lib/tts';
+import { generateModuleQuiz, quizPassed, calcQuizBonusXp } from '@/lib/lesson-quiz-generator';
 
 export default function LessonDetailScreen({ module, userProfile, onBack, onHome, onComplete, onUnlockConversation }) {
   const [view, setView] = useState('overview'); // overview | vocab | conversation
@@ -24,6 +25,19 @@ export default function LessonDetailScreen({ module, userProfile, onBack, onHome
 
   if (view === 'vocab') {
     return <VocabView module={module} onBack={() => setView('overview')} onSpeak={speakArabic} />;
+  }
+  if (view === 'quiz') {
+    return (
+      <QuizView
+        module={module}
+        onSpeak={speakArabic}
+        onBack={() => setView('overview')}
+        onFinish={(bonusXp) => {
+          if (bonusXp > 0 && onComplete) onComplete(bonusXp);
+          setView('overview');
+        }}
+      />
+    );
   }
   if (view === 'conversation') {
     return (
@@ -55,6 +69,7 @@ export default function LessonDetailScreen({ module, userProfile, onBack, onHome
         onBack={onBack}
         onHome={onHome}
         onOpenVocab={() => setView('vocab')}
+        onOpenQuiz={() => setView('quiz')}
         onOpenConv={(idx) => {
           if (!isConversationUnlocked(module, idx, userProfile)) {
             setUnlockTargetConv(idx);
@@ -88,7 +103,7 @@ export default function LessonDetailScreen({ module, userProfile, onBack, onHome
 // ============================================================================
 // OVERVIEW — landing modul
 // ============================================================================
-function OverviewView({ module, userProfile, pricing, onBack, onHome, onOpenVocab, onOpenConv }) {
+function OverviewView({ module, userProfile, pricing, onBack, onHome, onOpenVocab, onOpenConv, onOpenQuiz }) {
   return (
     <div className="flex-1 flex flex-col px-5 py-6 pb-24">
       <div className="flex items-center gap-2 mb-4">
@@ -195,6 +210,31 @@ function OverviewView({ module, userProfile, pricing, onBack, onHome, onOpenVoca
           );
         })}
       </div>
+
+      {/* Latihan Soal — auto-generated quiz dari vocab + dialog */}
+      {module.vocab && module.vocab.length >= 3 && (
+        <>
+          <p className="text-xs tracking-widest uppercase mt-5 mb-3" style={{ color: '#8b6b3d' }}>Uji Pemahaman</p>
+          <button
+            onClick={onOpenQuiz}
+            className="w-full text-left rounded-2xl p-5 relative overflow-hidden active:scale-[0.98] transition-transform"
+            style={{ background: 'linear-gradient(135deg, #a05536, #c46a3f)', boxShadow: '0 8px 20px -8px rgba(160,85,54,0.5)' }}
+          >
+            <div className="absolute -right-4 -top-3 text-7xl opacity-15">🎯</div>
+            <div className="relative flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,0.95)' }}>
+                <Award size={20} style={{ color: '#a05536' }} />
+              </div>
+              <div className="flex-1">
+                <p className="text-[10px] tracking-widest uppercase text-white opacity-90 mb-0.5 font-bold">🎯 LATIHAN SOAL</p>
+                <p className="text-base font-bold text-white leading-tight">Uji Pemahamanmu</p>
+                <p className="text-[11px] text-white opacity-90 leading-snug">7 soal campuran — vocab, audio, lengkapi dialog · lulus dapat bonus XP</p>
+              </div>
+              <ChevronRight size={18} className="text-white flex-shrink-0" />
+            </div>
+          </button>
+        </>
+      )}
     </div>
   );
 }
@@ -379,6 +419,165 @@ function UnlockConvModal({ module, convIdx, pricing, coins, onClose, onUnlock })
             </p>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// QUIZ VIEW — auto-generated dari vocab + dialog modul.
+// Pattern mirip NahwuShorf quiz: progress bar, soal MC, cek + explanation, hasil.
+// ============================================================================
+function QuizView({ module, onSpeak, onBack, onFinish }) {
+  const questions = useMemo(() => generateModuleQuiz(module, 7), [module]);
+  const [idx, setIdx] = useState(0);
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [revealed, setRevealed] = useState(false);
+  const [answers, setAnswers] = useState([]); // array of boolean (correct?)
+  const [done, setDone] = useState(false);
+
+  if (questions.length === 0) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center px-6 text-center" style={{ height: '100%' }}>
+        <p className="text-sm mb-4" style={{ color: '#8b6b3d' }}>Modul ini belum punya cukup data untuk kuis otomatis.</p>
+        <button onClick={onBack} className="px-5 py-2.5 rounded-full font-semibold" style={{ background: '#0a4d3c', color: 'white' }}>Kembali</button>
+      </div>
+    );
+  }
+
+  if (done) {
+    const correct = answers.filter(Boolean).length;
+    const total = questions.length;
+    const percent = Math.round((correct / total) * 100);
+    const passed = quizPassed(correct, total);
+    const bonusXp = calcQuizBonusXp(correct, total);
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center px-8 py-6 text-center" style={{ height: '100%' }}>
+        <div className="text-7xl mb-3">{passed ? (correct === total ? '🏆' : '🌟') : '📚'}</div>
+        <h2 className="text-2xl font-bold mb-1" style={{ fontFamily: 'Fraunces, serif', color: '#0a4d3c' }}>
+          {passed ? (correct === total ? 'Sempurna!' : 'Lulus, mantap!') : 'Hampir!'}
+        </h2>
+        <p className="text-sm mb-5" style={{ color: '#8b6b3d' }}>{module.title}</p>
+        <div className="w-full max-w-xs rounded-2xl p-5 mb-4" style={{ background: 'white', border: `1.5px solid ${passed ? '#0a4d3c40' : '#a0553640'}` }}>
+          <p className="text-4xl font-bold mb-1" style={{ color: '#0a4d3c', fontFamily: 'Fraunces, serif' }}>{correct}/{total}</p>
+          <p className="text-xs mb-3" style={{ color: '#8b6b3d' }}>Skor ({percent}%) {passed ? '· LULUS ≥70%' : '· butuh ≥70% untuk lulus'}</p>
+          <div className="h-2 rounded-full overflow-hidden mb-3" style={{ background: 'rgba(10,77,60,0.08)' }}>
+            <div className="h-full" style={{ width: `${percent}%`, background: passed ? '#0a4d3c' : '#a05536' }} />
+          </div>
+          {bonusXp > 0 ? (
+            <p className="text-xl font-bold" style={{ color: '#c9a961', fontFamily: 'Fraunces, serif' }}>+{bonusXp} XP bonus</p>
+          ) : (
+            <p className="text-xs italic" style={{ color: '#a05536' }}>Coba ulangi untuk bonus XP</p>
+          )}
+        </div>
+        <button onClick={() => onFinish(bonusXp)} className="w-full max-w-xs py-3.5 rounded-2xl text-white font-bold mb-2" style={{ background: '#0a4d3c' }}>Selesai</button>
+        {!passed && (
+          <button onClick={() => { setIdx(0); setSelectedOption(null); setRevealed(false); setAnswers([]); setDone(false); }} className="w-full max-w-xs py-3 rounded-2xl font-semibold flex items-center justify-center gap-1.5" style={{ background: 'rgba(10,77,60,0.08)', color: '#0a4d3c' }}>
+            <RotateCcw size={14} /> Ulangi Kuis
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  const current = questions[idx];
+  const handleCheck = () => {
+    if (selectedOption === null) return;
+    const ok = selectedOption === current.correct;
+    setAnswers((prev) => [...prev, ok]);
+    setRevealed(true);
+  };
+  const handleNext = () => {
+    if (idx + 1 >= questions.length) setDone(true);
+    else { setIdx(idx + 1); setSelectedOption(null); setRevealed(false); }
+  };
+
+  const isArabicOpt = (opt) => /[؀-ۿ]/.test(opt);
+
+  return (
+    <div className="flex-1 flex flex-col" style={{ height: '100%' }}>
+      <div className="flex items-center gap-3 px-5 py-3" style={{ borderBottom: '1px solid rgba(10,77,60,0.08)' }}>
+        <button onClick={onBack} className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'rgba(10,77,60,0.08)' }}>
+          <ArrowLeft size={17} style={{ color: '#0a4d3c' }} />
+        </button>
+        <div className="flex-1">
+          <p className="text-[10px] tracking-widest uppercase" style={{ color: '#8b6b3d' }}>Latihan Soal</p>
+          <p className="text-xs font-semibold" style={{ color: '#0a4d3c' }}>Soal {idx + 1} dari {questions.length}</p>
+        </div>
+      </div>
+      <div className="px-5 pt-3">
+        <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(10,77,60,0.08)' }}>
+          <div className="h-full transition-all" style={{ width: `${((idx + (revealed ? 1 : 0)) / questions.length) * 100}%`, background: '#0a4d3c' }} />
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-5 py-5">
+        <p className="text-sm font-semibold mb-3" style={{ color: '#1a1a1a' }}>{current.q}</p>
+
+        {/* Prompt area — bisa Arab, audio, atau Indonesia */}
+        <div className="rounded-2xl p-4 mb-4 text-center" style={{ background: '#faf6ee', border: '1.5px solid rgba(201,169,97,0.4)' }}>
+          {current.type === 'audio-to-id' ? (
+            <button onClick={() => onSpeak?.(current.ttsText)} className="inline-flex items-center gap-2 px-5 py-3 rounded-full" style={{ background: '#0a4d3c', color: 'white', fontWeight: 600 }}>
+              <Volume2 size={18} /> Putar Audio
+            </button>
+          ) : (current.type === 'ar-to-id') ? (
+            <>
+              <p className="text-2xl mb-1" dir="rtl" style={{ fontFamily: 'Amiri, serif', color: '#0a4d3c', fontWeight: 600 }}>{current.prompt}</p>
+              {current.promptLatin && <p className="text-xs italic" style={{ color: '#a87f47' }}>{current.promptLatin}</p>}
+              <button onClick={() => onSpeak?.(current.ttsText)} className="mt-2 inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs" style={{ background: 'rgba(10,77,60,0.1)', color: '#0a4d3c' }}>
+                <Volume2 size={12} /> Dengar
+              </button>
+            </>
+          ) : (
+            <p className="text-base font-semibold" style={{ color: '#3d2817' }}>"{current.prompt}"</p>
+          )}
+        </div>
+
+        {/* Opsi */}
+        <div className="space-y-2.5">
+          {current.options.map((opt, i) => {
+            const isSelected = selectedOption === i;
+            const isCorrectOpt = i === current.correct;
+            let bg = 'white';
+            let border = '1.5px solid rgba(10,77,60,0.12)';
+            let color = '#1a1a1a';
+            if (revealed) {
+              if (isCorrectOpt) { bg = 'rgba(22,163,74,0.08)'; border = '1.5px solid #16a34a'; color = '#16a34a'; }
+              else if (isSelected) { bg = 'rgba(192,57,43,0.07)'; border = '1.5px solid #c0392b'; color = '#c0392b'; }
+            } else if (isSelected) {
+              bg = 'rgba(10,77,60,0.08)'; border = '1.5px solid #0a4d3c';
+            }
+            return (
+              <button
+                key={i}
+                onClick={() => !revealed && setSelectedOption(i)}
+                disabled={revealed}
+                className="w-full text-left p-3.5 rounded-2xl transition-all flex items-center gap-3"
+                style={{ background: bg, border }}
+              >
+                <span className={isArabicOpt(opt) ? 'text-lg flex-1' : 'text-base flex-1'} dir={isArabicOpt(opt) ? 'rtl' : 'ltr'} style={{ fontFamily: isArabicOpt(opt) ? 'Amiri, serif' : 'inherit', color, fontWeight: 600 }}>{opt}</span>
+                {revealed && isCorrectOpt && <Check size={18} style={{ color: '#16a34a' }} />}
+                {revealed && isSelected && !isCorrectOpt && <X size={18} style={{ color: '#c0392b' }} />}
+              </button>
+            );
+          })}
+        </div>
+
+        {revealed && (
+          <div className="rounded-2xl p-3 mt-4" style={{ background: 'rgba(201,169,97,0.1)', borderLeft: '3px solid #c9a961' }}>
+            <p className="text-xs leading-relaxed" style={{ color: '#3d2817' }}><b>Penjelasan:</b> {current.explanation}</p>
+          </div>
+        )}
+      </div>
+
+      <div className="px-5 py-4" style={{ borderTop: '1px solid rgba(10,77,60,0.08)' }}>
+        {!revealed ? (
+          <button onClick={handleCheck} disabled={selectedOption === null} className="w-full py-3.5 rounded-2xl text-white font-bold disabled:opacity-40" style={{ background: '#0a4d3c' }}>Cek Jawaban</button>
+        ) : (
+          <button onClick={handleNext} className="w-full py-3.5 rounded-2xl text-white font-bold flex items-center justify-center gap-1.5" style={{ background: '#0a4d3c' }}>
+            {idx + 1 >= questions.length ? 'Lihat Hasil' : 'Lanjut'} <ChevronRight size={16} />
+          </button>
+        )}
       </div>
     </div>
   );
