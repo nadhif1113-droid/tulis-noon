@@ -23,7 +23,9 @@ import {
 } from '@/lib/challenge-launch';
 import {
   EVENT_FEATURES, EVENT_FEATURE_KEYS, getTodayProgress, computeEventStreak,
-  checkEligibility, getEventScore, MIN_STREAK_DAYS, MIN_FEATURES_USED, MIN_TOTAL_SCORE,
+  checkEligibility, checkGrandPrizeEligibility, getEventScore,
+  MIN_STREAK_DAYS, MIN_FEATURES_USED, MIN_TOTAL_SCORE,
+  GRAND_PRIZE_MIN_SCORE, MAX_POSSIBLE_SCORE,
 } from '@/lib/event-scoring';
 import { getChallengeLeaderboard } from '@/lib/social';
 
@@ -43,6 +45,10 @@ export default function EventDashboard({ userId, userProfile, onBack, onHome, on
 
   const eligibility = useMemo(
     () => checkEligibility(userProfile, CHALLENGE_START_MS),
+    [userProfile]
+  );
+  const grandPrize = useMemo(
+    () => checkGrandPrizeEligibility(userProfile, CHALLENGE_START_MS),
     [userProfile]
   );
   const eventScore = getEventScore(userProfile?.eventStats);
@@ -125,16 +131,63 @@ export default function EventDashboard({ userId, userProfile, onBack, onHome, on
           <p className="text-[10px] tracking-[0.3em] uppercase font-bold mb-2.5 flex items-center gap-1.5" style={{ color: '#8b6b3d' }}>
             <Trophy size={11} /> HADIAH TOTAL: RP {(challengeTotalPrize() / 1000).toFixed(0)}.000
           </p>
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             {CHALLENGE_PRIZES.map((prize) => (
-              <div key={prize.rank} className="flex items-center gap-2.5 py-1.5">
-                <span className="text-2xl">{prize.emoji}</span>
-                <p className="flex-1 text-sm font-semibold" style={{ color: '#0a4d3c' }}>Rank {prize.rank}</p>
-                <p className="text-base font-bold" style={{ color: '#a05536', fontFamily: 'Fraunces, serif' }}>{prize.label}</p>
+              <div key={prize.rank} className="rounded-xl p-2.5" style={{
+                background: prize.rank === 1 ? 'linear-gradient(135deg, rgba(201,169,97,0.18), rgba(212,184,118,0.1))' : 'rgba(255,255,255,0.6)',
+                border: prize.rank === 1 ? '1px solid rgba(201,169,97,0.5)' : '1px solid rgba(10,77,60,0.08)',
+              }}>
+                <div className="flex items-center gap-2.5">
+                  <span className="text-2xl">{prize.emoji}</span>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold" style={{ color: '#0a4d3c' }}>Juara {prize.rank}</p>
+                    <p className="text-[10px] leading-tight" style={{ color: '#8b6b3d' }}>{prize.tagline}</p>
+                  </div>
+                  <p className="text-base font-bold" style={{ color: '#a05536', fontFamily: 'Fraunces, serif' }}>{prize.label}</p>
+                </div>
+                {prize.rank === 1 && (
+                  <p className="text-[10px] mt-1.5 px-1 leading-snug" style={{ color: '#7a3d2a' }}>
+                    💡 Threshold ini bikin jackpot beneran "earned". Yang serius = berhak.
+                  </p>
+                )}
               </div>
             ))}
           </div>
         </div>
+
+        {/* 🏆 GRAND PRIZE PROGRESS (4000 XP target) */}
+        {!isPast && (
+          <div className="rounded-2xl p-4 relative overflow-hidden" style={{
+            background: grandPrize.eligible
+              ? 'linear-gradient(135deg, #c9a961, #d4b876)'
+              : 'linear-gradient(135deg, rgba(122,61,42,0.95), rgba(160,85,54,0.9))',
+            color: 'white',
+          }}>
+            <div className="absolute -right-4 -top-2 text-7xl opacity-15">🏆</div>
+            <div className="relative">
+              <p className="text-[9px] tracking-[0.3em] uppercase font-bold mb-1.5 opacity-90">
+                JACKPOT JUARA 1 — RP 500.000
+              </p>
+              <div className="flex items-baseline gap-2 mb-2">
+                <p className="text-2xl font-bold" style={{ fontFamily: 'Fraunces, serif' }}>
+                  {eventScore.toLocaleString('id-ID')}
+                </p>
+                <p className="text-sm opacity-80">/ {GRAND_PRIZE_MIN_SCORE.toLocaleString('id-ID')} XP</p>
+              </div>
+              <div className="h-2.5 rounded-full mb-2" style={{ background: 'rgba(255,255,255,0.25)' }}>
+                <div className="h-full rounded-full transition-all" style={{
+                  width: `${grandPrize.percent}%`,
+                  background: grandPrize.eligible ? '#0a4d3c' : '#faf6ee',
+                }} />
+              </div>
+              <p className="text-xs leading-snug">
+                {grandPrize.eligible
+                  ? '🎯 Sudah lewat threshold! Pertahankan rank #1 di leaderboard sampai event berakhir.'
+                  : `Kurang ${grandPrize.gap.toLocaleString('id-ID')} XP lagi. Maksimal harian: ~410 XP (semua fitur + diversity bonus).`}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* ELIGIBILITY STATUS */}
         <div className="rounded-2xl p-4" style={{
