@@ -94,8 +94,13 @@ export default function NahwuShorfScreen({ pathId = 'nahwu', userProfile, isPrem
   const handleFinish = () => {
     const correct = quizAnswers.filter(Boolean).length;
     const total = activeLesson.quiz.length;
-    const xpEarned = Math.round((correct / total) * activeLesson.xpReward);
-    onComplete?.({ earned: xpEarned, lessonId: activeLesson.id, pathId, score: correct, total });
+    const correctRatio = total > 0 ? correct / total : 0;
+    const xpEarned = Math.round(correctRatio * activeLesson.xpReward);
+    onComplete?.({
+      earned: xpEarned, lessonId: activeLesson.id, pathId,
+      score: correct, total, correctRatio,
+      contentId: `nahwu-shorf-${pathId}-${activeLesson.id}`,
+    });
     setView('list');
     setActiveLesson(null);
   };

@@ -50,10 +50,17 @@ export default function PerkenalanDiriScreen({
   };
 
   const handleQuizComplete = ({ score, totalQuestions }) => {
-    const xpEarned = Math.round((score / totalQuestions) * selectedMateri.xpReward);
+    const correctRatio = totalQuestions > 0 ? score / totalQuestions : 0;
+    const xpEarned = Math.round(correctRatio * selectedMateri.xpReward);
     setQuizResult({ score, totalQuestions, xpEarned, isPerfect: score === totalQuestions });
     setView('result');
-    if (onComplete) onComplete({ earned: xpEarned, score, totalQuestions, materiId: selectedMateri.id });
+    if (onComplete) {
+      onComplete({
+        earned: xpEarned, score, totalQuestions, correctRatio,
+        materiId: selectedMateri.id,
+        contentId: `perkenalan-${selectedMateri.id}`,
+      });
+    }
   };
 
   if (view === 'reader' && selectedMateri) {

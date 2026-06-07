@@ -28,11 +28,17 @@ export default function CeritaScreen({ lives = 10, onNoLives, onBack, onHome, on
   };
 
   const handleQuizComplete = ({ score, totalQuestions }) => {
-    const xpEarned = Math.round((score / totalQuestions) * selectedStory.xpReward);
+    const correctRatio = totalQuestions > 0 ? score / totalQuestions : 0;
+    const xpEarned = Math.round(correctRatio * selectedStory.xpReward);
     const isPerfect = score === totalQuestions;
     setQuizResult({ score, totalQuestions, xpEarned, isPerfect });
     setView('result');
-    if (onComplete) onComplete({ earned: xpEarned, score, totalQuestions });
+    if (onComplete) {
+      onComplete({
+        earned: xpEarned, score, totalQuestions, correctRatio,
+        contentId: `cerita-${selectedStory.id}`,
+      });
+    }
   };
 
   if (view === 'reader' && selectedStory) {

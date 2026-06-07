@@ -42,6 +42,7 @@ import { postActivity, getCommunityFeed, getLeaderboard, getUserGlobalRank, upda
 import { Analytics, setAnalyticsUser, setUserProperties } from '@/lib/analytics';
 import { isChallengeActive, challengeDaysRemaining, challengeTotalDays, CHALLENGE_TITLE, CHALLENGE_TAGLINE, CHALLENGE_PRIZES, challengeTotalPrize, EVENT_ID, CHALLENGE_START_MS } from '@/lib/challenge-launch';
 import { applyEventXp, EVENT_FEATURES } from '@/lib/event-scoring';
+import { processActivityXp } from '@/lib/anti-cheat';
 import { LEARNING_UMRAH } from '@/data/learning-umrah';
 import { LEARNING_PELAJAR } from '@/data/learning-pelajar';
 import { LEARNING_PROFESIONAL } from '@/data/learning-profesional';
@@ -655,28 +656,75 @@ export default function TulisNoonApp() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screen, user?.uid]);
 
-  // awardXp(earned, feature)
-  //   - earned: jumlah XP standard yang user dapat (untuk total XP profile)
+  // awardXp(earned, feature, opts?)
+  //   - earned: raw XP yang user dapat dari aktivitas
   //   - feature: optional, salah satu key di EVENT_FEATURES (lesson/hafalan/
   //     nahwu_shorf/perkenalan/game/tanya_cepat/community/friend)
   //     Kalau provided + event lagi aktif → ikut hitung event score (capped per fitur)
-  const awardXp = (earned, feature = null) => {
-    if (!earned || earned <= 0) return;
-    const newXp = (xp || 0) + earned;
-    console.log('💎 awardXp:', { earned, feature, oldXp: xp, newXp });
+  //   - opts.contentId: ID unik konten (modul/level/cerita) — untuk anti-replay
+  //   - opts.correctRatio: score / total — untuk quality gate (0..1)
+  //
+  // ANTI-CHEAT (lib/anti-cheat.js):
+  //   Layer 1 replay: aktivitas yang sama di-replay → 30% XP saja
+  //   Layer 2 quality: score <40% = 0 XP. 40-69% = 50% XP. ≥70% = full
+  const awardXp = (earned, feature = null, opts = {}) => {
+    if (!earned || earned <= 0) return { xp: 0, isReplay: false, qualityTier: 'full' };
+
+    // === ANTI-CHEAT: Apply Layer 1 + 2 kalau opts disediakan ===
+    let finalXp = earned;
+    let isReplay = false;
+    let qualityTier = 'full';
+    let activityId = null;
+    let newCompletedActivities = null;
+
+    if (opts.contentId && feature) {
+      const result = processActivityXp(
+        authProfile,
+        feature,
+        opts.contentId,
+        earned,
+        typeof opts.correctRatio === 'number' ? opts.correctRatio : null
+      );
+      finalXp = result.xp;
+      isReplay = result.isReplay;
+      qualityTier = result.quality.tier;
+      activityId = result.activityId;
+      newCompletedActivities = result.newCompletedActivities;
+
+      if (finalXp === 0) {
+        // Quality gate fail — kasih feedback tapi gak update apa-apa
+        console.log('🚫 Quality gate fail:', result.quality.reason);
+        setAchievements((a) => [{
+          id: Date.now(), type: 'quality-fail',
+          text: `⚠️ ${result.quality.reason}`,
+          emoji: '📚', time: 'baru saja', user: userName || 'Anda',
+        }, ...a]);
+        return { xp: 0, isReplay, qualityTier };
+      }
+      if (isReplay || qualityTier === 'half') {
+        const msg = isReplay
+          ? `🔁 Replay — ${finalXp} XP (30% reward). Coba konten baru!`
+          : `📖 ${result.quality.reason}`;
+        console.log(msg);
+      }
+    }
+
+    const newXp = (xp || 0) + finalXp;
+    console.log('💎 awardXp:', { earned, finalXp, feature, isReplay, qualityTier, newXp });
     setXp(newXp);
 
     const updates = { xp: newXp };
+    if (newCompletedActivities) updates.completedActivities = newCompletedActivities;
 
     // Tantangan Launch — increment challengeXp + apply event scoring kalau aktif
     if (isChallengeActive()) {
-      updates.challengeXp = (authProfile?.challengeXp || 0) + earned;
+      updates.challengeXp = (authProfile?.challengeXp || 0) + finalXp;
       // Event scoring engine (multi-feature dgn cap per fitur)
       if (feature && EVENT_FEATURES[feature]) {
         const updatedStats = applyEventXp(
           authProfile?.eventStats,
           feature,
-          earned,
+          finalXp,
           EVENT_ID,
           Date.now()
         );
@@ -715,13 +763,15 @@ export default function TulisNoonApp() {
       }
     }
 
-    // 2. Update tournament dailyXp — track XP earned hari ini
-    updates.dailyXp = updateDailyXp(authProfile?.dailyXp, earned);
+    // 2. Update tournament dailyXp — track XP earned hari ini (pakai finalXp, bukan earned)
+    updates.dailyXp = updateDailyXp(authProfile?.dailyXp, finalXp);
 
     // Persist ke Firestore
     updateUserProfile(updates)
       .then(() => console.log('✅ XP+streak+dailyXp persisted:', updates))
       .catch((err) => console.error('❌ Failed to persist:', err));
+
+    return { xp: finalXp, isReplay, qualityTier };
   };
 
   const tabScreens = ['home', 'belajar', 'sosial', 'profil'];
@@ -906,7 +956,8 @@ export default function TulisNoonApp() {
             onBack={() => setScreen('lessons')}
             onHome={() => { setTab('home'); setScreen('main'); }}
             onComplete={(earned) => {
-              awardXp(earned, 'lesson');
+              // Anti-replay: track modul yang sudah selesai
+              awardXp(earned, 'lesson', { contentId: `lesson-${selectedLesson?.pathId}-${selectedLesson?.id}` });
               setProgress(p => ({ ...p, [selectedLesson.pathId]: Math.max((p[selectedLesson.pathId] || 0), selectedLesson.order) }));
               logCommunity({ type:'lesson', text:`Selesai modul: ${selectedLesson.title} (+${earned} XP)`, emoji: selectedLesson.emoji });
               Analytics.lessonComplete(selectedLesson.pathId, selectedLesson.id, earned);
@@ -974,8 +1025,9 @@ export default function TulisNoonApp() {
             onBack={() => setScreen('lessons')}
             onHome={() => { setTab('home'); setScreen('main'); }}
             onUpgrade={() => setScreen('premium')}
-            onComplete={async ({ earned, materiId }) => {
-              awardXp(earned, 'perkenalan');
+            onComplete={async ({ earned, materiId, correctRatio, contentId }) => {
+              // Anti-replay + quality gate (correctRatio dari quiz)
+              awardXp(earned, 'perkenalan', { contentId: contentId || `perkenalan-${materiId}`, correctRatio });
               // Track completed materi
               const completed = authProfile?.completedPerkenalanMateri || [];
               if (!completed.includes(materiId)) {
@@ -1112,8 +1164,8 @@ export default function TulisNoonApp() {
           onNoLives={() => setShowLivesModal(true)}
           onBack={() => setScreen('main')}
           onHome={() => { setTab('home'); setScreen('main'); }}
-          onComplete={({ earned, score, totalQuestions }) => {
-            awardXp(earned, 'game');
+          onComplete={({ earned, score, totalQuestions, correctRatio, contentId }) => {
+            awardXp(earned, 'game', { contentId, correctRatio });
             logCommunity({ type: 'cerita', text: `Cerita Interaktif — quiz selesai (${score}/${totalQuestions}, +${earned} XP)`, emoji: '📖' });
             deductLifeIfLost(score === totalQuestions);
           }}
@@ -1141,8 +1193,8 @@ export default function TulisNoonApp() {
           onNoLives={() => setShowLivesModal(true)}
           onBack={() => setScreen('main')}
           onHome={() => { setTab('home'); setScreen('main'); }}
-          onComplete={({ earned, score, totalQuestions }) => {
-            awardXp(earned, 'game');
+          onComplete={({ earned, score, totalQuestions, correctRatio, contentId }) => {
+            awardXp(earned, 'game', { contentId, correctRatio });
             logCommunity({ type: 'tebak-gambar', text: `Tebak Gambar — selesai (${score}/${totalQuestions}, +${earned} XP)`, emoji: '🖼️' });
             deductLifeIfLost(score === totalQuestions);
           }}
@@ -1240,8 +1292,8 @@ export default function TulisNoonApp() {
           onNoLives={() => setShowLivesModal(true)}
           onBack={() => setScreen('main')}
           onHome={() => { setTab('home'); setScreen('main'); }}
-          onComplete={({ earned, score, totalQuestions }) => {
-            awardXp(earned, 'game');
+          onComplete={({ earned, score, totalQuestions, correctRatio, contentId }) => {
+            awardXp(earned, 'game', { contentId, correctRatio });
             logCommunity({ type: 'tulis-arab', text: `Tulis Arab — selesai level (${score}/${totalQuestions}, +${earned} XP)`, emoji: '✍️' });
             // Deduct nyawa kalau non-perfect
             deductLifeIfLost(score === totalQuestions);
@@ -1307,9 +1359,9 @@ export default function TulisNoonApp() {
           onBack={() => { setTab('belajar'); setScreen('main'); }}
           onHome={() => { setTab('home'); setScreen('main'); }}
           onUpgrade={() => setScreen('premium')}
-          onComplete={async ({ earned, lessonId, pathId }) => {
+          onComplete={async ({ earned, lessonId, pathId, correctRatio, contentId }) => {
             if (earned > 0) {
-              awardXp(earned, 'nahwu_shorf');
+              awardXp(earned, 'nahwu_shorf', { contentId: contentId || `nahwu-shorf-${pathId}-${lessonId}`, correctRatio });
               logCommunity({ type: pathId, text: `${pathId === 'nahwu' ? 'Nahwu' : 'Shorf'} — selesai pelajaran (+${earned} XP)`, emoji: pathId === 'nahwu' ? '🧮' : '🌿' });
               // Track completed lessons
               const completedMap = authProfile?.completedNahwuShorf || {};

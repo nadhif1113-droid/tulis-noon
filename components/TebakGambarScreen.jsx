@@ -32,10 +32,16 @@ export default function TebakGambarScreen({ lives = 10, onNoLives, onBack, onHom
 
   const handlePlayComplete = ({ score, totalQuestions }) => {
     const isPerfect = score === totalQuestions;
-    const xpEarned = Math.round((score / totalQuestions) * selectedLevel.xpReward);
+    const correctRatio = totalQuestions > 0 ? score / totalQuestions : 0;
+    const xpEarned = Math.round(correctRatio * selectedLevel.xpReward);
     setResult({ score, totalQuestions, xpEarned, isPerfect });
     setView('result');
-    if (onComplete) onComplete({ earned: xpEarned, score, totalQuestions });
+    if (onComplete) {
+      onComplete({
+        earned: xpEarned, score, totalQuestions, correctRatio,
+        contentId: `tebak-gambar-${selectedLevel.id}`,
+      });
+    }
   };
 
   // Handler lanjut ke kategori berikutnya

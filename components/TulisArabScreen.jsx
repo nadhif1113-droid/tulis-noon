@@ -321,8 +321,18 @@ function PlayView({ phase, level, lives = 10, onNoLives, onBack, onComplete }) {
   // Pas masuk stage 'done', panggil onComplete dengan xp earned
   useEffect(() => {
     if (stage === 'done') {
-      const xpEarned = Math.round((score / items.length) * level.xpReward);
-      onComplete({ score, total: items.length, xpEarned });
+      const correctRatio = items.length > 0 ? score / items.length : 0;
+      const xpEarned = Math.round(correctRatio * level.xpReward);
+      // Emit BOTH legacy (xpEarned/total) + new (earned/totalQuestions/correctRatio/contentId)
+      onComplete({
+        score,
+        total: items.length,
+        totalQuestions: items.length,
+        xpEarned,
+        earned: xpEarned,
+        correctRatio,
+        contentId: `tulis-arab-${phase.id}-level-${level.level}`,
+      });
     }
   }, [stage]);
 
