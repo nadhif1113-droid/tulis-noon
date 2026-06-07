@@ -786,6 +786,21 @@ export default function TulisNoonApp() {
           <LessonDetailScreen
             module={selectedLesson}
             userProfile={authProfile}
+            userId={user?.uid}
+            onNextModule={() => {
+              // Coba advance ke modul berikutnya di path yang sama
+              const path = selectedLesson?.pathId;
+              const list = path === 'umrah' ? LEARNING_UMRAH : path === 'profesi' ? LEARNING_PROFESIONAL : path === 'beasiswa' ? LEARNING_PELAJAR : null;
+              if (!list) { setScreen('lessons'); return; }
+              const curIdx = list.findIndex((m) => m.id === selectedLesson?.id);
+              const nextModule = curIdx >= 0 && curIdx < list.length - 1 ? list[curIdx + 1] : null;
+              if (nextModule) {
+                setSelectedLesson(nextModule);
+              } else {
+                // Last module in path → balik ke list
+                setScreen('lessons');
+              }
+            }}
             onBack={() => setScreen('lessons')}
             onHome={() => { setTab('home'); setScreen('main'); }}
             onComplete={(earned) => {

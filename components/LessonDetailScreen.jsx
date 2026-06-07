@@ -9,11 +9,14 @@ import { ArrowLeft, ArrowRight, Home, Volume2, Sparkles, BookOpen, MessageCircle
 import { isConversationFree, isConversationUnlocked, getPricing } from '@/lib/learning-pricing';
 import { speakArabic as ttsSpeakArabic } from '@/lib/tts';
 import { generateModuleQuiz, quizPassed, calcQuizBonusXp } from '@/lib/lesson-quiz-generator';
+import InsightCard from '@/components/InsightCard';
+import NextActionModal from '@/components/NextActionModal';
 
-export default function LessonDetailScreen({ module, userProfile, onBack, onHome, onComplete, onUnlockConversation }) {
-  const [view, setView] = useState('overview'); // overview | vocab | conversation
+export default function LessonDetailScreen({ module, userProfile, userId, onBack, onHome, onComplete, onUnlockConversation, onNextModule }) {
+  const [view, setView] = useState('overview'); // overview | vocab | conversation | quiz
   const [convIdx, setConvIdx] = useState(0);
   const [unlockTargetConv, setUnlockTargetConv] = useState(null);
+  const [showNextAction, setShowNextAction] = useState(false);
   const pricing = getPricing(module?.pathId);
 
   // TTS Arab — server-side (Google Cloud TTS) + fallback Web Speech.
@@ -41,22 +44,62 @@ export default function LessonDetailScreen({ module, userProfile, onBack, onHome
   }
   if (view === 'conversation') {
     return (
-      <ConversationView
-        module={module}
-        convIdx={convIdx}
-        onSpeak={speakArabic}
-        onBack={() => setView('overview')}
-        onNext={() => {
-          if (convIdx < module.conversations.length - 1) setConvIdx(convIdx + 1);
-          else {
-            // Selesai semua percakapan
-            if (onComplete) onComplete(module.xpReward);
-            setView('overview');
-            setConvIdx(0);
-          }
-        }}
-        onPrev={() => { if (convIdx > 0) setConvIdx(convIdx - 1); }}
-      />
+      <>
+        <ConversationView
+          module={module}
+          convIdx={convIdx}
+          userId={userId}
+          onSpeak={speakArabic}
+          onBack={() => setView('overview')}
+          onNext={() => {
+            if (convIdx < module.conversations.length - 1) {
+              setConvIdx(convIdx + 1);
+            } else {
+              // Selesai semua percakapan → tampil modal Next Action (bukan langsung close)
+              if (onComplete) onComplete(module.xpReward);
+              setShowNextAction(true);
+            }
+          }}
+          onPrev={() => { if (convIdx > 0) setConvIdx(convIdx - 1); }}
+        />
+        {showNextAction && (
+          <NextActionModal
+            moduleTitle={module.title}
+            moduleEmoji={module.emoji || '✅'}
+            convsDone={module.conversations.length}
+            convsTotal={module.conversations.length}
+            xpEarned={module.xpReward}
+            hasQuiz={true}
+            hasNextModule={!!onNextModule}
+            onTakeQuiz={() => {
+              setShowNextAction(false);
+              setView('quiz');
+            }}
+            onNextModule={() => {
+              setShowNextAction(false);
+              setView('overview');
+              setConvIdx(0);
+              if (onNextModule) onNextModule();
+            }}
+            onRestart={() => {
+              setShowNextAction(false);
+              setConvIdx(0);
+              // tetap di view conversation
+            }}
+            onFinish={() => {
+              setShowNextAction(false);
+              setView('overview');
+              setConvIdx(0);
+            }}
+            onClose={() => {
+              // Dismiss modal saja, gak navigate. User bisa pilih nanti.
+              setShowNextAction(false);
+              setView('overview');
+              setConvIdx(0);
+            }}
+          />
+        )}
+      </>
     );
   }
 
@@ -276,9 +319,18 @@ function VocabView({ module, onBack, onSpeak }) {
 // ============================================================================
 // CONVERSATION VIEW — dialog per situation dgn TTS
 // ============================================================================
-function ConversationView({ module, convIdx, onSpeak, onBack, onNext, onPrev }) {
+function ConversationView({ module, convIdx, userId, onSpeak, onBack, onNext, onPrev }) {
   const conv = module.conversations[convIdx];
   const isLast = convIdx === module.conversations.length - 1;
+
+  // Build payload untuk insight API — kasih konteks minimal
+  const insightPayload = useMemo(() => ({
+    moduleTitle: module.title,
+    convTitle: conv?.title || '',
+    situation: conv?.situation || '',
+    vocab: (module.vocab || []).slice(0, 8).map((v) => ({ ar: v.ar, latin: v.latin, id: v.id })),
+    dialog: (conv?.dialog || []).map((d) => ({ speaker: d.speaker, ar: d.ar, latin: d.latin, id: d.id })),
+  }), [module, conv]);
 
   return (
     <div className="flex-1 flex flex-col px-5 py-6 pb-24">
@@ -339,6 +391,14 @@ function ConversationView({ module, convIdx, onSpeak, onBack, onNext, onPrev }) 
           );
         })}
       </div>
+
+      {/* Insight Card — pemahaman pasca-percakapan */}
+      <InsightCard
+        moduleId={module.id}
+        convId={conv?.id || `conv-${convIdx}`}
+        payload={insightPayload}
+        userId={userId}
+      />
 
       {/* Nav buttons */}
       <div className="flex gap-2 mt-4">
