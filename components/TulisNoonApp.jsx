@@ -2251,8 +2251,8 @@ function BelajarTab({ onSelectPath, onOpenGuru, progress }) {
     { id: 'umrah', title: 'Wisatawan & Jamaah Umrah', arabic: 'للزائرين', desc: '15 modul · 1500 kosakata', icon: MapPin, color: '#0a4d3c', lessons: 15, available: true },
     { id: 'profesi', title: 'Profesional & Bisnis', arabic: 'للمهنيين', desc: '20 modul · 2500 kosakata', icon: Briefcase, color: '#8b6b3d', lessons: 20, available: true },
     { id: 'beasiswa', title: 'Pelajar / Siswa / Mahasiswa', arabic: 'للطلاب', desc: '10 modul · 1300 kosakata Fusha', icon: GraduationCap, color: '#7a3d2a', lessons: 10, available: true },
-    { id: 'nahwu', title: 'Nahwu — Sintaksis Arab', arabic: 'النَّحْو', desc: '20 pelajaran · I\'rab, kaana, inna, maushul, tamyiz, mustasna, adad', icon: BookOpen, color: '#0a4d3c', lessons: 20, available: true },
-    { id: 'shorf', title: 'Shorf — Morfologi Arab', arabic: 'الصَّرْف', desc: '16 pelajaran · Tasrif istilahi, mazid, mu\'tal, jamak, tafdhil', icon: Sparkles, color: '#7a3d2a', lessons: 16, available: true },
+    { id: 'nahwu', title: 'Nahwu — Sintaksis Arab', arabic: 'النَّحْو', desc: '24 pelajaran · i\'rab, jumlah, kaana, inna, athaf, badal, asma\' khamsah', icon: BookOpen, color: '#0a4d3c', lessons: 24, available: true },
+    { id: 'shorf', title: 'Shorf — Morfologi Arab', arabic: 'الصَّرْف', desc: '19 pelajaran · tasrif, wazan, mu\'tal, jamak, i\'lal, mubaalaghah, tashghir', icon: Sparkles, color: '#7a3d2a', lessons: 19, available: true },
   ];
 
   return (
