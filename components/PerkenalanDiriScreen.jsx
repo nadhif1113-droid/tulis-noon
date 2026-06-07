@@ -25,8 +25,9 @@ export default function PerkenalanDiriScreen({
   onBack,
   onHome,
   onComplete,        // (xpEarned) — dipanggil pas selesai quiz
-  onSpendCoinsUnlockMateri,  // (materiId) => Promise<boolean>  — unlock 1 materi 5 koin
-  onSpendCoinsUnlockBundle,  // () => Promise<boolean>          — unlock semua 150 koin
+  onSpendCoinsUnlockMateri,  // (materiId) => Promise<boolean>  — legacy koin (di-bypass kalau Mahir)
+  onSpendCoinsUnlockBundle,  // () => Promise<boolean>          — legacy bundle koin
+  onUpgrade,         // () => void — buka PremiumScreen (pivot dari koin → Mahir tier)
 }) {
   const [view, setView] = useState('list');           // list | reader | quiz | result
   const [selectedMateri, setSelectedMateri] = useState(null);
@@ -38,7 +39,10 @@ export default function PerkenalanDiriScreen({
 
   const handleSelectMateri = (materi) => {
     if (!isMateriUnlocked(materi, userProfile)) {
-      setUnlockTarget(materi);
+      // Pivot ke Mahir: tap materi terkunci → langsung buka PremiumScreen
+      // (skip koin modal lama). Modal koin masih ada di file ini sbg legacy
+      // tapi nggak lagi di-trigger dari flow utama.
+      onUpgrade?.();
       return;
     }
     setSelectedMateri(materi);
@@ -229,7 +233,7 @@ function ListView({ userProfile, onBack, onHome, onSelect, onOpenBundle }) {
                     </span>
                   ) : (
                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5" style={{ background: unlocked ? 'rgba(10,77,60,0.12)' : 'rgba(201,169,97,0.18)', color: unlocked ? '#0a4d3c' : '#8b6b3d' }}>
-                      {unlocked ? <><Check size={9} /> DIBUKA</> : <><Lock size={9} /> {PERKENALAN_MATERI_COST} koin</>}
+                      {unlocked ? <><Check size={9} /> DIBUKA</> : <><Lock size={9} /> MAHIR</>}
                     </span>
                   )}
                 </div>
