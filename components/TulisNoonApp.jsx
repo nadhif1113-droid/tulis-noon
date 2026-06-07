@@ -29,7 +29,8 @@ import CommunityScreen from '@/components/CommunityScreen';
 import ChatScreen from '@/components/ChatScreen';
 import NgomongScreen from '@/components/NgomongScreen';
 import { speakArabic as ttsSpeakArabic } from '@/lib/tts';
-import { postActivity, getCommunityFeed, getLeaderboard, getUserGlobalRank, updatePresence, listenDmThreads, getFriends } from '@/lib/social';
+import { postActivity, getCommunityFeed, getLeaderboard, getUserGlobalRank, updatePresence, listenDmThreads, getFriends, getChallengeLeaderboard, getUserChallengeRank } from '@/lib/social';
+import { isChallengeActive, challengeDaysRemaining, challengeTotalDays, CHALLENGE_TITLE, CHALLENGE_TAGLINE, CHALLENGE_PRIZES, challengeTotalPrize } from '@/lib/challenge-launch';
 import { LEARNING_UMRAH } from '@/data/learning-umrah';
 import { LEARNING_PELAJAR } from '@/data/learning-pelajar';
 import { LEARNING_PROFESIONAL } from '@/data/learning-profesional';
@@ -40,7 +41,7 @@ import { schedulePrayerNotifications } from '@/lib/local-prayer-notifications';
 import { detectLocation } from '@/lib/location-detector';
 import { PERKENALAN_MATERI_COST, PERKENALAN_BUNDLE_COST } from '@/data/perkenalan-diri-materi';
 import { NGOMONG_SESSION_COST } from '@/data/ngomong-materi';
-import { LAUNCH_OPEN_ALL_PREMIUM, isUserInTrial, trialDaysRemaining, premiumSource } from '@/lib/feature-flags';
+import { LAUNCH_OPEN_ALL_PREMIUM, isUserInTrial, trialDaysRemaining, premiumSource, isUserPremium } from '@/lib/feature-flags';
 import { PREMIUM_TIERS, PENDIRI_SLOT_LIMIT, FREE_TIER_PERKS } from '@/lib/premium-tiers';
 import { PREMIUM_UNLOCK_COST } from '@/lib/hafalan-tier';
 import { checkLivesRefresh } from '@/lib/lives-system';
@@ -67,6 +68,7 @@ export default function TulisNoonApp() {
   const [chatFriend, setChatFriend] = useState(null); // teman yg lagi di-chat
   const [dmThreads, setDmThreads] = useState([]); // daftar chat (inbox) real-time
   const unreadChats = dmThreads.filter((t) => t.unread).length; // jumlah chat belum dibaca
+  const [challengeRank, setChallengeRank] = useState(null); // peringkat di Tantangan Launch
   // Level dalam scenario yang dipilih (1-100)
   const [selectedLevel, setSelectedLevel] = useState(1);
   const [progress, setProgress] = useState({ umrah: 1, profesi: 0, beasiswa: 0 });
@@ -243,6 +245,7 @@ export default function TulisNoonApp() {
           if (s === 'challenge-levels') { setScreen('main'); return true; }
           if (s === 'game') { setScreen('main'); return true; }
           if (s === 'ngomong') { setScreen('main'); return true; }
+          if (s === 'challenge-launch') { setScreen('main'); return true; }
           if (s === 'roleplay') { setScreen('roleplay-list'); return true; }
           if (s === 'roleplay-list') { setScreen('main'); return true; }
           if (s === 'match') { setScreen('main'); return true; }
@@ -422,6 +425,16 @@ export default function TulisNoonApp() {
     return () => { try { unsub && unsub(); } catch (e) {} };
   }, [user?.uid]);
 
+  // Hitung peringkat user di Tantangan Launch tiap challengeXp berubah.
+  useEffect(() => {
+    if (!isChallengeActive()) { setChallengeRank(null); return; }
+    const cxp = authProfile?.challengeXp || 0;
+    if (cxp <= 0) { setChallengeRank(null); return; }
+    let cancelled = false;
+    getUserChallengeRank(cxp).then((r) => { if (!cancelled) setChallengeRank(r); }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [authProfile?.challengeXp]);
+
   // Log 1 aktivitas: tampil instan di feed lokal + persist ke Firestore (community).
   // community=false → cuma lokal (mis. warning koin kurang, ga usah disebar).
   const logCommunity = (item, community = true) => {
@@ -485,6 +498,11 @@ export default function TulisNoonApp() {
     setXp(newXp);
 
     const updates = { xp: newXp };
+
+    // Tantangan Launch 15 Hari — increment challengeXp kalau periode aktif.
+    if (isChallengeActive()) {
+      updates.challengeXp = (authProfile?.challengeXp || 0) + earned;
+    }
 
     // 1. Update streak — kalau hari baru, increment atau reset
     const streakUpdate = calculateStreakUpdate(
@@ -626,7 +644,7 @@ export default function TulisNoonApp() {
                 }
                 setSelectedGame(g);
                 setScreen('game');
-              }} onOpenChallenge={(scenario) => { setSelectedChallenge(scenario || getTodayChallenge()); setScreen('challenge-levels'); }} onOpenGuru={() => setScreen('guru')} achievements={achievements} onSeeAllActivity={() => setTab('sosial')} featuredChallenge={featuredChallenge} />}
+              }} onOpenChallenge={(scenario) => { setSelectedChallenge(scenario || getTodayChallenge()); setScreen('challenge-levels'); }} onOpenGuru={() => setScreen('guru')} achievements={achievements} onSeeAllActivity={() => setTab('sosial')} featuredChallenge={featuredChallenge} challengeXp={authProfile?.challengeXp || 0} challengeRank={challengeRank} onOpenChallengeLaunch={() => setScreen('challenge-launch')} />}
               {tab === 'belajar' && <BelajarTab onSelectPath={(p) => { setSelectedPath(p); setScreen('lessons'); }} onOpenGuru={() => setScreen('guru')} progress={progress} />}
               {tab === 'sosial' && <SosialTab achievements={achievements} userName={userName} currentUserId={user?.uid} userProfile={authProfile} dmThreads={dmThreads} onOpenChat={(friend) => { setChatFriend(friend); setScreen('chat'); }} onOpenMatch={() => setScreen('match')} onOpenFriends={() => setScreen('friends')} onOpenCommunity={() => setScreen('community')} onRankComputed={handleRankComputed} />}
               {tab === 'profil' && <ProfilTab userName={userName} userProfile={userProfile} xp={xp} streak={streak} progress={progress} onOpenPremium={() => setScreen('premium')} />}
@@ -715,9 +733,9 @@ export default function TulisNoonApp() {
             onBack={() => setScreen('main')}
             onHome={() => { setTab('home'); setScreen('main'); }}
             onConsumeQuota={async () => {
-              // Launch phase: kalau flag global aktif, kuota Tanya Cepat unlimited
-              // (tidak potong free quota maupun bundle). Aman buat testing.
-              if (LAUNCH_OPEN_ALL_PREMIUM) return true;
+              // Premium aktif (launch / trial / paid / lifetime) → unlimited,
+              // tidak potong free quota maupun bundle.
+              if (isUserPremium(authProfile)) return true;
               const freeUsed = authProfile?.tanyaCepatFreeUsed || 0;
               const bundleQuota = authProfile?.tanyaCepatBundleQuota || 0;
               // Pakai free dulu, baru bundle
@@ -1008,9 +1026,19 @@ export default function TulisNoonApp() {
           onUpgrade={() => setScreen('premium')}
         />}
 
+        {screen === 'challenge-launch' && <ChallengeLaunchScreen
+          userId={user?.uid}
+          userProfile={authProfile}
+          challengeXp={authProfile?.challengeXp || 0}
+          challengeRank={challengeRank}
+          onBack={() => setScreen('main')}
+          onHome={() => { setTab('home'); setScreen('main'); }}
+        />}
+
         {screen === 'ngomong' && <NgomongScreen
           coins={authProfile?.coins || 0}
           unlocked={authProfile?.unlockedNgomong || []}
+          isPremium={isUserPremium(authProfile)}
           onUnlockMateri={async (materiId) => {
             const cur = authProfile?.coins || 0;
             if (cur < NGOMONG_SESSION_COST) return false;
@@ -1701,7 +1729,7 @@ function AboutModal({ onClose }) {
   );
 }
 
-function HomeTab({ userName, userProfile, location, xp, streak, coins, lives, maxLives, hafalanProgress, perkenalanCompleted, tanyaCepatFreeUsed, tanyaCepatBundleQuota, onOpenTanyaCepat, onOpenHafalan, onShowXpInfo, onShowCoinInfo, onShowStreakInfo, onShowLivesInfo, onOpenLesson, onOpenGame, onOpenChallenge, onOpenGuru, achievements, onSeeAllActivity, featuredChallenge }) {
+function HomeTab({ userName, userProfile, location, xp, streak, coins, lives, maxLives, hafalanProgress, perkenalanCompleted, tanyaCepatFreeUsed, tanyaCepatBundleQuota, onOpenTanyaCepat, onOpenHafalan, onShowXpInfo, onShowCoinInfo, onShowStreakInfo, onShowLivesInfo, onOpenLesson, onOpenGame, onOpenChallenge, onOpenGuru, achievements, onSeeAllActivity, featuredChallenge, challengeXp = 0, challengeRank = null, onOpenChallengeLaunch }) {
   // Personalized greeting based on interests
   const personalizedNote = userProfile?.interests?.includes('religion')
     ? 'Mari belajar bahasa Al-Quran hari ini'
@@ -1868,6 +1896,33 @@ function HomeTab({ userName, userProfile, location, xp, streak, coins, lives, ma
           )}
         </div>
       </div>
+
+      {/* Banner Tantangan Launch 15 Hari — cuma muncul kalau periode tantangan aktif */}
+      {isChallengeActive() && (
+        <button onClick={onOpenChallengeLaunch} className="w-full text-left rounded-2xl p-4 mb-4 relative overflow-hidden active:scale-[0.98] transition-transform" style={{ background: 'linear-gradient(135deg, #062e25 0%, #0a4d3c 50%, #c9a961 130%)' }}>
+          <div className="absolute -right-4 -top-3 text-7xl opacity-15" style={{ fontFamily: 'Amiri, serif', color: '#c9a961' }}>🏆</div>
+          <div className="relative">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold tracking-widest" style={{ background: '#c9a961', color: 'white' }}>LAUNCH</span>
+              <p className="text-[10px] tracking-[0.2em] uppercase text-white opacity-90">{challengeDaysRemaining()} hari tersisa</p>
+            </div>
+            <h3 className="text-base text-white mb-1" style={{ fontFamily: 'Fraunces, serif', fontWeight: 700 }}>{CHALLENGE_TITLE} · Menang Uang Jajan!</h3>
+            <p className="text-xs text-white opacity-85 mb-2 leading-snug">Total hadiah <b>Rp {challengeTotalPrize().toLocaleString('id-ID')}</b> dibagi ke top 3. Kumpulkan XP terbanyak!</p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-[11px] text-white">
+                {challengeRank ? (
+                  <span className="px-2 py-1 rounded-full" style={{ background: 'rgba(201,169,97,0.3)' }}>⭐ Peringkat ke-{challengeRank}</span>
+                ) : challengeXp > 0 ? (
+                  <span className="opacity-80">{challengeXp} XP terkumpul</span>
+                ) : (
+                  <span className="opacity-80">Mulai belajar untuk ikut!</span>
+                )}
+              </div>
+              <span className="text-[11px] text-white opacity-90 font-semibold">Lihat papan →</span>
+            </div>
+          </div>
+        </button>
+      )}
 
       {/* Daily Challenge Card — ROTASI tiap buka app (dari featuredChallenge) */}
       {(() => {
@@ -4992,6 +5047,178 @@ function RoleplayListScreen({ onBack, onHome, onSelectScenario }) {
           <li>• Bingung mau jawab apa? Tap lampu 💡 buat dikasih contoh kalimat</li>
           <li>• Selesai ngobrol → dapet nilai + vocab baru yang kamu kuasai</li>
         </ul>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// CHALLENGE LAUNCH SCREEN — papan peringkat Tantangan 15 Hari berhadiah uang jajan.
+// Fetch top 10 by challengeXp, tampilkan ranking user, info hadiah & cara ikut.
+// ============================================================================
+function ChallengeLaunchScreen({ userId, userProfile, challengeXp = 0, challengeRank = null, onBack, onHome }) {
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const daysLeft = challengeDaysRemaining();
+  const totalDays = challengeTotalDays();
+  const totalPrize = challengeTotalPrize();
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    getChallengeLeaderboard(10).then((list) => {
+      if (cancelled) return;
+      setLeaderboard(list);
+      setLoading(false);
+    }).catch(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const userInTop10 = leaderboard.some((u) => u.id === userId);
+
+  return (
+    <div className="flex-1 overflow-y-auto" style={{ height: '100%' }}>
+      {/* Header */}
+      <div className="flex items-center gap-3 px-5 py-3 sticky top-0 z-10" style={{ background: '#faf6ee', borderBottom: '1px solid rgba(10,77,60,0.08)' }}>
+        <button onClick={onBack} className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'rgba(10,77,60,0.08)' }}>
+          <ArrowLeft size={17} style={{ color: '#0a4d3c' }} />
+        </button>
+        <div className="flex-1">
+          <p className="text-[10px] tracking-[0.2em] uppercase" style={{ color: '#8b6b3d' }}>Launch Edisi Terbatas</p>
+          <h1 className="text-lg font-bold" style={{ fontFamily: 'Fraunces, serif', color: '#0a4d3c' }}>{CHALLENGE_TITLE}</h1>
+        </div>
+        <button onClick={onHome} className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'rgba(10,77,60,0.08)' }}>
+          <Home size={16} style={{ color: '#0a4d3c' }} />
+        </button>
+      </div>
+
+      <div className="px-5 py-4">
+        {/* HERO */}
+        <div className="rounded-3xl p-5 mb-4 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #062e25 0%, #0a4d3c 50%, #1a6b56 100%)' }}>
+          <div className="absolute -right-6 -top-4 text-8xl opacity-20">🏆</div>
+          <p className="text-[10px] tracking-[0.3em] uppercase mb-1 font-bold" style={{ color: '#c9a961' }}>HADIAH TOTAL</p>
+          <h2 className="text-3xl text-white mb-1" style={{ fontFamily: 'Fraunces, serif', fontWeight: 700 }}>Rp {totalPrize.toLocaleString('id-ID')}</h2>
+          <p className="text-sm mb-3" style={{ color: 'rgba(255,255,255,0.85)' }}>{CHALLENGE_TAGLINE}</p>
+          <div className="flex items-center gap-3">
+            <div className="flex-1 px-3 py-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.18)' }}>
+              <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.7)' }}>SISA WAKTU</p>
+              <p className="text-base font-bold text-white">{daysLeft} hari</p>
+            </div>
+            <div className="flex-1 px-3 py-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.18)' }}>
+              <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.7)' }}>PERIODE</p>
+              <p className="text-base font-bold text-white">{totalDays} hari</p>
+            </div>
+          </div>
+        </div>
+
+        {/* PERINGKAT USER */}
+        <div className="rounded-2xl p-4 mb-4" style={{ background: 'white', border: '1.5px solid rgba(201,169,97,0.45)', boxShadow: '0 4px 14px -8px rgba(201,169,97,0.4)' }}>
+          <p className="text-[10px] tracking-widest uppercase mb-2" style={{ color: '#8b6b3d' }}>Posisi Kamu</p>
+          {challengeXp > 0 ? (
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-2xl font-bold" style={{ color: '#0a4d3c', fontFamily: 'Fraunces, serif' }}>
+                  {challengeRank ? `#${challengeRank}` : '–'}
+                </p>
+                <p className="text-xs" style={{ color: '#8b6b3d' }}>Peringkat sekarang</p>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold" style={{ color: '#c9a961', fontFamily: 'Fraunces, serif' }}>{challengeXp}</p>
+                <p className="text-xs" style={{ color: '#8b6b3d' }}>XP terkumpul</p>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm" style={{ color: '#3d2817' }}>Mulai belajar sekarang — XP yang kamu kumpulin selama periode ini langsung masuk papan peringkat!</p>
+          )}
+        </div>
+
+        {/* HADIAH */}
+        <p className="text-xs tracking-widest uppercase mb-2" style={{ color: '#8b6b3d' }}>Hadiah Pemenang</p>
+        <div className="space-y-2 mb-5">
+          {CHALLENGE_PRIZES.map((p) => (
+            <div key={p.rank} className="flex items-center gap-3 rounded-2xl p-3" style={{ background: 'white', border: '1px solid rgba(10,77,60,0.1)' }}>
+              <div className="text-2xl">{p.emoji}</div>
+              <div className="flex-1">
+                <p className="text-sm font-bold" style={{ color: '#0a4d3c' }}>Peringkat ke-{p.rank}</p>
+                <p className="text-xs" style={{ color: '#8b6b3d' }}>Transfer langsung ke pemenang</p>
+              </div>
+              <p className="text-base font-bold" style={{ color: '#c9a961', fontFamily: 'Fraunces, serif' }}>{p.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* LEADERBOARD */}
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-xs tracking-widest uppercase" style={{ color: '#8b6b3d' }}>Papan Peringkat</p>
+          <span className="text-[10px]" style={{ color: '#8b6b3d' }}>TOP 10</span>
+        </div>
+        {loading ? (
+          <BrandLoader inline size="sm" text="Memuat peringkat..." className="py-6" />
+        ) : leaderboard.length === 0 ? (
+          <div className="rounded-2xl p-5 text-center" style={{ background: 'white', border: '1px dashed rgba(10,77,60,0.18)' }}>
+            <p className="text-sm font-semibold mb-1" style={{ color: '#0a4d3c' }}>Belum ada yang ikut</p>
+            <p className="text-xs" style={{ color: '#8b6b3d' }}>Jadi yang pertama — main game atau ikut tantangan harian untuk masuk peringkat!</p>
+          </div>
+        ) : (
+          <div className="space-y-1.5 mb-5">
+            {leaderboard.map((u, i) => {
+              const rank = i + 1;
+              const isMe = u.id === userId;
+              const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : null;
+              return (
+                <div key={u.id} className="flex items-center gap-3 rounded-xl p-2.5" style={{
+                  background: isMe ? 'rgba(201,169,97,0.12)' : 'white',
+                  border: isMe ? '1.5px solid #c9a961' : '1px solid rgba(10,77,60,0.08)',
+                }}>
+                  <div className="flex items-center justify-center flex-shrink-0" style={{ width: 32 }}>
+                    {medal ? <span className="text-xl">{medal}</span> : <span className="text-sm font-bold" style={{ color: '#8b6b3d' }}>#{rank}</span>}
+                  </div>
+                  <div className="rounded-full flex items-center justify-center flex-shrink-0" style={{ width: 32, height: 32, background: u.avatarEmoji ? 'rgba(201,169,97,0.15)' : 'linear-gradient(135deg, #0a4d3c, #1a6b56)' }}>
+                    {u.avatarEmoji ? <span style={{ fontSize: 18 }}>{u.avatarEmoji}</span> : <span className="text-white font-bold text-xs">{(u.displayName || '?')[0].toUpperCase()}</span>}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate" style={{ color: '#0a4d3c' }}>
+                      {isMe ? `${u.displayName} (kamu)` : u.displayName}
+                    </p>
+                  </div>
+                  <p className="text-sm font-bold flex-shrink-0" style={{ color: '#c9a961', fontFamily: 'Fraunces, serif' }}>{u.challengeXp}</p>
+                </div>
+              );
+            })}
+            {!userInTop10 && challengeXp > 0 && challengeRank && (
+              <>
+                <p className="text-center text-[10px] my-2" style={{ color: '#8b6b3d' }}>· · ·</p>
+                <div className="flex items-center gap-3 rounded-xl p-2.5" style={{ background: 'rgba(201,169,97,0.12)', border: '1.5px solid #c9a961' }}>
+                  <div className="flex items-center justify-center flex-shrink-0" style={{ width: 32 }}>
+                    <span className="text-sm font-bold" style={{ color: '#8b6b3d' }}>#{challengeRank}</span>
+                  </div>
+                  <div className="rounded-full flex items-center justify-center flex-shrink-0" style={{ width: 32, height: 32, background: userProfile?.avatarEmoji ? 'rgba(201,169,97,0.15)' : 'linear-gradient(135deg, #0a4d3c, #1a6b56)' }}>
+                    {userProfile?.avatarEmoji ? <span style={{ fontSize: 18 }}>{userProfile.avatarEmoji}</span> : <span className="text-white font-bold text-xs">{(userProfile?.displayName || '?')[0].toUpperCase()}</span>}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate" style={{ color: '#0a4d3c' }}>{userProfile?.displayName || 'Kamu'} (kamu)</p>
+                  </div>
+                  <p className="text-sm font-bold" style={{ color: '#c9a961', fontFamily: 'Fraunces, serif' }}>{challengeXp}</p>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* CARA IKUT */}
+        <div className="rounded-2xl p-4 mb-4" style={{ background: '#faf6ee', borderLeft: '4px solid #c9a961' }}>
+          <p className="text-sm font-bold mb-2" style={{ color: '#0a4d3c' }}>Cara ikut tantangan</p>
+          <ol className="text-xs space-y-1" style={{ color: '#3d2817', paddingLeft: 20 }}>
+            <li>Main game, hafalan, atau ikut tantangan harian sebanyak-banyaknya.</li>
+            <li>Tiap XP yang kamu dapat selama periode ini otomatis masuk peringkat tantangan.</li>
+            <li>Pemenang dihubungi via email/admin chat setelah periode habis.</li>
+            <li>Hadiah ditransfer langsung dalam 1-3 hari kerja.</li>
+          </ol>
+        </div>
+
+        <p className="text-[10px] text-center mb-4" style={{ color: '#8b6b3d' }}>
+          Periode: {new Date(Date.parse('2026-06-08T00:00:00+07:00')).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} — {new Date(Date.parse('2026-06-22T23:59:59+07:00')).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+        </p>
       </div>
     </div>
   );
