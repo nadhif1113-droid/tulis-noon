@@ -2448,7 +2448,7 @@ function HomeTab({ userName, userProfile, location, xp, streak, coins, lives, ma
               Game & Latihan
             </p>
             <p className="text-xs text-white opacity-85 leading-snug">
-              6 permainan edukatif — Tebak Gambar, Ngobrol, Ngomong, Cerita & lainnya
+              5 permainan edukatif — Tebak Gambar, Ngobrol, Ngomong, Cerita & lainnya
             </p>
           </div>
           <ChevronRight size={18} style={{ color: '#c9a961' }} className="flex-shrink-0" />

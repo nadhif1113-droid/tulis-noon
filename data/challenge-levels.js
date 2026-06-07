@@ -35,21 +35,13 @@ export function getTodayChallenge() {
 }
 
 /**
- * Build scaffold untuk level yang belum ada kontennya — "Coming Soon".
- * Mulai dari startLevel (misal 6) sampai 100.
+ * Build scaffold — DISABLED.
+ * Sebelumnya generate placeholder "Coming Soon" Level 6-100, tapi itu bikin user
+ * bingung. Sekarang return array kosong — cuma level yang udah seeded yang tampil.
+ * Konten baru ditambah berkala via authoring real.
  */
-function scaffoldComingSoonLevels(startLevel, endLevel = 100) {
-  const scaffolds = [];
-  for (let lvl = startLevel; lvl <= endLevel; lvl++) {
-    scaffolds.push({
-      level: lvl,
-      title: `Level ${lvl}`,
-      description: 'Coming soon — vocab expansion',
-      comingSoon: true,
-      questions: [],
-    });
-  }
-  return scaffolds;
+function scaffoldComingSoonLevels(_startLevel, _endLevel = 100) {
+  return [];
 }
 
 // ============================================================================

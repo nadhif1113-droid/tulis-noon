@@ -97,82 +97,8 @@ export const TULIS_ARAB_PHASES = [
       },
     ],
   },
-
-  // ===================================================================
-  // PHASE 2 — CARA BACA (PREMIUM)
-  // ===================================================================
-  {
-    id: 'cara-baca',
-    number: 2,
-    title: 'Cara Baca',
-    description: 'Belajar baca suku kata, mad (panjang/pendek), tasydid (huruf ganda).',
-    emoji: '🔊',
-    color: '#c9a961',
-    bgGradient: 'linear-gradient(135deg, #c9a961, #d4b876)',
-    isFree: true,
-    levels: [
-      placeholderLevel(4, 'Suku Kata Sederhana', 'Gabungin huruf + harakat jadi suku kata yang bisa dibaca: ba+ta = بَتَ.'),
-      placeholderLevel(5, 'Bunyi Mad', 'Belajar baca panjang (mad) vs pendek. Contoh: قَا vs قَ.'),
-      placeholderLevel(6, 'Tasydid & Sukun', 'Huruf ganda (tasydid) dan huruf mati (sukun). Penting buat baca Quran.'),
-    ],
-  },
-
-  // ===================================================================
-  // PHASE 3 — MENULIS KATA (PREMIUM)
-  // ===================================================================
-  {
-    id: 'menulis-kata',
-    number: 3,
-    title: 'Menulis Kata',
-    description: 'Susun huruf-huruf jadi kata yang bermakna. Mulai dari kata pendek sampai vocab pasar & umrah.',
-    emoji: '✍️',
-    color: '#a05536',
-    bgGradient: 'linear-gradient(135deg, #a05536, #c46a3f)',
-    isFree: true,
-    levels: [
-      placeholderLevel(7, 'Kata 2-3 Huruf', 'Susun kata pendek: كَتَبَ (menulis), قَرَأَ (membaca).'),
-      placeholderLevel(8, 'Vocab Pasar', 'Kosakata belanja: kurma (تَمْر), harga (سِعْر), beli (شِرَاء).'),
-      placeholderLevel(9, 'Vocab Umrah', 'Kosakata ibadah: masjid (مَسْجِد), tawaf (طَوَاف), sa\'i (سَعْي).'),
-    ],
-  },
-
-  // ===================================================================
-  // PHASE 4 — MENULIS KALIMAT (PREMIUM)
-  // ===================================================================
-  {
-    id: 'menulis-kalimat',
-    number: 4,
-    title: 'Menulis Kalimat',
-    description: 'Susun kalimat utuh. Pertanyaan, pernyataan, sapaan, doa harian.',
-    emoji: '📝',
-    color: '#7a3d2a',
-    bgGradient: 'linear-gradient(135deg, #7a3d2a, #8b4a2a)',
-    isFree: true,
-    levels: [
-      placeholderLevel(10, 'Kalimat Tanya', 'Bikin pertanyaan: "Berapa harganya?", "Di mana masjid?".'),
-      placeholderLevel(11, 'Kalimat Pernyataan', 'Bikin pernyataan: "Saya mau ini", "Ini bagus".'),
-      placeholderLevel(12, 'Sapaan & Doa', 'Sapaan & doa harian: salam, alhamdulillah, doa makan.'),
-    ],
-  },
-
-  // ===================================================================
-  // PHASE 5 — MENULIS PARAGRAF (PREMIUM)
-  // ===================================================================
-  {
-    id: 'menulis-paragraf',
-    number: 5,
-    title: 'Menulis Paragraf',
-    description: 'Final boss. Susun paragraf utuh: cerita, doa panjang, konversasi nyata.',
-    emoji: '📜',
-    color: '#0a4d3c',
-    bgGradient: 'linear-gradient(135deg, #0a4d3c, #2e8869)',
-    isFree: true,
-    levels: [
-      placeholderLevel(13, 'Cerita Pendek', 'Tulis paragraf cerita 2-3 kalimat tentang aktivitas harian.'),
-      placeholderLevel(14, 'Doa Harian', 'Tulis paragraf doa harian: bangun tidur, sebelum makan, dst.'),
-      placeholderLevel(15, 'Konversasi Real (Final)', 'Gabungin semua skill. Tulis percakapan utuh di pasar / masjid / café.'),
-    ],
-  },
+  // Phase 2-5 (placeholders Level 4-15) di-remove sementara — belum ada konten beneran.
+  // Akan ditambah saat konten authoring siap. Sekarang user fokus di Phase 1 yang lengkap.
 ];
 
 /**

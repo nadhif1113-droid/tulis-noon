@@ -4,7 +4,7 @@
 //
 // Game yang tersedia:
 //   - Tebak Gambar (visual vocab)
-//   - Quiz Video (coming soon)
+//   - (Quiz Video removed — will be added when video library ready)
 //   - Latihan Ngobrol (AI roleplay)
 //   - Tulis Arab (huruf hijaiyah)
 //   - Belajar Ngomong (TTS+STT)
@@ -12,7 +12,7 @@
 
 'use client';
 
-import { ArrowLeft, Home, Bot, BookOpen, Mic, Image as ImageIcon, Play, Sparkles } from 'lucide-react';
+import { ArrowLeft, Home, Bot, BookOpen, Mic, Image as ImageIcon, Sparkles } from 'lucide-react';
 
 const ALL_GAMES = [
   {
@@ -25,14 +25,8 @@ const ALL_GAMES = [
       family: 'Tebak benda keluarga', sports: 'Tebak olahraga',
     },
   },
-  {
-    id: 'video-quiz', t: 'Quiz Video', d: 'Skenario video',
-    icon: Play, color: '#7a3d2a', bg: 'rgba(122,61,42,0.1)',
-    comingSoon: true,
-    longDesc: 'Soon — tonton scene mini, jawab kuis berdasarkan situasi.',
-    interests: ['travel', 'business', 'religion', 'family'],
-    personalizedDesc: { travel: 'Segera hadir', business: 'Segera hadir', religion: 'Segera hadir', family: 'Segera hadir' },
-  },
+  // Note: 'video-quiz' di-hide karena belum ada konten beneran (anti janji palsu).
+  // Akan ditambah saat library video scenario siap.
   {
     id: 'chat-roleplay', t: 'Latihan Ngobrol', d: 'AI roleplay',
     icon: Bot, color: '#8b6b3d', bg: 'rgba(139,107,61,0.15)',
@@ -112,7 +106,7 @@ export default function GamesScreen({ userProfile, onBack, onHome, onOpenGame })
           <div className="relative">
             <p className="text-[10px] tracking-[0.3em] uppercase mb-1 font-bold" style={{ color: '#c9a961' }}>MAIN SAMBIL BELAJAR</p>
             <h2 className="text-xl text-white mb-2 leading-tight" style={{ fontFamily: 'Fraunces, serif', fontWeight: 700 }}>
-              6 Permainan Edukatif
+              5 Permainan Edukatif
             </h2>
             <p className="text-xs text-white opacity-90 leading-relaxed">
               Latihan menyenangkan untuk vocabulary, baca-tulis, bicara, dan pemahaman. Konsisten 10 menit/hari lebih efektif dari 1 jam seminggu.
