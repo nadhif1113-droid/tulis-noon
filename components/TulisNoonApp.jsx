@@ -34,6 +34,7 @@ import CertificateEarnedModal from '@/components/CertificateEarnedModal';
 import PersonaGoalModal from '@/components/PersonaGoalModal';
 import OnboardingFlow from '@/components/OnboardingFlow';
 import GamesScreen from '@/components/GamesScreen';
+import DailyBriefingModal from '@/components/DailyBriefingModal';
 import { CERTIFICATE_PATHS, getPathProgress, generateCertNumber, MASTER_CERTIFICATE } from '@/lib/certificate';
 import { speakArabic as ttsSpeakArabic } from '@/lib/tts';
 import { postActivity, getCommunityFeed, getLeaderboard, getUserGlobalRank, updatePresence, listenDmThreads, getFriends, getChallengeLeaderboard, getUserChallengeRank, getUnreadPostCount } from '@/lib/social';
@@ -81,6 +82,7 @@ export default function TulisNoonApp() {
   const [earnedCertPathId, setEarnedCertPathId] = useState(null); // pathId yg baru saja diraih (untuk modal celebration)
   const [showPersonaModal, setShowPersonaModal] = useState(false); // legacy fallback
   const [showOnboarding, setShowOnboarding] = useState(false); // wizard 7-step onboarding
+  const [showDailyBriefing, setShowDailyBriefing] = useState(false); // briefing harian (1x/hari)
   // Level dalam scenario yang dipilih (1-100)
   const [selectedLevel, setSelectedLevel] = useState(1);
   const [progress, setProgress] = useState({ umrah: 1, profesi: 0, beasiswa: 0 });
@@ -378,6 +380,26 @@ export default function TulisNoonApp() {
       });
     }
   }, [user?.uid, authProfile]);
+
+  // Auto-show Daily Briefing — sekali per hari saat user buka app.
+  // Skip kalau onboarding belum selesai (user baru — udah dapat onboarding modal).
+  useEffect(() => {
+    if (!authProfile) return;
+    if (authLoading) return;
+    if (screen !== 'main') return;
+    // Skip user baru
+    if (!authProfile.onboardingCompleted) return;
+    if (showOnboarding) return;
+    // Cek apakah briefing hari ini udah pernah tampil
+    const today = new Date().toDateString();
+    if (authProfile.lastDailyBriefingShown === today) return;
+    // Skip kalau modal lain udah keburu nampil
+    if (showDailyBriefing) return;
+    // Show briefing
+    console.log('📅 Triggering daily briefing modal');
+    setShowDailyBriefing(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authProfile?.onboardingCompleted, authProfile?.lastDailyBriefingShown, authLoading, screen]);
 
   // Auto-show Onboarding Flow kalau user belum selesai onboarding.
   // Logic:
@@ -1344,6 +1366,48 @@ export default function TulisNoonApp() {
               if (!authProfile?.tourCompleted) {
                 setTimeout(() => setShowTour(true), 200);
               }
+            }}
+          />
+        )}
+
+        {/* Daily Briefing — muncul 1x per hari saat user buka app */}
+        {showDailyBriefing && (
+          <DailyBriefingModal
+            userName={userName || authProfile?.displayName || user?.displayName}
+            userProfile={authProfile}
+            onClose={async () => {
+              setShowDailyBriefing(false);
+              try {
+                const today = new Date().toDateString();
+                await updateUserProfile({ lastDailyBriefingShown: today, lastActiveDate: today });
+              } catch {}
+            }}
+            onStartLearning={async (rec) => {
+              setShowDailyBriefing(false);
+              try {
+                const today = new Date().toDateString();
+                await updateUserProfile({ lastDailyBriefingShown: today, lastActiveDate: today });
+              } catch {}
+              // Route ke screen sesuai path
+              if (rec.pathId === 'nahwu' || rec.pathId === 'shorf') {
+                setScreen(rec.pathId);
+                setTab('belajar');
+              } else if (rec.pathId === 'perkenalan') {
+                setShowPerkenalanPicker(true);
+                setScreen('main');
+                setTab('home');
+              } else if (rec.pathId === 'hafalan-juz30') {
+                setScreen('hafalan');
+              } else {
+                // umrah/profesi/beasiswa → ke belajar tab
+                setTab('belajar');
+                setScreen('main');
+              }
+              Analytics.recommendationClicked?.(rec.pathId);
+            }}
+            onOpenChallenge={() => {
+              setShowDailyBriefing(false);
+              setScreen('challenge-launch');
             }}
           />
         )}
