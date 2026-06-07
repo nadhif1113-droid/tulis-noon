@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { ArrowLeft, ArrowRight, Home, Sparkles, Star, RefreshCw, Volume2, Check, X, ChevronRight } from 'lucide-react';
-import { TEBAK_GAMBAR_LEVELS, generateQuestions } from '@/data/tebak-gambar-levels';
+import { TEBAK_GAMBAR_LEVELS, generateQuestions, QUESTIONS_PER_ROUND } from '@/data/tebak-gambar-levels';
 import { speakArabic as ttsSpeakArabic } from '@/lib/tts';
 
 export default function TebakGambarScreen({ lives = 10, onNoLives, onBack, onHome, onComplete }) {
@@ -106,7 +106,7 @@ function ListView({ lives, onBack, onHome, onSelect }) {
       {/* Hero */}
       <div className="rounded-3xl p-5 mb-4 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #a05536, #c46a3f)' }}>
         <div className="absolute -right-6 -top-4 text-7xl opacity-15">🖼️</div>
-        <p className="text-[10px] tracking-[0.3em] uppercase text-white opacity-80 mb-1 font-bold">5 Kategori · 50 Vocab</p>
+        <p className="text-[10px] tracking-[0.3em] uppercase text-white opacity-80 mb-1 font-bold">10 Kategori · 200 Vocab</p>
         <h3 className="text-xl text-white mb-2 leading-tight" style={{ fontFamily: 'Fraunces, serif', fontWeight: 700 }}>
           Tebak Bahasa Arab-nya!
         </h3>
@@ -135,7 +135,7 @@ function ListView({ lives, onBack, onHome, onSelect }) {
               <p className="text-xs leading-snug mb-1.5" style={{ color: '#666' }}>{level.description}</p>
               <div className="flex items-center gap-3 text-[11px]">
                 <span style={{ color: '#c9a961' }}>⭐ Max +{level.xpReward} XP</span>
-                <span style={{ color: '#8b6b3d' }}>{level.items.length} soal</span>
+                <span style={{ color: '#8b6b3d' }}>{QUESTIONS_PER_ROUND} soal · {level.items.length} pool</span>
               </div>
             </div>
             <ChevronRight size={18} style={{ color: '#c9a961' }} className="flex-shrink-0" />
@@ -165,7 +165,7 @@ function ListView({ lives, onBack, onHome, onSelect }) {
 // PLAY VIEW — multiple choice quiz
 // ============================================================================
 function PlayView({ level, onBack, onComplete }) {
-  const [questions] = useState(() => generateQuestions(level.id, level.items.length));
+  const [questions] = useState(() => generateQuestions(level.id, QUESTIONS_PER_ROUND));
   const [qIdx, setQIdx] = useState(0);
   const [score, setScore] = useState(0);
   const [selected, setSelected] = useState(null);
@@ -224,10 +224,31 @@ function PlayView({ level, onBack, onComplete }) {
         Apa nama benda ini dalam bahasa Arab?
       </p>
 
-      {/* Image card */}
-      <div className="rounded-3xl p-8 mb-3 text-center" style={{ background: 'white', boxShadow: '0 10px 30px -10px rgba(10,77,60,0.15)' }}>
-        <p className="text-7xl mb-2">{current.image}</p>
-        <p className="text-xs uppercase tracking-widest font-bold" style={{ color: '#8b6b3d' }}>{current.id}</p>
+      {/* Image card — kalau imageUrl ada, render <img> (pure visual challenge).
+          Kalau null, fallback ke emoji + label Indonesia (biar gak ambigu). */}
+      <div className="rounded-3xl mb-3 text-center overflow-hidden" style={{ background: 'white', boxShadow: '0 10px 30px -10px rgba(10,77,60,0.15)' }}>
+        {current.imageUrl ? (
+          <div className="w-full flex items-center justify-center p-4" style={{ aspectRatio: '1/1', maxHeight: '260px' }}>
+            <img
+              src={current.imageUrl}
+              alt={current.id}
+              className="w-full h-full object-contain"
+              loading="eager"
+              onError={(e) => {
+                // Fallback: kalau gambar gagal load, tampilin emoji
+                e.target.style.display = 'none';
+                const fallback = e.target.parentElement.querySelector('.emoji-fallback');
+                if (fallback) fallback.style.display = 'block';
+              }}
+            />
+            <p className="text-7xl emoji-fallback" style={{ display: 'none' }}>{current.image}</p>
+          </div>
+        ) : (
+          <div className="p-8">
+            <p className="text-7xl mb-2">{current.image}</p>
+            <p className="text-xs uppercase tracking-widest font-bold" style={{ color: '#8b6b3d' }}>{current.id}</p>
+          </div>
+        )}
       </div>
 
       {/* Feedback banner */}

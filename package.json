@@ -14,7 +14,9 @@
     "cap:init:android": "npx cap add android",
     "ios:build": "npx cap sync ios && npx cap open ios",
     "android:build": "npx cap sync android && npx cap open android",
-    "mobile:setup": "bash scripts/setup-mobile.sh"
+    "mobile:setup": "bash scripts/setup-mobile.sh",
+    "tebak:gen": "node scripts/generate-tebak-images.js",
+    "tebak:gen:dry": "node scripts/generate-tebak-images.js --dry-run --limit 5"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.21.1",
@@ -22,14 +24,14 @@
     "@capacitor/android": "^6.1.2",
     "@capacitor/app": "^6.0.1",
     "@capacitor/core": "^6.1.2",
+    "@capacitor/geolocation": "^6.1.0",
     "@capacitor/haptics": "^6.0.1",
     "@capacitor/ios": "^6.1.2",
     "@capacitor/keyboard": "^6.0.2",
+    "@capacitor/local-notifications": "^6.1.0",
     "@capacitor/network": "^6.0.2",
     "@capacitor/preferences": "^6.0.2",
     "@capacitor/push-notifications": "^6.0.2",
-    "@capacitor/geolocation": "^6.1.0",
-    "@capacitor/local-notifications": "^6.1.0",
     "@capacitor/splash-screen": "^6.0.2",
     "@capacitor/status-bar": "^6.0.1",
     "@capacitor/toast": "^6.0.2",
@@ -49,6 +51,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.4.19",
+    "dotenv": "^17.4.2",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.3",
     "typescript": "^5"
