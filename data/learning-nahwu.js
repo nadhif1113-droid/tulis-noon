@@ -1660,6 +1660,340 @@ export const NAHWU_LESSONS = [
       },
     ],
   },
+  ,
+  // ============ PELAJARAN 21 (PREMIUM) ============
+  {
+    id: 'nahwu-21-athaf',
+    order: 21,
+    isFree: false,
+    title: 'Athaf & Huruf Athaf',
+    subtitle: 'Penyambung kalimat: و، ف، ثُمَّ، أَوْ',
+    emoji: '🪢',
+    duration: '6 menit',
+    color: '#a05536',
+    xpReward: 35,
+    theory: {
+      intro: 'Athaf (الْعَطْفُ) adalah menyambung 2 kata/kalimat dengan huruf athaf. Ma\'thuf (yang disambung) MENGIKUTI i\'rab ma\'thuf alaih (yang sebelumnya). Sangat sering dipakai untuk merangkai daftar atau urutan.',
+      sections: [
+        {
+          title: 'Huruf Athaf Utama',
+          body: 'و (dan — sekedar gabung), ف (lalu — urutan langsung), ثُمَّ (kemudian — urutan dgn jeda), أَوْ (atau), أَمْ (atau — dlm pertanyaan), بَلْ (bahkan), لَكِنْ (tetapi), لاَ (bukan).',
+          examples: [
+            { ar: 'جَاءَ زَيْدٌ وَعَمْرٌو', latin: 'jaa\'a Zaidun wa \'Amrun', id: 'Zaid dan Amr datang' },
+            { ar: 'دَخَلَ زَيْدٌ فَعَمْرٌو', latin: 'dakhala Zaidun fa-\'Amrun', id: 'Zaid masuk lalu Amr (urutan langsung)' },
+            { ar: 'أَكَلَ ثُمَّ شَرِبَ', latin: 'akala tsumma syariba', id: 'Dia makan kemudian minum (jeda)' },
+          ],
+        },
+        {
+          title: 'Aturan I\'rab Ma\'thuf',
+          body: 'Ma\'thuf MENGIKUTI i\'rab ma\'thuf alaih. Kalau rofa\' → rofa\'. Nashob → nashob. Jar → jar.',
+          examples: [
+            { ar: 'رَأَيْتُ زَيْدًا وَعَمْرًا', latin: 'ra\'aitu Zaidan wa \'Amran', id: 'Aku melihat Zaid dan Amr (keduanya nashob)' },
+            { ar: 'مَرَرْتُ بِزَيْدٍ وَعَمْرٍو', latin: 'marartu biZaidin wa \'Amrin', id: 'Aku lewati Zaid dan Amr (keduanya majrur)' },
+          ],
+        },
+        {
+          title: 'Beda و، ف، ثُمَّ',
+          body: 'Bedakan: و = sekedar gabung tanpa urutan. ف = urutan langsung tanpa jeda. ثُمَّ = urutan dgn jeda waktu.',
+          examples: [
+            { ar: 'جَاءَ زَيْدٌ وَعَمْرٌو', latin: '', id: 'Zaid dan Amr datang (bisa bersamaan)' },
+            { ar: 'جَاءَ زَيْدٌ فَعَمْرٌو', latin: '', id: 'Zaid datang lalu LANGSUNG Amr' },
+            { ar: 'جَاءَ زَيْدٌ ثُمَّ عَمْرٌو', latin: '', id: 'Zaid datang KEMUDIAN (jeda) Amr' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ الرَّحْمَنِ الرَّحِيمِ مَالِكِ يَوْمِ الدِّينِ',
+        latin: 'al-hamdu lillaahi rabbil-\'aalamiin ar-rahmaanir-rahiim maaliki yaumid-diin',
+        surah: 'Al-Fatihah',
+        ayatNum: '2-4',
+        analysis: [
+          { word: 'لِلَّهِ', type: 'Jar-majrur', note: 'untuk Allah' },
+          { word: 'رَبِّ', type: 'Badal/Na\'at', note: 'majrur ikut Allah' },
+          { word: 'الرَّحْمَنِ', type: 'Na\'at', note: 'majrur (athaf bayan)' },
+          { word: 'الرَّحِيمِ', type: 'Na\'at', note: 'majrur' },
+          { word: 'مَالِكِ', type: 'Na\'at', note: 'majrur' },
+        ],
+        explanation: 'Meskipun tanpa حرف عطف (و) tertulis, beberapa kata di sini merupakan sifat berturut-turut (sebagian ulama anggap athaf bayan). Semua majrur — mengikuti i\'rab kata pertama. Inilah kaidah dasar: ma\'thuf ikut ma\'thuf alaih.',
+      },
+    },
+    quiz: [
+      {
+        q: 'Apa beda ف dgn ثُمَّ?',
+        options: ['Sama saja', 'ف = urutan langsung; ثُمَّ = urutan dgn jeda', 'ثُمَّ untuk pertanyaan', 'ف untuk negatif'],
+        correct: 1,
+        explanation: 'ف menunjukkan urutan langsung (langsung setelah). ثُمَّ menunjukkan urutan dgn jeda waktu.',
+      },
+      {
+        q: 'Ma\'thuf MENGIKUTI i\'rab...',
+        options: ['Mubtada\'', 'Ma\'thuf alaih (yang sebelumnya)', 'Fa\'il', 'Sembarang'],
+        correct: 1,
+        explanation: 'Ma\'thuf selalu mengikuti i\'rab ma\'thuf alaih (kata yang ada sebelum huruf athaf).',
+      },
+      {
+        q: 'Pada رَأَيْتُ زَيْدًا وَعَمْرًا, kenapa عَمْرًا nashob?',
+        options: ['Karena fa\'il', 'Karena maf\'ul langsung', 'Karena athaf ke زَيْدًا (yg juga nashob sbg maf\'ul)', 'Salah harakat'],
+        correct: 2,
+        explanation: 'عَمْرًا nashob karena athaf ke زَيْدًا. زَيْدًا nashob sbg maf\'ul bih. Ma\'thuf ikut.',
+      },
+      {
+        q: 'أَوْ artinya...',
+        options: ['Dan', 'Atau', 'Lalu', 'Tetapi'],
+        correct: 1,
+        explanation: 'أَوْ = atau. Untuk pilihan. Mis. خُذْ كِتَابًا أَوْ قَلَمًا = ambil buku atau pena.',
+      },
+    ],
+  },
+
+  // ============ PELAJARAN 22 (PREMIUM) ============
+  {
+    id: 'nahwu-22-badal',
+    order: 22,
+    isFree: false,
+    title: 'Badal',
+    subtitle: 'Pengganti dari kata sebelumnya',
+    emoji: '🔁',
+    duration: '6 menit',
+    color: '#a05536',
+    xpReward: 35,
+    theory: {
+      intro: 'Badal (الْبَدَلُ) adalah isim yang MENGGANTIKAN posisi isim sebelumnya (mubdal minhu) — biasanya untuk menjelaskan/spesifikasi lebih lanjut. I\'rab badal sama dgn mubdal minhu.',
+      sections: [
+        {
+          title: 'Badal Kullun min Kullin (Total)',
+          body: 'Badal menggantikan SEPENUHNYA mubdal minhu. Mubdal minhu hanya pengantar.',
+          examples: [
+            { ar: 'جَاءَ أَخُوكَ مُحَمَّدٌ', latin: 'jaa\'a akhuuka Muhammad', id: 'Saudaramu Muhammad datang (Muhammad badal dari أَخُو)' },
+            { ar: 'الْخَلِيفَةُ عُمَرُ عَادِلٌ', latin: 'al-khaliifatu \'Umaru \'aadil', id: 'Khalifah Umar itu adil' },
+          ],
+        },
+        {
+          title: 'Badal Ba\'dh min Kull (Sebagian)',
+          body: 'Badal menggantikan SEBAGIAN saja dari mubdal minhu. Biasanya dgn dhomir kembali.',
+          examples: [
+            { ar: 'أَكَلْتُ الرَّغِيفَ ثُلُثَهُ', latin: 'akaltur-raghiifa tsulutsahu', id: 'Aku makan roti itu sepertiganya (ثُلُثَهُ badal dari الرَّغِيفَ)' },
+            { ar: 'رَأَيْتُ الْقَوْمَ نِصْفَهُمْ', latin: 'ra\'aitul-qauma nishfahum', id: 'Aku melihat kaum itu setengahnya' },
+          ],
+        },
+        {
+          title: 'Badal Isytimal (Cakupan)',
+          body: 'Badal yang mencakup SIFAT dari mubdal minhu (bukan keseluruhan, bukan sebagian fisik).',
+          examples: [
+            { ar: 'أَعْجَبَنِي زَيْدٌ عِلْمُهُ', latin: 'a\'jabanii Zaidun \'ilmuh', id: 'Aku kagum dgn Zaid, ilmunya (عِلْمُهُ badal isytimal)' },
+            { ar: 'سُلِبَ زَيْدٌ ثَوْبُهُ', latin: 'suliba Zaidun tsaubuh', id: 'Zaid dirampok, bajunya' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ',
+        latin: 'ihdinash-shiraathal-mustaqiim shiraathal-ladziina an\'amta \'alaihim',
+        surah: 'Al-Fatihah',
+        ayatNum: '6-7',
+        analysis: [
+          { word: 'اهْدِنَا', type: 'Fi\'il Amr', note: 'tunjukilah kami' },
+          { word: 'الصِّرَاطَ', type: 'Maf\'ul bih', note: 'nashob; jalan' },
+          { word: 'الْمُسْتَقِيمَ', type: 'Na\'at', note: 'nashob; yang lurus' },
+          { word: 'صِرَاطَ', type: 'Badal', note: 'nashob ikut الصِّرَاطَ; mengulang/spesifikasi' },
+          { word: 'الَّذِينَ', type: 'Mudhof ilaih', note: 'maushul' },
+        ],
+        explanation: 'صِرَاطَ kedua adalah BADAL dari الصِّرَاطَ pertama — keduanya nashob. Mengapa diulang? Untuk menegaskan & spesifikasi: "jalan yang lurus, YAITU jalan orang-orang yang Engkau beri nikmat".',
+      },
+    },
+    quiz: [
+      {
+        q: 'I\'rab badal mengikuti...',
+        options: ['Khobar', 'Fi\'il', 'Mubdal minhu (yang digantikan)', 'Selalu nashob'],
+        correct: 2,
+        explanation: 'Badal selalu mengikuti i\'rab mubdal minhu. Kalau mubdal minhu rofa\' → badal rofa\'.',
+      },
+      {
+        q: 'Pada جَاءَ أَخُوكَ مُحَمَّدٌ, kata مُحَمَّدٌ adalah...',
+        options: ['Fa\'il', 'Maf\'ul', 'Badal (kullun min kullin)', 'Hal'],
+        correct: 2,
+        explanation: 'مُحَمَّدٌ menggantikan أَخُوكَ sepenuhnya — badal kullun min kullin. Sama rofa\'.',
+      },
+      {
+        q: 'Apa beda badal dgn na\'at?',
+        options: ['Sama saja', 'Badal menggantikan; na\'at hanya mensifati', 'Na\'at lebih panjang', 'Badal nashob'],
+        correct: 1,
+        explanation: 'Badal: hubungannya substitusi (yang dimaksud sebenarnya). Na\'at: hubungannya sifat (memodifikasi).',
+      },
+      {
+        q: 'Jenis badal ada berapa macam?',
+        options: ['1', '2', '3', '4'],
+        correct: 2,
+        explanation: '3 macam: (1) Badal kullun min kullin — total, (2) Ba\'dh min kullin — sebagian, (3) Isytimal — cakupan sifat.',
+      },
+    ],
+  },
+
+  // ============ PELAJARAN 23 (PREMIUM) ============
+  {
+    id: 'nahwu-23-dhomir',
+    order: 23,
+    isFree: false,
+    title: 'Dhomir Munfashil & Muttashil',
+    subtitle: 'Kata ganti yang terpisah & yang melekat',
+    emoji: '👤',
+    duration: '7 menit',
+    color: '#a05536',
+    xpReward: 35,
+    theory: {
+      intro: 'Dhomir (الضَّمِيرُ) adalah kata ganti. Ada 2 jenis: MUNFASHIL (terpisah, berdiri sendiri) dan MUTTASHIL (melekat di akhir kata). Semua dhomir MABNI.',
+      sections: [
+        {
+          title: 'Dhomir Munfashil — Terpisah, Sbg Mubtada\'/Khobar',
+          body: 'Dhomir munfashil: أَنَا، نَحْنُ، أَنْتَ، أَنْتِ، أَنْتُمْ، أَنْتُنَّ، هُوَ، هِيَ، هُمَا، هُمْ، هُنَّ. Berdiri sendiri, biasanya jadi mubtada\' atau khobar.',
+          examples: [
+            { ar: 'أَنَا مُسْلِمٌ', latin: 'anaa muslim', id: 'Aku seorang muslim (أَنَا mubtada\')' },
+            { ar: 'هِيَ طَالِبَةٌ', latin: 'hiya thaalibah', id: 'Dia (pr) seorang siswi' },
+            { ar: 'هُمْ مُؤْمِنُونَ', latin: 'hum mu\'minuun', id: 'Mereka orang-orang beriman' },
+          ],
+        },
+        {
+          title: 'Dhomir Muttashil — Melekat di Akhir Kata',
+          body: 'Dhomir muttashil: ـِي، ـكَ، ـكِ، ـكُمْ، ـكُنَّ، ـهُ، ـهَا، ـهُمْ، ـهُنَّ، ـنَا. Menempel di akhir isim, fi\'il, atau harf. Fungsinya: fa\'il, maf\'ul, mudhof ilaih, atau majrur.',
+          examples: [
+            { ar: 'كِتَابِي', latin: 'kitaabii', id: 'bukuKU (ـِي mudhof ilaih)' },
+            { ar: 'رَأَيْتُهُ', latin: 'ra\'aituhu', id: 'aku melihatNYA (هُ maf\'ul; تُ fa\'il)' },
+            { ar: 'لَكُمْ', latin: 'lakum', id: 'untuk kalian (كُمْ majrur)' },
+          ],
+        },
+        {
+          title: 'I\'rab Dhomir',
+          body: 'Semua dhomir MABNI (harakat akhirnya tidak berubah). Tapi posisinya secara mahalli bisa rofa\'/nashob/jar tergantung peran dalam kalimat.',
+          examples: [
+            { ar: 'هُوَ كَاتِبٌ', latin: 'huwa kaatib', id: 'هُوَ mabni atas fathah, mahallan rofa\' sbg mubtada\'' },
+            { ar: 'إِنَّهُ كَاتِبٌ', latin: 'innahu kaatib', id: 'هُ mabni atas dhommah, mahallan nashob sbg isim إِنَّ' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ',
+        latin: 'iyyaaka na\'budu wa iyyaaka nasta\'iin',
+        surah: 'Al-Fatihah',
+        ayatNum: 5,
+        analysis: [
+          { word: 'إِيَّا', type: 'Dhomir Munfashil', note: 'untuk maf\'ul; "engkau" — mahallan nashob' },
+          { word: 'كَ', type: 'Dhomir Muttashil', note: 'menempel ke إِيَّا; mabni' },
+          { word: 'نَعْبُدُ', type: 'Fi\'il Mudhori\'', note: 'fa\'il = dhomir mustatir نَحْنُ' },
+          { word: 'نَسْتَعِينُ', type: 'Fi\'il Mudhori\'', note: 'kami minta tolong; nasta\'iin' },
+        ],
+        explanation: 'إِيَّاكَ adalah dhomir munfashil khusus untuk MAF\'UL (jarang). Biasanya maf\'ul pakai dhomir muttashil (نَعْبُدُكَ). Tapi di sini didahulukan إِيَّاكَ untuk PENEKANAN: "hanya kepada-Mu". Inilah keindahan sintaksis Qur\'an.',
+      },
+    },
+    quiz: [
+      {
+        q: 'Beda utama dhomir munfashil & muttashil adalah...',
+        options: ['Sama saja', 'Munfashil berdiri sendiri; muttashil melekat di akhir kata', 'Muttashil hanya lk', 'Munfashil hanya untuk Qur\'an'],
+        correct: 1,
+        explanation: 'Munfashil: terpisah, berdiri sendiri (أَنَا، هُوَ). Muttashil: melekat di akhir kata (كِتَابُهُ، رَأَيْتُهُ).',
+      },
+      {
+        q: 'Semua dhomir secara i\'rab adalah...',
+        options: ['Mu\'rab', 'Mabni', 'Selalu rofa\'', 'Selalu nashob'],
+        correct: 1,
+        explanation: 'Semua dhomir mabni — harakatnya tidak berubah. Tapi posisi-nya mahallan bisa rofa\'/nashob/jar.',
+      },
+      {
+        q: 'Pada كِتَابُهُ, peran هُ adalah...',
+        options: ['Fa\'il', 'Maf\'ul', 'Mudhof ilaih', 'Mubtada\''],
+        correct: 2,
+        explanation: 'هُ menempel di akhir isim — perannya mudhof ilaih (mahallan jar). كِتَابُهُ = "bukunya".',
+      },
+      {
+        q: 'إِيَّاكَ dipakai sebagai...',
+        options: ['Mubtada\'', 'Fa\'il', 'Maf\'ul (dhomir munfashil khusus maf\'ul)', 'Khobar'],
+        correct: 2,
+        explanation: 'إِيَّاكَ adalah dhomir munfashil khusus untuk MAF\'UL ketika ingin didahulukan untuk penekanan.',
+      },
+    ],
+  },
+
+  // ============ PELAJARAN 24 (PREMIUM) ============
+  {
+    id: 'nahwu-24-asma-khamsah',
+    order: 24,
+    isFree: false,
+    title: 'Asma\' al-Khamsah',
+    subtitle: '5 isim khusus dgn i\'rab unik',
+    emoji: '✋',
+    duration: '6 menit',
+    color: '#a05536',
+    xpReward: 35,
+    theory: {
+      intro: 'Asma\' al-Khamsah (الْأَسْمَاءُ الْخَمْسَةُ) adalah 5 isim yang punya I\'RAB UNIK: rofa\' dgn و, nashob dgn ا, jar dgn ي. Berbeda dari isim biasa.',
+      sections: [
+        {
+          title: '5 Isim Tersebut',
+          body: 'أَبٌ (ayah), أَخٌ (saudara lk), حَمٌ (mertua), فُو (mulut), ذُو (yang mempunyai).',
+          examples: [
+            { ar: 'أَبٌ - أَبُو - أَبَا - أَبِي', latin: 'ab → abuu/abaa/abii', id: 'ayah dgn 3 i\'rab' },
+            { ar: 'أَخٌ - أَخُو - أَخَا - أَخِي', latin: 'akh → akhuu/akhaa/akhii', id: 'saudara' },
+            { ar: 'ذُو - ذَا - ذِي', latin: 'dzuu - dzaa - dzii', id: 'yang punya' },
+          ],
+        },
+        {
+          title: 'Syarat Pemakaian',
+          body: 'Aturan unik berlaku HANYA kalau: (1) Mufrad (tidak mutsanna/jamak), (2) Mukabbar (bukan tashghir), (3) Jadi MUDHOF (kecuali ke ya\' mutakallim).',
+          examples: [
+            { ar: 'جَاءَ أَبُو زَيْدٍ', latin: 'jaa\'a abuu Zaid', id: 'Ayah Zaid datang (أَبُو rofa\' dgn و)' },
+            { ar: 'رَأَيْتُ أَبَا زَيْدٍ', latin: 'ra\'aitu abaa Zaid', id: 'Aku melihat ayah Zaid (أَبَا nashob dgn ا)' },
+            { ar: 'مَرَرْتُ بِأَبِي زَيْدٍ', latin: 'marartu bi\'abii Zaid', id: 'Aku lewati ayah Zaid (أَبِي jar dgn ي)' },
+          ],
+        },
+        {
+          title: 'Catatan: ذُو khusus',
+          body: 'ذُو tidak bisa berdiri sendiri — wajib mudhof ke isim. Artinya: "yang mempunyai..." atau "pemilik...".',
+          examples: [
+            { ar: 'ذُو عِلْمٍ', latin: 'dzuu \'ilm', id: 'pemilik ilmu / yang berilmu' },
+            { ar: 'ذَا مَالٍ', latin: 'dzaa maal', id: 'pemilik harta (nashob)' },
+            { ar: 'ذِي عِلْمٍ', latin: 'dzii \'ilm', id: 'pemilik ilmu (jar)' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'وَأَخُو عَادٍ إِذْ أَنْذَرَ قَوْمَهُ',
+        latin: 'wa akhuu \'aadin idz andzara qaumahu',
+        surah: 'Al-Ahqaf',
+        ayatNum: 21,
+        analysis: [
+          { word: 'وَأَخُو', type: 'Asma\' al-Khamsah', note: 'rofa\' dgn WAU (bukan dhommah); mudhof' },
+          { word: 'عَادٍ', type: 'Mudhof ilaih', note: 'majrur; Bani \'Ad' },
+          { word: 'إِذْ', type: 'Zhorof', note: 'ketika' },
+          { word: 'أَنْذَرَ', type: 'Fi\'il Madhi', note: 'memperingatkan' },
+          { word: 'قَوْمَهُ', type: 'Maf\'ul + dhomir', note: 'kaumnya' },
+        ],
+        explanation: 'أَخُو عَادٍ — saudara kaum \'Ad (yaitu Nabi Hud). Lihat: أَخُو rofa\' dgn WAU, bukan dhommah biasa. Itu i\'rab khas asma\' al-khamsah karena: mufrad + mudhof + mukabbar.',
+      },
+    },
+    quiz: [
+      {
+        q: 'Berapa jumlah asma\' al-khamsah?',
+        options: ['3', '5', '7', '10'],
+        correct: 1,
+        explanation: '5 isim: أَبٌ، أَخٌ، حَمٌ، فُو، ذُو.',
+      },
+      {
+        q: 'Saat rofa\', asma\' al-khamsah ditandai dgn...',
+        options: ['Dhommah', 'Wau', 'Alif', 'Ya'],
+        correct: 1,
+        explanation: 'Rofa\' = wau (و). أَبُو، أَخُو، حَمُو، فُو، ذُو.',
+      },
+      {
+        q: 'Pada رَأَيْتُ أَبَا زَيْدٍ, kenapa أَبَا?',
+        options: ['Rofa\' dgn و', 'Nashob dgn ا', 'Jar dgn ي', 'Salah harakat'],
+        correct: 1,
+        explanation: 'أَبَا nashob (sbg maf\'ul) ditandai dgn ALIF — bukan fathah biasa. Itu aturan asma\' al-khamsah.',
+      },
+      {
+        q: 'ذُو punya keunikan apa?',
+        options: ['Tidak ada keunikan', 'Wajib jadi mudhof — tidak bisa berdiri sendiri', 'Selalu rofa\'', 'Tidak di Qur\'an'],
+        correct: 1,
+        explanation: 'ذُو wajib mudhof (digabung dgn isim lain). Artinya: "yang mempunyai...". Mis. ذُو عِلْمٍ = pemilik ilmu.',
+      },
+    ],
+  },
 ];
 
 // Helper
