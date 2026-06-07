@@ -618,7 +618,7 @@ function ProfileRow({ label, value, valueColor = '#3d2817', icon: Icon }) {
 // ============================================================================
 const INTEREST_LABELS = {
   religion: '🕌 Agama', travel: '✈️ Travel', food: '🍽️ Kuliner', movies: '🎬 Film',
-  music: '🎵 Musik', sports: '⚽ Olahraga', business: '💼 Bisnis', history: '📜 Sejarah',
+  sports: '⚽ Olahraga', business: '💼 Bisnis', history: '📜 Sejarah',
   tech: '💻 Teknologi', family: '👨‍👩‍👧 Keluarga',
 };
 

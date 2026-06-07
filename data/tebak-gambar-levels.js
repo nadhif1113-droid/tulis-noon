@@ -378,7 +378,6 @@ export const TEBAK_GAMBAR_LEVELS = [
       { image: '📚', imageUrl: null, arabic: 'قِرَاءَة', latin: 'qira\'a', id: 'Membaca', distractors: ['كِتَابَة', 'دِرَاسَة', 'بَحْث'] },
       { image: '✍️', imageUrl: null, arabic: 'كِتَابَة', latin: 'kitaba', id: 'Menulis', distractors: ['قِرَاءَة', 'رَسْم', 'طِبَاعَة'] },
       { image: '🎨', imageUrl: null, arabic: 'رَسْم', latin: 'rasm', id: 'Menggambar', distractors: ['كِتَابَة', 'تَلْوِين', 'نَحْت'] },
-      { image: '🎵', imageUrl: null, arabic: 'مُوسِيقَى', latin: 'musiqa', id: 'Musik', distractors: ['غِنَاء', 'رَقْص', 'لَحْن'] },
       { image: '💤', imageUrl: null, arabic: 'نَوْم', latin: 'nawm', id: 'Tidur', distractors: ['رَاحَة', 'اسْتِيقَاظ', 'حُلْم'] },
     ],
   },

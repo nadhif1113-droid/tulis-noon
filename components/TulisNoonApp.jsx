@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, ArrowRight, Volume2, Mic, Check, X, Sparkles, Lock, MapPin, Briefcase, GraduationCap, Trophy, Flame, Star, Home, BookOpen, Users, User, Heart, Share2, Send, Play, Image as ImageIcon, MessageCircle, Calendar, Target, Zap, ChevronRight, Bot, Video, Clock, Award, UserCheck, Coffee, Music, Film, Gamepad2, Heart as HeartIcon, Mountain, Facebook, Instagram, Twitter, Link2, Copy, Coins, HelpCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Volume2, Mic, Check, X, Sparkles, Lock, MapPin, Briefcase, GraduationCap, Trophy, Flame, Star, Home, BookOpen, Users, User, Heart, Share2, Send, Play, Image as ImageIcon, MessageCircle, Calendar, Target, Zap, ChevronRight, Bot, Video, Clock, Award, UserCheck, Coffee, Film, Gamepad2, Heart as HeartIcon, Mountain, Facebook, Instagram, Twitter, Link2, Copy, Coins, HelpCircle } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { CHALLENGE_SCENARIOS, getTodayChallenge, getXpForLevel } from '@/data/challenge-levels';
 import { ROLEPLAY_SCENARIOS } from '@/data/roleplay-scenarios';
@@ -1589,7 +1589,6 @@ function WelcomeScreen({ onComplete, initialName = '' }) {
       { id: 'travel', label: 'Travel & Jalan-jalan', emoji: '✈️' },
       { id: 'food', label: 'Kuliner', emoji: '🍽️' },
       { id: 'movies', label: 'Film & Drama', emoji: '🎬' },
-      { id: 'music', label: 'Musik', emoji: '🎵' },
       { id: 'sports', label: 'Olahraga', emoji: '⚽' },
       { id: 'business', label: 'Bisnis & Karir', emoji: '💼' },
       { id: 'history', label: 'Sejarah Islam', emoji: '📜' },
@@ -2804,7 +2803,7 @@ function ProfilTab({ userName, userProfile, xp, streak, progress, onOpenPremium 
   const totalLessons = Object.values(progress).reduce((a,b)=>a+b,0);
   const interestLabels = {
     religion: '🕌 Agama', travel: '✈️ Travel', food: '🍽️ Kuliner', movies: '🎬 Film',
-    music: '🎵 Musik', sports: '⚽ Olahraga', business: '💼 Bisnis', history: '📜 Sejarah',
+    sports: '⚽ Olahraga', business: '💼 Bisnis', history: '📜 Sejarah',
     tech: '💻 Teknologi', family: '👨‍👩‍👧 Keluarga'
   };
   return (
