@@ -23,7 +23,8 @@ export default function TanyaCepatScreen({
   onBack,
   onHome,
   onConsumeQuota,      // () => Promise<boolean> — kurangi quota (-1)
-  onBuyBundle,         // () => Promise<boolean> — beli 10 percakapan = 5 koin
+  onBuyBundle,         // () => Promise<boolean> — LEGACY beli 10 percakapan = 20 koin
+  onUpgrade,           // () => void — buka PremiumScreen (Mahir tier — pivot dari koin)
 }) {
   const [messages, setMessages] = useState([]); // [{role:'user'|'assistant', content, parsed?}]
   const [inputText, setInputText] = useState('');
@@ -255,14 +256,14 @@ export default function TanyaCepatScreen({
       <div className="px-4 pb-4 pt-2" style={{ background: 'rgba(250,246,238,0.95)', borderTop: '1px solid rgba(10,77,60,0.08)' }}>
         {!hasQuota && (
           <button
-            onClick={() => setShowBundleModal(true)}
+            onClick={() => onUpgrade?.()}
             className="w-full mb-2 rounded-2xl p-3 text-left flex items-center gap-3"
             style={{ background: 'linear-gradient(135deg, #c9a961, #d4b876)' }}
           >
             <Sparkles size={18} color="white" />
             <div className="flex-1">
-              <p className="text-sm font-bold text-white">Quota habis</p>
-              <p className="text-[11px] text-white opacity-90">Tap untuk beli bundle {TANYA_CEPAT_BUNDLE_QUOTA} percakapan = {TANYA_CEPAT_BUNDLE_COST} koin</p>
+              <p className="text-sm font-bold text-white">Quota harian habis</p>
+              <p className="text-[11px] text-white opacity-90">Tap untuk Upgrade ke Mahir · Tanya Cepat unlimited</p>
             </div>
           </button>
         )}
@@ -622,9 +623,9 @@ function TanyaCepatIntroModal({ onClose }) {
               <Coins size={16} style={{ color: '#c9a961' }} />
             </div>
             <div className="flex-1">
-              <p className="text-xs font-bold mb-0.5" style={{ color: '#0a4d3c' }}>5 percakapan GRATIS</p>
+              <p className="text-xs font-bold mb-0.5" style={{ color: '#0a4d3c' }}>5 percakapan harian GRATIS</p>
               <p className="text-[11px] leading-snug" style={{ color: '#8b6b3d' }}>
-                Setelah habis, top-up <strong>5 koin = 10 percakapan</strong>
+                Mau unlimited? Upgrade ke <strong>Tulis Noon Mahir</strong>
               </p>
             </div>
           </div>
