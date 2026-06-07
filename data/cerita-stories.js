@@ -63,10 +63,10 @@ export const CERITA_STORIES = [
     ],
     endQuiz: [
       { q: 'Apa arti مَطَار?', choices: ['Bandara', 'Hotel', 'Pasar', 'Masjid'], correctIdx: 0 },
-      { q: 'Bagaimana cara mengucapkan "terima kasih" dalam bahasa Arab?', choices: ['Tafaddhal', 'Shukran', 'Ahlan', 'Mafi musykila'], correctIdx: 1 },
+      { q: 'Bagaimana cara mengucapkan "terima kasih" dalam bahasa Arab?', choices: ['تَفَضَّل', 'شُكْرًا', 'أَهْلًا', 'مَا فِي مُشْكِلَة'], correctIdx: 1 },
       { q: 'Apa makna مِنْ فَضْلِك?', choices: ['Permisi', 'Tolong/Silakan', 'Maaf', 'Selamat datang'], correctIdx: 1 },
       { q: 'Madinah biasa disebut juga sebagai...', choices: ['Al-Munawwarah', 'Al-Mukarramah', 'Al-Mubarakah', 'Al-Aqsha'], correctIdx: 0 },
-      { q: 'Untuk meminta diantar dengan sopan, kita pakai kata...', choices: ['Khalas', 'Min fadhlik', 'Khallas wallah', 'Yallah'], correctIdx: 1 },
+      { q: 'Untuk meminta diantar dengan sopan, kita pakai kata...', choices: ['خَلَاص', 'مِنْ فَضْلِك', 'خَلَاص وَاللَّه', 'يَالَّا'], correctIdx: 1 },
     ],
   },
 
@@ -137,10 +137,10 @@ export const CERITA_STORIES = [
     ],
     endQuiz: [
       { q: 'Apa arti بِكَمْ الْكِيلُو؟', choices: ['Berapa kilonya?', 'Berapa per kilo?', 'Mau ambil berapa kilo?', 'Kilo apa?'], correctIdx: 1 },
-      { q: 'Untuk minta diskon, kita bilang...', choices: ['Khalas!', 'Wallah ghali, rakhkhis', 'Yallah bi kilo', 'Shukran jiddan'], correctIdx: 1 },
+      { q: 'Untuk minta diskon, kita bilang...', choices: ['خَلَاص!', 'وَاللَّه غَالِي، رَخِّص', 'يَالَّا بِكِيلُو', 'شُكْرًا جِدًّا'], correctIdx: 1 },
       { q: 'Kata "ضَيْف" artinya...', choices: ['Pedagang', 'Tamu', 'Pelanggan', 'Pembeli'], correctIdx: 1 },
       { q: 'آخِر سِعْر = ?', choices: ['Harga awal', 'Harga rata-rata', 'Harga terakhir', 'Harga grosir'], correctIdx: 2 },
-      { q: 'Kurma Madinah yang gelap & terkenal namanya...', choices: ['Sukkari', 'Khalas', 'Ajwa', 'Mejdool'], correctIdx: 2 },
+      { q: 'Kurma Madinah yang gelap & terkenal namanya...', choices: ['Sukkari', 'خَلَاص', 'Ajwa', 'Mejdool'], correctIdx: 2 },
       { q: 'Apa makna طَازِج?', choices: ['Mahal', 'Murah', 'Fresh/segar', 'Kering'], correctIdx: 2 },
     ],
   },
@@ -249,9 +249,9 @@ CERITA_STORIES.push(
     ],
     endQuiz: [
       { q: 'Apa arti فُطُور?', choices: ['Makan malam', 'Sarapan', 'Makan siang', 'Camilan'], correctIdx: 1 },
-      { q: 'Bagaimana mengucap "Selamat pagi"?', choices: ['Masāul khayr', 'Ṣabāḥul khayr', 'Tuṣbiḥu \'alā khayr', 'Marḥabā'], correctIdx: 1 },
+      { q: 'Bagaimana mengucap "Selamat pagi"?', choices: ['مَسَاءُ الْخَيْر', 'صَبَاحُ الْخَيْر', 'تُصْبِحُ عَلَى خَيْر', 'مَرْحَبًا'], correctIdx: 1 },
       { q: 'خُبْز artinya...', choices: ['Telur', 'Keju', 'Roti', 'Susu'], correctIdx: 2 },
-      { q: 'Untuk bilang "enak", pakai kata...', choices: ['Jamīl', 'Ladzīdz', 'Kabīr', 'Ṣaghīr'], correctIdx: 1 },
+      { q: 'Untuk bilang "enak", pakai kata...', choices: ['جَمِيل', 'لَذِيذ', 'Kabīr', 'صَغِير'], correctIdx: 1 },
       { q: 'Kata "زَيْتُون" artinya...', choices: ['Anggur', 'Zaitun', 'Apel', 'Pisang'], correctIdx: 1 },
     ],
   },
@@ -277,7 +277,7 @@ CERITA_STORIES.push(
       { q: 'حَافِلَة artinya...', choices: ['Mobil', 'Bus', 'Taksi', 'Sepeda'], correctIdx: 1 },
       { q: 'Jamaah haji perempuan disebut...', choices: ['Ḥājj', 'Ḥājja', 'Ḥājjun', 'Ḥājjīn'], correctIdx: 1 },
       { q: 'Kubah hijau Masjid Nabawi disebut...', choices: ['Al-qubba al-bayḍā\'', 'Al-qubba al-khaḍrā\'', 'Al-qubba al-ḥamrā\'', 'Al-qubba al-zarqā\''], correctIdx: 1 },
-      { q: 'Cara tanya "Ke mana?" dalam Arab...', choices: ['Min ayn?', 'Ilā ayn?', 'Mā hādhā?', 'Kayfa?'], correctIdx: 1 },
+      { q: 'Cara tanya "Ke mana?" dalam Arab...', choices: ['مِنْ أَيْن؟', 'إِلَى أَيْن؟', 'مَا هَذَا؟', 'كَيْفَ؟'], correctIdx: 1 },
     ],
   },
   {
@@ -300,8 +300,8 @@ CERITA_STORIES.push(
     ],
     endQuiz: [
       { q: 'مَاء زَمْزَم adalah...', choices: ['Air mineral biasa', 'Air berkah dari mata air Mekkah', 'Air kelapa', 'Air sumur Madinah'], correctIdx: 1 },
-      { q: 'Cara tanya "Dari mana?" dalam Arab...', choices: ['Ilā ayn', 'Min ayn', 'Mā ayn', 'Hādhā ayn'], correctIdx: 1 },
-      { q: 'Kata "juga" dalam Arab...', choices: ['Lākin', 'Ayḍan', 'Jiddan', 'Ḥattā'], correctIdx: 1 },
+      { q: 'Cara tanya "Dari mana?" dalam Arab...', choices: ['إِلَى أَيْن', 'مِنْ أَيْن', 'مَا أَيْن', 'هَذَا أَيْن'], correctIdx: 1 },
+      { q: 'Kata "juga" dalam Arab...', choices: ['لَكِن', 'أَيْضًا', 'جِدًّا', 'حَتَّى'], correctIdx: 1 },
       { q: 'Cara bilang "Saya dari Indonesia"...', choices: ['Anā ilā indūnīsiyā', 'Anā min indūnīsiyā', 'Anā fī indūnīsiyā', 'Anā ma\'a indūnīsiyā'], correctIdx: 1 },
     ],
   },
@@ -327,7 +327,7 @@ CERITA_STORIES.push(
       { q: 'Kata صَلَاة artinya...', choices: ['Doa', 'Sholat', 'Dzikir', 'Tasbih'], correctIdx: 1 },
       { q: 'مَتَى artinya...', choices: ['Di mana', 'Kapan', 'Apa', 'Siapa'], correctIdx: 1 },
       { q: 'نِصْف سَاعَة berarti...', choices: ['Satu jam', 'Setengah jam', 'Seperempat jam', 'Dua jam'], correctIdx: 1 },
-      { q: 'Untuk minta perhatian sopan, kita bilang...', choices: ['Yallah', 'Khalas', 'Law samaḥt', 'Mafi musykila'], correctIdx: 2 },
+      { q: 'Untuk minta perhatian sopan, kita bilang...', choices: ['يَالَّا', 'خَلَاص', 'لَوْ سَمَحْت', 'مَا فِي مُشْكِلَة'], correctIdx: 2 },
     ],
   }
 );
@@ -416,9 +416,9 @@ CERITA_STORIES.push(
     endQuiz: [
       { q: 'Hijazi "تَرُوح" artinya...', choices: ['Datang', 'Pergi', 'Tinggal', 'Pulang'], correctIdx: 1 },
       { q: 'مِئَة artinya...', choices: ['Sepuluh', 'Seratus', 'Seribu', 'Sejuta'], correctIdx: 1 },
-      { q: 'Cara bilang "400" dalam Arab...', choices: ['Thalāth mi\'a', 'Arba\' mi\'a', 'Khams mi\'a', 'Sitt mi\'a'], correctIdx: 1 },
+      { q: 'Cara bilang "400" dalam Arab...', choices: ['ثَلَاث مِئَة', 'أَرْبَع مِئَة', 'خَمْس مِئَة', 'سِتّ مِئَة'], correctIdx: 1 },
       { q: 'صَحْرَاء adalah...', choices: ['Pegunungan', 'Padang pasir', 'Pantai', 'Hutan'], correctIdx: 1 },
-      { q: 'Untuk menawar harga, kata kunci yang dipakai...', choices: ['Ḥilwa', 'Ghālī', 'Jamīl', 'Mafhūm'], correctIdx: 1 },
+      { q: 'Untuk menawar harga, kata kunci yang dipakai...', choices: ['Ḥilwa', 'Ghālī', 'جَمِيل', 'Mafhūm'], correctIdx: 1 },
     ],
   },
   {
@@ -442,10 +442,10 @@ CERITA_STORIES.push(
     ],
     endQuiz: [
       { q: 'جَوَّال artinya...', choices: ['Komputer', 'HP/Ponsel', 'TV', 'Radio'], correctIdx: 1 },
-      { q: 'Cara tanya "Apa kabar" ke perempuan...', choices: ['Kayf ḥāluk', 'Kayf ḥāluki', 'Kayf ḥālukum', 'Kayf ḥāluhā'], correctIdx: 1 },
-      { q: 'Jawaban "Baik" dalam Arab...', choices: ['Ladzīdz', 'Bi khayr', 'Ṣaghīr', 'Jamīl'], correctIdx: 1 },
+      { q: 'Cara tanya "Apa kabar" ke perempuan...', choices: ['كَيْف حَالُك', 'كَيْف حَالُكِ', 'كَيْف حَالُكُم', 'كَيْف حَالُهَا'], correctIdx: 1 },
+      { q: 'Jawaban "Baik" dalam Arab...', choices: ['لَذِيذ', 'بِخَيْر', 'صَغِير', 'جَمِيل'], correctIdx: 1 },
       { q: 'الرَّوْضَة adalah...', choices: ['Taman umum di Madinah', 'Tempat ziarah Nabi', 'Area khusus antara mimbar dan makam Nabi', 'Pintu masjid'], correctIdx: 2 },
-      { q: 'Panggilan sayang ibu dalam Arab...', choices: ['Ya abī', 'Yā ummī', 'Yā ukhtī', 'Yā ibnatī'], correctIdx: 1 },
+      { q: 'Panggilan sayang ibu dalam Arab...', choices: ['يَا أَبِي', 'يَا أُمِّي', 'يَا أُخْتِي', 'يَا اِبْنَتِي'], correctIdx: 1 },
     ],
   },
   {
@@ -472,8 +472,8 @@ CERITA_STORIES.push(
     endQuiz: [
       { q: 'فُنْدُق artinya...', choices: ['Restoran', 'Hotel', 'Toko', 'Rumah'], correctIdx: 1 },
       { q: 'غُرْفَة artinya...', choices: ['Pintu', 'Kamar', 'Jendela', 'Lantai'], correctIdx: 1 },
-      { q: 'Hari Rabu dalam Arab...', choices: ['Yawm al-aḥad', 'Yawm al-arbi\'ā\'', 'Yawm al-khamīs', 'Yawm al-jumu\'a'], correctIdx: 1 },
-      { q: '"Per malam" dalam Arab...', choices: ['Fī aṣ-ṣabāḥ', 'Fī al-laylah', 'Fī al-yawm', 'Fī al-usbū\''], correctIdx: 1 },
+      { q: 'Hari Rabu dalam Arab...', choices: ['يَوْم الْأَحَد', 'يَوْم الْأَرْبِعَاء', 'يَوْم الْخَمِيس', 'يَوْم الْجُمُعَة'], correctIdx: 1 },
+      { q: '"Per malam" dalam Arab...', choices: ['فِي الصَّبَاح', 'فِي اللَّيْلَة', 'فِي الْيَوْم', 'فِي الْأُسْبُوع'], correctIdx: 1 },
       { q: 'Kata "أَحْجِز" artinya...', choices: ['Saya bayar', 'Saya reservasi', 'Saya pergi', 'Saya minta'], correctIdx: 1 },
     ],
   }
