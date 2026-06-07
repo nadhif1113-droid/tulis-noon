@@ -1254,6 +1254,21 @@ export default function TulisNoonApp() {
           userProfile={authProfile}
           onBack={() => setScreen('main')}
           onHome={() => { setTab('home'); setScreen('main'); }}
+          onShareBonus={async (platformId) => {
+            // +10 XP bonus 1x/hari untuk share (anti-spam cap)
+            const today = new Date().toDateString();
+            const lastShare = authProfile?.shareXpDate;
+            if (lastShare === today) {
+              console.log('Share bonus already claimed today');
+              return;
+            }
+            try {
+              awardXp(10, 'community'); // counted juga ke event score (kategori social)
+              await updateUserProfile({ shareXpDate: today, lastSharePlatform: platformId });
+              Analytics.trackEvent?.('share_event', { platform: platformId });
+              setAchievements((a) => [{ id: Date.now(), type: 'share', text: `📣 Share progress event ke ${platformId} (+10 XP)`, emoji: '🎁', time: 'baru saja', user: userName || 'Anda' }, ...a]);
+            } catch (e) { console.error('share bonus error:', e); }
+          }}
         />}
 
         {screen === 'certificates' && <CertificatesScreen

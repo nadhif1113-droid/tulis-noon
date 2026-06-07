@@ -13,7 +13,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Home, Trophy, Flame, Target, CheckCircle2, Lock, Sparkles, Award, Users, Calendar, Info } from 'lucide-react';
+import { ArrowLeft, Home, Trophy, Flame, Target, CheckCircle2, Lock, Sparkles, Award, Users, Calendar, Info, Share2 } from 'lucide-react';
+import ShareEventModal from '@/components/ShareEventModal';
 import {
   isChallengeActive, challengeDaysRemaining, challengeTotalDays, challengeDaysUntilStart,
   challengeCurrentDay, challengePercentElapsed,
@@ -26,9 +27,10 @@ import {
 } from '@/lib/event-scoring';
 import { getChallengeLeaderboard } from '@/lib/social';
 
-export default function EventDashboard({ userId, userProfile, onBack, onHome }) {
+export default function EventDashboard({ userId, userProfile, onBack, onHome, onShareBonus }) {
   const [leaderboard, setLeaderboard] = useState([]);
   const [lbLoading, setLbLoading] = useState(true);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const isActive = isChallengeActive();
   const isPast = Date.now() > CHALLENGE_END_MS;
@@ -190,6 +192,27 @@ export default function EventDashboard({ userId, userProfile, onBack, onHome }) 
           <StatBox icon="⭐" label="Score" value={eventScore} color="#c9a961" />
         </div>
 
+        {/* SHARE PROGRESS — viral growth CTA */}
+        {isActive && (
+          <button
+            onClick={() => setShowShareModal(true)}
+            className="w-full rounded-2xl p-4 flex items-center gap-3 active:scale-[0.98] transition-transform relative overflow-hidden"
+            style={{ background: 'linear-gradient(135deg, #c9a961, #d4b876)', boxShadow: '0 10px 24px -8px rgba(201,169,97,0.5)' }}
+          >
+            <div className="absolute -right-3 -top-3 text-6xl opacity-15">📣</div>
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,0.25)' }}>
+              <Share2 size={20} color="#0a4d3c" />
+            </div>
+            <div className="flex-1 text-left relative">
+              <p className="text-[10px] tracking-[0.3em] uppercase font-bold mb-0.5" style={{ color: '#0a4d3c' }}>
+                🎁 PAMERKAN PROGRES
+              </p>
+              <p className="text-sm font-bold leading-tight" style={{ color: '#0a4d3c' }}>Ajak teman + bonus +10 XP</p>
+              <p className="text-[11px]" style={{ color: '#7a3d2a' }}>Caption siap pakai untuk WA / IG / Twitter</p>
+            </div>
+          </button>
+        )}
+
         {/* LEADERBOARD */}
         <div className="rounded-2xl p-4" style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.1)' }}>
           <p className="text-[10px] tracking-[0.3em] uppercase font-bold mb-3 flex items-center gap-1.5" style={{ color: '#0a4d3c' }}>
@@ -244,6 +267,24 @@ export default function EventDashboard({ userId, userProfile, onBack, onHome }) 
           </div>
         </details>
       </div>
+
+      {/* SHARE MODAL */}
+      {showShareModal && (
+        <ShareEventModal
+          userId={userId}
+          userName={userProfile?.displayName}
+          score={eventScore}
+          rank={(() => {
+            const myIdx = leaderboard.findIndex((u) => u.uid === userId);
+            return myIdx >= 0 ? myIdx + 1 : '?';
+          })()}
+          streak={eventStreak}
+          onClose={() => setShowShareModal(false)}
+          onShared={(platformId) => {
+            if (onShareBonus) onShareBonus(platformId);
+          }}
+        />
+      )}
     </div>
   );
 }
