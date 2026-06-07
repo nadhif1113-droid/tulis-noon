@@ -17,7 +17,7 @@ const PATH_META = {
   nahwu: {
     title: 'Nahwu',
     subtitle: 'Sintaksis & I\'rab',
-    desc: 'Belajar struktur kalimat bahasa Arab klasik — fondasi untuk paham tafsir & kitab kuning.',
+    desc: 'Belajar struktur kalimat bahasa Arab Fasiha — fondasi untuk paham tafsir & kitab kuning.',
     emoji: '🧮',
     color: '#0a4d3c',
     gradient: 'linear-gradient(135deg, #0a4d3c 0%, #1a6b56 100%)',
