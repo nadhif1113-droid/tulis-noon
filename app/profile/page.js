@@ -11,6 +11,7 @@ import AdminHelpFAB from '../../components/AdminHelpFAB';
 import BrandLoader from '../../components/BrandLoader';
 import { isInMiddleEast, isInIndonesia, getUserTimezone } from '../../lib/geo-detect';
 import { sendTestNotification, getPendingPrayerNotifsCount } from '../../lib/local-prayer-notifications';
+import { isUserInTrial, trialDaysRemaining, premiumSource } from '../../lib/feature-flags';
 
 // Debug-only: tombol test notif. Set true kalau mau debug notif sholat di dev.
 const SHOW_NOTIF_DEBUG = false;
@@ -388,6 +389,89 @@ export default function ProfilePage() {
               </p>
             </div>
           )}
+        </div>
+
+        {/* Status Langganan Tulis Noon Mahir — adaptif sesuai status user */}
+        <div className="px-5 mb-4">
+          {(() => {
+            const source = premiumSource(userProfile);
+            const inTrial = isUserInTrial(userProfile);
+            const daysLeft = trialDaysRemaining(userProfile);
+
+            // Visual & copy per status
+            let bg, badgeBg, badgeColor, badgeText, title, subtitle, ctaText, icon;
+            if (source === 'lifetime') {
+              bg = 'linear-gradient(135deg, #062e25 0%, #0a4d3c 50%, #c9a961 130%)';
+              badgeBg = '#c9a961'; badgeColor = '#3d2817';
+              badgeText = '🌟 PENDIRI LIFETIME';
+              title = 'Akses Selamanya';
+              subtitle = 'Kamu adalah Pendiri Tulis Noon · semua fitur kebuka tanpa batas';
+              ctaText = 'Lihat sertifikat & detail';
+              icon = '👑';
+            } else if (source === 'paid') {
+              bg = 'linear-gradient(135deg, #0a4d3c, #1a6b56)';
+              badgeBg = '#c9a961'; badgeColor = '#3d2817';
+              badgeText = '✨ MAHIR AKTIF';
+              title = 'Tulis Noon Mahir';
+              subtitle = 'Langganan aktif · semua jalur belajar terbuka';
+              ctaText = 'Lihat detail langganan';
+              icon = '✨';
+            } else if (inTrial || source === 'trial') {
+              bg = 'linear-gradient(135deg, #c9a961, #d4b876)';
+              badgeBg = 'rgba(255,255,255,0.95)'; badgeColor = '#a05536';
+              badgeText = `⏳ TRIAL · ${daysLeft} HARI TERSISA`;
+              title = `${daysLeft > 0 ? daysLeft : 0} hari trial gratis`;
+              subtitle = daysLeft > 3
+                ? 'Semua fitur kebuka. Upgrade kapan saja untuk akses permanen.'
+                : 'Trial-mu hampir habis! Upgrade sekarang biar nggak putus.';
+              ctaText = 'Lihat paket Mahir';
+              icon = '⏳';
+            } else if (source === 'launch') {
+              bg = 'linear-gradient(135deg, #0a4d3c, #1a6b56)';
+              badgeBg = '#c9a961'; badgeColor = '#3d2817';
+              badgeText = '🎁 LAUNCH SPECIAL';
+              title = 'Semua fitur kebuka';
+              subtitle = 'Periode launch — semua fitur Mahir kebuka untukmu. Nikmati!';
+              ctaText = 'Lihat paket Mahir';
+              icon = '🎁';
+            } else {
+              bg = 'linear-gradient(135deg, #c9a961, #d4b876)';
+              badgeBg = 'rgba(255,255,255,0.95)'; badgeColor = '#a05536';
+              badgeText = '✨ UPGRADE';
+              title = 'Tulis Noon Mahir';
+              subtitle = 'Buka semua jalur belajar · mulai Rp 49.000 (3 bulan)';
+              ctaText = 'Lihat paket & bayar';
+              icon = '✨';
+            }
+
+            return (
+              <button
+                onClick={() => router.replace('/?screen=premium')}
+                className="block w-full p-4 rounded-2xl active:scale-[0.98] transition-transform relative overflow-hidden text-left"
+                style={{ background: bg, boxShadow: '0 8px 20px -6px rgba(0,0,0,0.25)' }}
+              >
+                <div className="absolute -right-3 -top-3 text-6xl opacity-15">{icon}</div>
+                <div className="relative">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-[9px] tracking-widest uppercase font-bold px-2 py-0.5 rounded-full" style={{ background: badgeBg, color: badgeColor }}>{badgeText}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,0.95)' }}>
+                      <Sparkles size={18} style={{ color: '#a05536' }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-base font-bold text-white leading-tight">{title}</p>
+                      <p className="text-[11px] text-white opacity-90 leading-snug mt-0.5">{subtitle}</p>
+                    </div>
+                    <ChevronRight size={18} className="text-white flex-shrink-0" />
+                  </div>
+                  <p className="text-[11px] text-white opacity-85 mt-2.5 font-medium flex items-center gap-1">
+                    {ctaText} <ChevronRight size={12} />
+                  </p>
+                </div>
+              </button>
+            );
+          })()}
         </div>
 
         {/* Sertifikat Saya */}
