@@ -390,6 +390,28 @@ export default function ProfilePage() {
           )}
         </div>
 
+        {/* Sertifikat Saya */}
+        <div className="px-5 mb-4">
+          <button
+            onClick={() => router.replace('/?screen=certificates')}
+            className="block w-full p-4 rounded-2xl active:scale-[0.98] transition-transform relative overflow-hidden text-left"
+            style={{ background: 'linear-gradient(135deg, #0a4d3c, #1a6b56)', boxShadow: '0 8px 20px -6px rgba(10,77,60,0.4)' }}
+          >
+            <div className="absolute -right-2 -top-2 text-5xl opacity-15">🏅</div>
+            <div className="flex items-center gap-3 relative">
+              <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,0.95)' }}>
+                <Award size={18} style={{ color: '#0a4d3c' }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] tracking-widest uppercase font-bold text-white opacity-90">🏅 PENCAPAIAN</p>
+                <p className="text-base font-bold text-white leading-tight">Sertifikat Saya</p>
+                <p className="text-[11px] text-white opacity-90 leading-snug">Lihat sertifikat dari jalur belajar yang sudah selesai</p>
+              </div>
+              <ChevronRight size={18} className="text-white flex-shrink-0" />
+            </div>
+          </button>
+        </div>
+
         {/* Sign out */}
         <div className="px-5 pb-6">
           <button
