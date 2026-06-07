@@ -167,10 +167,15 @@ function MateriSession({ materi, isUnlocked, coins, onUnlock, onUpgrade, onExit,
     if (!supported || typeof window === 'undefined' || isDone || showPaywall || phase !== 'speak') return;
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     const rec = new SR();
-    rec.continuous = false;
+    // continuous=true biar user kontrol kapan stop. Auto-stop sering kepotong
+    // di tengah kata, terutama di mobile WebView.
+    rec.continuous = true;
     rec.interimResults = true;
     rec.lang = 'ar-SA';
     rec.maxAlternatives = 1;
+    // interimRef fallback — kalau recognition cuma kasih interim (umum di mobile)
+    // tanpa pernah isFinal=true, kita tetap punya hasil untuk dibandingkan.
+    const interimRef = { current: '' };
     rec.onresult = (event) => {
       let finalChunk = '';
       let inter = '';
@@ -180,15 +185,31 @@ function MateriSession({ materi, isUnlocked, coins, onUnlock, onUpgrade, onExit,
         else inter += res[0].transcript;
       }
       if (finalChunk) transcriptRef.current += finalChunk;
+      interimRef.current = inter;
       setInterim((transcriptRef.current + inter).trim());
     };
-    rec.onerror = () => setIsListening(false);
+    rec.onerror = (e) => {
+      setIsListening(false);
+      const errCode = e?.error || 'unknown';
+      // Kasih feedback ke user kalau ada masalah teknis (mic denied, no-speech, dll)
+      if (errCode === 'not-allowed' || errCode === 'service-not-allowed') {
+        setRecognized({ transcript: '', isMatch: false, similarity: 0, noAudio: true, errMsg: 'Akses mikrofon diblokir — izinkan dulu di browser' });
+      } else if (errCode === 'no-speech') {
+        setRecognized({ transcript: '', isMatch: false, similarity: 0, noAudio: true, errMsg: 'Suaramu nggak terdengar — coba lagi & ngomong lebih jelas' });
+      } else if (errCode !== 'aborted') {
+        setRecognized({ transcript: '', isMatch: false, similarity: 0, noAudio: true, errMsg: 'Rekam suara error — coba lagi' });
+      }
+    };
     rec.onend = () => {
       setIsListening(false);
-      const full = transcriptRef.current.trim();
+      // Pakai interim sbg fallback kalau nggak ada final result (umum di mobile).
+      const full = (transcriptRef.current.trim() || interimRef.current.trim());
       if (full && current) {
         const result = compareArabicSpeech(full, current.ar);
         setRecognized({ transcript: full, ...result });
+      } else if (current) {
+        // Recognition selesai tapi nggak nangkap apapun.
+        setRecognized({ transcript: '', isMatch: false, similarity: 0, noAudio: true, errMsg: 'Suaramu nggak terdengar — coba lagi' });
       }
     };
     recRef.current = rec;
@@ -239,7 +260,9 @@ function MateriSession({ materi, isUnlocked, coins, onUnlock, onUpgrade, onExit,
   // ---- SELESAI ----
   if (isDone) {
     const total = isUnlocked ? items.length : Math.min(freeLimit, items.length);
-    const earned = correct * 5;
+    // Minimum 5 XP partisipasi — walau pengucapan belum dapet, user tetep dapet
+    // reward karena udah usaha (apalagi kalau mic mereka bermasalah).
+    const earned = Math.max(5, correct * 5);
     return (
       <div className="flex-1 flex flex-col items-center justify-center px-8 text-center" style={{ height: '100%' }}>
         <div className="text-6xl mb-3">{correct >= total ? '🎉' : '✨'}</div>
@@ -404,14 +427,24 @@ function MateriSession({ materi, isUnlocked, coins, onUnlock, onUpgrade, onExit,
         </button>
 
         {recognized && (
-          <div className="w-full max-w-xs rounded-2xl p-3 mb-4" style={{ background: recognized.isMatch ? 'rgba(22,163,74,0.08)' : 'rgba(192,57,43,0.07)' }}>
+          <div className="w-full max-w-xs rounded-2xl p-3 mb-4" style={{
+            background: recognized.noAudio ? 'rgba(201,169,97,0.12)'
+              : recognized.isMatch ? 'rgba(22,163,74,0.08)' : 'rgba(192,57,43,0.07)'
+          }}>
             <div className="flex items-center justify-center gap-2 mb-1">
-              {recognized.isMatch ? <Check size={18} style={{ color: '#16a34a' }} /> : <X size={18} style={{ color: '#c0392b' }} />}
-              <p className="font-bold text-sm" style={{ color: recognized.isMatch ? '#16a34a' : '#c0392b' }}>
-                {recognized.isMatch ? 'Mantap, pengucapanmu pas!' : 'Belum pas, coba lagi'}
+              {recognized.noAudio ? <Mic size={18} style={{ color: '#a05536' }} />
+                : recognized.isMatch ? <Check size={18} style={{ color: '#16a34a' }} />
+                : <X size={18} style={{ color: '#c0392b' }} />}
+              <p className="font-bold text-sm" style={{
+                color: recognized.noAudio ? '#a05536' : recognized.isMatch ? '#16a34a' : '#c0392b'
+              }}>
+                {recognized.noAudio ? (recognized.errMsg || 'Suaramu nggak terdengar')
+                  : recognized.isMatch ? 'Mantap, pengucapanmu pas!' : 'Belum pas, coba lagi'}
               </p>
             </div>
-            <p className="text-xs" dir="rtl" style={{ fontFamily: 'Amiri, serif', color: '#3d2817' }}>Terdengar: {recognized.transcript}</p>
+            {!recognized.noAudio && recognized.transcript && (
+              <p className="text-xs" dir="rtl" style={{ fontFamily: 'Amiri, serif', color: '#3d2817' }}>Terdengar: {recognized.transcript}</p>
+            )}
           </div>
         )}
         {isListening && interim && (
