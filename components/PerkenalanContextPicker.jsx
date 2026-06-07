@@ -45,7 +45,7 @@ const CONTEXTS = [
     icon: '🕋',
     title: 'Jamaah Umrah/Haji',
     desc: 'Buat jamaah — sapa & kenalan sesama jamaah dari berbagai negara di Masjidil Haram',
-    badge: '15 KOIN',
+    badge: 'MAHIR',
     color: '#c9a961',
     bgGradient: 'linear-gradient(135deg, #c9a961, #d4b876)',
     target: 'umrah-15',
