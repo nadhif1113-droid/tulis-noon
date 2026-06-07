@@ -1621,6 +1621,437 @@ export const SHORF_LESSONS = [
       },
     ],
   },
+  ,
+  // ============ PELAJARAN 20 (PREMIUM) ============
+  {
+    id: 'shorf-20-mamnu',
+    order: 20,
+    isFree: false,
+    title: 'Mamnu\' min ash-Shorf',
+    subtitle: 'Kata yang tidak menerima tanwin',
+    emoji: '🚷',
+    duration: '6 menit',
+    color: '#a05536',
+    xpReward: 35,
+    theory: {
+      intro: 'Mamnu\' min ash-Shorf (الْمَمْنُوْعُ مِنَ الصَّرْفِ) adalah isim yang TIDAK menerima tanwin dan i\'rab jar-nya ditandai dgn FATHAH (bukan kasroh). Ada aturan khusus untuk mengenalinya.',
+      sections: [
+        {
+          title: 'Ciri-Ciri Utama',
+          body: 'TIDAK boleh ditanwin. Saat jar, tandanya FATHAH (bukan kasroh seperti isim biasa). KECUALI kalau ada alif-lam atau jadi mudhof — maka kembali ke kasroh.',
+          examples: [
+            { ar: 'مِنْ مَكَّةَ', latin: 'min Makkah', id: 'dari Mekkah (مَكَّةَ majrur dgn fathah! Bukan kasroh)' },
+            { ar: 'فِي الْمَدِينَةِ', latin: 'fil-madiinah', id: 'di Madinah (kasroh karena ada الـ)' },
+          ],
+        },
+        {
+          title: 'Kategori yang Mamnu\'',
+          body: '(1) Nama wanita: فَاطِمَةُ، مَرْيَمُ. (2) Nama asing: إِبْرَاهِيمُ، إِسْحَاقُ، إِسْمَاعِيلُ. (3) Pola jamak taksir akhir: مَفَاعِل، مَفَاعِيل (مَسَاجِدُ). (4) Pola ism tafdhil أَفْعَل: أَكْبَرُ. (5) Pola mu\'annats khusus: حَمْرَاءُ، صَحْرَاءُ.',
+          examples: [
+            { ar: 'فَاطِمَةُ', latin: 'Faathimah', id: 'nama wanita — mamnu\'' },
+            { ar: 'إِبْرَاهِيمُ', latin: 'Ibraahiim', id: 'nama asing — mamnu\'' },
+            { ar: 'مَسَاجِدُ', latin: 'masaajid', id: 'jamak taksir pola مَفَاعِل — mamnu\'' },
+            { ar: 'أَكْبَرُ', latin: 'akbar', id: 'ism tafdhil أَفْعَل — mamnu\'' },
+            { ar: 'حَمْرَاءُ', latin: 'hamraa\'', id: 'pola pr — mamnu\'' },
+          ],
+        },
+        {
+          title: 'Contoh Aplikasi I\'rab',
+          body: 'مَكَّةُ saat rofa\': مَكَّةُ. Saat nashob: مَكَّةَ. Saat jar tanpa alif-lam: مَكَّةَ (fathah, bukan kasroh!). Saat jar dgn alif-lam ([yg mamnu\']): kembali kasroh.',
+          examples: [
+            { ar: 'هَذِهِ مَكَّةُ', latin: '', id: 'rofa\' tanpa tanwin' },
+            { ar: 'دَخَلْتُ مَكَّةَ', latin: '', id: 'nashob (fathah biasa)' },
+            { ar: 'مِنْ مَكَّةَ', latin: '', id: 'jar dgn FATHAH (bukan kasroh) — itu ciri mamnu\'' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ ... وَإِبْرَاهِيمَ الَّذِي وَفَّى',
+        latin: 'wa Ibraahiimal-ladzii waffaa',
+        surah: 'An-Najm',
+        ayatNum: 37,
+        analysis: [
+          { word: 'وَ', type: 'Harf athaf', note: '' },
+          { word: 'إِبْرَاهِيمَ', type: 'Mamnu\' min ash-shorf', note: 'majrur dgn FATHAH (bukan kasroh) karena nama asing' },
+          { word: 'الَّذِي', type: 'Na\'at (isim maushul)', note: '' },
+          { word: 'وَفَّى', type: 'Fi\'il Madhi', note: 'memenuhi (janji)' },
+        ],
+        explanation: 'إِبْرَاهِيمَ adalah mamnu\' karena nama asing. Posisinya majrur (athaf), tapi ditandai FATHAH, bukan kasroh. Inilah penanda khas mamnu\' min ash-shorf di Qur\'an.',
+      },
+    },
+    quiz: [
+      {
+        q: 'Mamnu\' min ash-shorf saat jar ditandai dgn...',
+        options: ['Kasroh', 'Fathah', 'Dhommah', 'Sukun'],
+        correct: 1,
+        explanation: 'Mamnu\' saat jar pakai FATHAH, bukan kasroh seperti isim biasa.',
+      },
+      {
+        q: 'Manakah yang BUKAN mamnu\'?',
+        options: ['مَكَّةُ', 'إِبْرَاهِيمُ', 'الْمَسْجِدُ', 'أَكْبَرُ'],
+        correct: 2,
+        explanation: 'الْمَسْجِدُ pakai alif-lam — bukan mamnu\'. Tiga lainnya: nama tempat, nama asing, ism tafdhil — semua mamnu\'.',
+      },
+      {
+        q: 'Pada مِنْ مَكَّةَ, kenapa مَكَّةَ pakai fathah?',
+        options: ['Karena maf\'ul', 'Karena majrur tapi mamnu\' min ash-shorf', 'Salah harakat', 'Karena fa\'il'],
+        correct: 1,
+        explanation: 'مَكَّةَ majrur karena مِنْ huruf jar, TAPI karena nama tempat (mamnu\') maka tandanya fathah bukan kasroh.',
+      },
+      {
+        q: 'Pola jamak taksir yang mamnu\'...',
+        options: ['أَفْعَال', 'فُعُول', 'مَفَاعِل / مَفَاعِيل', 'فِعَال'],
+        correct: 2,
+        explanation: 'Pola جَمَع الْأَقْصَى — مَفَاعِل (مَسَاجِد) dan مَفَاعِيل (مَفَاتِيح) — selalu mamnu\'.',
+      },
+    ],
+  },
+
+  // ============ PELAJARAN 21 (PREMIUM) ============
+  {
+    id: 'shorf-21-manqush-maqshur',
+    order: 21,
+    isFree: false,
+    title: 'Manqush, Maqshur, Mamdud',
+    subtitle: 'Isim dgn akhiran ya, alif, alif-hamzah',
+    emoji: '〽️',
+    duration: '6 menit',
+    color: '#a05536',
+    xpReward: 35,
+    theory: {
+      intro: 'Tiga jenis isim dgn akhiran khusus yang perlu aturan tashrif tersendiri: Manqush (akhir ي), Maqshur (akhir ا), dan Mamdud (akhir ـَاء).',
+      sections: [
+        {
+          title: 'Isim Manqush (Akhir ي)',
+          body: 'Isim yang akhirnya ya\' kasroh. Saat rofa\' & jar, ya\' boleh dibuang (jadi kasroh). Saat nashob, ya\' tetap dgn fathah.',
+          examples: [
+            { ar: 'الْقَاضِي', latin: 'al-qaadhii', id: 'hakim (rofa\' dgn dhommah muqaddarah)' },
+            { ar: 'رَأَيْتُ قَاضِيًا', latin: 'ra\'aitu qaadhiyan', id: 'aku melihat hakim (nashob — ya tetap, dgn fathah)' },
+            { ar: 'مَرَرْتُ بِقَاضٍ', latin: 'marartu biqaadhin', id: 'aku lewati hakim (majrur — ya dibuang, jadi tanwin)' },
+          ],
+        },
+        {
+          title: 'Isim Maqshur (Akhir ا)',
+          body: 'Isim yang akhirnya alif. Harakat i\'rab tidak tampak (muqaddarah) — alif tidak berubah dlm semua keadaan.',
+          examples: [
+            { ar: 'مُوسَى', latin: 'Muusaa', id: 'Musa — semua i\'rab muqaddarah pada alif' },
+            { ar: 'الْهُدَى', latin: 'al-hudaa', id: 'petunjuk' },
+            { ar: 'الْمَأْوَى', latin: 'al-ma\'waa', id: 'tempat berlindung' },
+          ],
+        },
+        {
+          title: 'Isim Mamdud (Akhir ـَاء)',
+          body: 'Isim yang akhirnya hamzah dgn alif sebelumnya (ـَاء). I\'rab-nya jelas (tampak harakatnya).',
+          examples: [
+            { ar: 'صَحْرَاءُ', latin: 'shahraa\'', id: 'gurun (mamnu\' juga karena pola mu\'annats)' },
+            { ar: 'سَمَاءٌ', latin: 'samaa\'', id: 'langit' },
+            { ar: 'دُعَاءٌ', latin: 'du\'aa\'', id: 'doa' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'وَأَنَّ إِلَى رَبِّكَ الْمُنْتَهَى',
+        latin: 'wa anna ilaa rabbikal-muntahaa',
+        surah: 'An-Najm',
+        ayatNum: 42,
+        analysis: [
+          { word: 'وَ', type: 'Harf athaf', note: '' },
+          { word: 'أَنَّ', type: 'Harf taukid', note: 'bahwasanya' },
+          { word: 'إِلَى رَبِّكَ', type: 'Jar majrur', note: 'kepada Tuhanmu' },
+          { word: 'الْمُنْتَهَى', type: 'Isim Maqshur', note: 'akhir alif; harakat muqaddarah; isim أَنَّ' },
+        ],
+        explanation: 'الْمُنْتَهَى adalah isim maqshur. Walaupun seharusnya nashob (sbg isim أَنَّ), tanda nashob-nya MUQADDAR di alif (tidak tampak). Aturan klasik isim maqshur.',
+      },
+    },
+    quiz: [
+      {
+        q: 'Isim Manqush akhirnya...',
+        options: ['Alif', 'Ya kasroh', 'Wau', 'Alif-hamzah'],
+        correct: 1,
+        explanation: 'Manqush = akhir ya\' kasroh. Contoh: الْقَاضِي، الْوَالِي، الدَّاعِي.',
+      },
+      {
+        q: 'Pada مَرَرْتُ بِقَاضٍ, kenapa hilang ya?',
+        options: ['Salah ejaan', 'Karena majrur — pada isim manqush, ya boleh dibuang saat jar', 'Karena tanwin', 'Karena tidak baku'],
+        correct: 1,
+        explanation: 'Aturan manqush: saat majrur (dan rofa\'), ya akhir boleh dibuang. Hasilnya bentuk قَاضٍ dgn tanwin pengganti.',
+      },
+      {
+        q: 'مُوسَى, عِيسَى, الْهُدَى termasuk isim...',
+        options: ['Manqush', 'Maqshur', 'Mamdud', 'Sahih'],
+        correct: 1,
+        explanation: 'Semua akhir alif → isim MAQSHUR. Harakat i\'rab muqaddarah di alif.',
+      },
+      {
+        q: 'Isim Mamdud akhirnya...',
+        options: ['Alif saja', 'Ya saja', 'Alif + hamzah (ـَاء)', 'Wau saja'],
+        correct: 2,
+        explanation: 'Mamdud = akhir alif diikuti hamzah. Contoh: سَمَاء، صَحْرَاء، حَمْرَاء.',
+      },
+    ],
+  },
+
+  // ============ PELAJARAN 22 (PREMIUM) ============
+  {
+    id: 'shorf-22-rubai-mazid',
+    order: 22,
+    isFree: false,
+    title: 'Ruba\'i Mazid',
+    subtitle: 'Fi\'il 4 huruf dgn tambahan',
+    emoji: '🔢',
+    duration: '6 menit',
+    color: '#a05536',
+    xpReward: 40,
+    theory: {
+      intro: 'Selain ruba\'i mujarrad (4 huruf asli) yg sudah dibahas, ada Ruba\'i MAZID — yaitu fi\'il 4 huruf yang ditambah 1-2 huruf. Wazan-nya: تَفَعْلَلَ، اِفْعَنْلَلَ، اِفْعَلَلَّ.',
+      sections: [
+        {
+          title: 'Wazan تَفَعْلَلَ — Tambah ت di Depan',
+          body: 'Makna: refleksif (jadi diri sendiri). Pola: ta-fa-\'la-la.',
+          examples: [
+            { ar: 'دَحْرَجَ → تَدَحْرَجَ', latin: 'dahraja → tadahraja', id: 'menggelinding → menggelinding (diri sendiri)' },
+            { ar: 'تَرْجَمَ → تَتَرْجَمَ', latin: '', id: 'menerjemahkan → diterjemahkan/diri sendiri' },
+            { ar: 'زَلْزَلَ → تَزَلْزَلَ', latin: 'zalzala → tazalzala', id: 'mengguncang → terguncang' },
+          ],
+        },
+        {
+          title: 'Wazan اِفْعَنْلَلَ — Tambah ن di Tengah',
+          body: 'Lebih jarang. Tambah hamzah washol + n.',
+          examples: [
+            { ar: 'حَرْجَمَ → اِحْرَنْجَمَ', latin: 'harjama → ihranjama', id: 'berkumpul → berdesakan' },
+          ],
+        },
+        {
+          title: 'Wazan اِفْعَلَلَّ — Lam Ditasydid',
+          body: 'Hamzah washol + lam fi\'il ditasydid. Sangat jarang.',
+          examples: [
+            { ar: 'طَمَأَنَّ → اِطْمَأَنَّ', latin: 'thama\'na → ithma\'anna', id: 'tenteram' },
+            { ar: 'قَشْعَرَّ → اِقْشَعَرَّ', latin: 'qasy\'arra → iqsya\'arra', id: 'merinding' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'إِنَّ الَّذِينَ آمَنُوا وَعَمِلُوا الصَّالِحَاتِ وَتَطْمَئِنُّ قُلُوبُهُمْ بِذِكْرِ اللَّهِ',
+        latin: 'innal-ladziina aamanuu wa \'amilush-shaalihaati wa tathma\'innu quluubuhum bidzikrillaah',
+        surah: 'Ar-Ra\'d',
+        ayatNum: 28,
+        analysis: [
+          { word: 'إِنَّ', type: 'Harf taukid', note: '' },
+          { word: 'الَّذِينَ آمَنُوا', type: 'Isim إِنَّ + silah', note: 'orang-orang yg beriman' },
+          { word: 'تَطْمَئِنُّ', type: 'Fi\'il Mudhori\' Ruba\'i Mazid', note: 'wazan اِفْعَلَلَّ; menjadi tenang' },
+          { word: 'قُلُوبُهُمْ', type: 'Fa\'il + dhomir', note: 'hati-hati mereka' },
+          { word: 'بِذِكْرِ اللَّهِ', type: 'Jar majrur', note: 'dgn mengingat Allah' },
+        ],
+        explanation: 'تَطْمَئِنُّ adalah fi\'il mudhori\' ruba\'i mazid pola اِفْعَلَلَّ (lam ditasydid). Akar: ط-م-أ-ن. Maknanya: menjadi tenang/tenteram. Pola ini bawa nuansa proses internal yg dalam.',
+      },
+    },
+    quiz: [
+      {
+        q: 'تَدَحْرَجَ termasuk wazan ruba\'i mazid jenis...',
+        options: ['تَفَعْلَلَ', 'اِفْعَنْلَلَ', 'اِفْعَلَلَّ', 'فَعَّلَ'],
+        correct: 0,
+        explanation: 'تَدَحْرَجَ pakai pola تَفَعْلَلَ — tambah ت di depan ruba\'i mujarrad دَحْرَجَ.',
+      },
+      {
+        q: 'اِطْمَأَنَّ wazan-nya...',
+        options: ['تَفَعْلَلَ', 'اِفْعَنْلَلَ', 'اِفْعَلَلَّ', 'فَعْلَلَ'],
+        correct: 2,
+        explanation: 'اِطْمَأَنَّ pakai pola اِفْعَلَلَّ — hamzah washol + lam fi\'il (ن di sini) ditasydid.',
+      },
+      {
+        q: 'Beda دَحْرَجَ dgn تَدَحْرَجَ adalah...',
+        options: ['Sama', 'دَحْرَجَ aktif (memilang); تَدَحْرَجَ refleksif (menggelinding sendiri)', 'تَدَحْرَجَ pasif', 'Tidak ada beda'],
+        correct: 1,
+        explanation: 'دَحْرَجَ = menggelindingkan (aktif). تَدَحْرَجَ = menggelinding sendiri (refleksif/mengena diri).',
+      },
+      {
+        q: 'Ruba\'i mazid jarang muncul tapi penting karena...',
+        options: ['Tidak penting', 'Beberapa fi\'il Qur\'an pakai pola ini (mis. اطْمَأَنَّ, اِقْشَعَرَّ)', 'Hanya untuk syair', 'Hafalan saja'],
+        correct: 1,
+        explanation: 'Beberapa fi\'il di Al-Qur\'an pakai pola ruba\'i mazid — mengenal pola-nya membuka makna kata.',
+      },
+    ],
+  },
+
+  // ============ PELAJARAN 23 (PREMIUM) ============
+  {
+    id: 'shorf-23-jamak-qillah',
+    order: 23,
+    isFree: false,
+    title: 'Pola Jamak Qillah',
+    subtitle: 'Jamak untuk jumlah sedikit (3-10)',
+    emoji: '🌱',
+    duration: '6 menit',
+    color: '#a05536',
+    xpReward: 35,
+    theory: {
+      intro: 'Jamak Taksir dibagi 2 berdasarkan jumlah: JAMAK QILLAH (sedikit, 3-10) dan JAMAK KATSROH (banyak, 11+). Ada 4 pola khusus untuk Jamak Qillah.',
+      sections: [
+        {
+          title: '4 Pola Jamak Qillah',
+          body: '(1) أَفْعُل، (2) أَفْعَال، (3) أَفْعِلَة، (4) فِعْلَة.',
+          examples: [
+            { ar: 'نَفْسٌ → أَنْفُسٌ', latin: 'nafs → anfus', id: 'jiwa → jiwa-jiwa (pola أَفْعُل)' },
+            { ar: 'يَوْمٌ → أَيَّامٌ', latin: 'yaum → ayyaam', id: 'hari → hari-hari (pola أَفْعَال)' },
+            { ar: 'رَغِيفٌ → أَرْغِفَةٌ', latin: 'raghiif → arghifah', id: 'roti → roti-roti (pola أَفْعِلَة)' },
+            { ar: 'فَتَى → فِتْيَةٌ', latin: 'fataa → fityah', id: 'pemuda → para pemuda (pola فِعْلَة)' },
+          ],
+        },
+        {
+          title: 'Jamak Katsroh — Banyak Polanya',
+          body: 'Untuk jumlah 11+, pakai pola lain seperti فُعُل، فُعُول، فِعَال، فُعَلَاء، مَفَاعِل، dll. Yang sudah kita pelajari sebelumnya.',
+          examples: [
+            { ar: 'كِتَابٌ → كُتُبٌ', latin: 'kitaab → kutub (katsroh)', id: '11+ buku' },
+            { ar: 'جَبَلٌ → جِبَالٌ', latin: 'jabal → jibaal (katsroh)', id: '11+ gunung' },
+          ],
+        },
+        {
+          title: 'Beda Pemakaian',
+          body: 'Dalam praktik, banyak kata pakai 1 pola jamak saja tanpa beda qillah/katsroh. Tapi untuk teks klasik, pembedaan ini penting.',
+          examples: [
+            { ar: 'ثَلَاثَةُ أَنْفُسٍ', latin: '', id: '3 jiwa (qillah)' },
+            { ar: 'الْأَنْفُسُ كُلُّهَا', latin: '', id: 'semua jiwa (qillah tetap dipakai)' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'كُلُّ نَفْسٍ ذَائِقَةُ الْمَوْتِ',
+        latin: 'kullu nafsin dzaa\'iqatul-maut',
+        surah: 'Ali Imran',
+        ayatNum: 185,
+        analysis: [
+          { word: 'كُلُّ', type: 'Mubtada\'', note: 'rofa\'; mudhof' },
+          { word: 'نَفْسٍ', type: 'Mudhof ilaih', note: 'majrur; nakirah mufrad' },
+          { word: 'ذَائِقَةُ', type: 'Khobar', note: 'rofa\'; mudhof' },
+          { word: 'الْمَوْتِ', type: 'Mudhof ilaih', note: 'majrur' },
+        ],
+        explanation: 'Bonus: jamak qillah dari نَفْسٌ adalah أَنْفُسٌ (pola أَفْعُل). Banyak ayat pakai bentuk أَنْفُسَكُمْ (jiwa-jiwa kalian). Sekarang kamu kenal: itu pola jamak qillah.',
+      },
+    },
+    quiz: [
+      {
+        q: 'Berapa pola jamak qillah?',
+        options: ['2', '3', '4', '5'],
+        correct: 2,
+        explanation: '4 pola: أَفْعُل، أَفْعَال، أَفْعِلَة، فِعْلَة.',
+      },
+      {
+        q: 'أَنْفُسٌ pakai pola...',
+        options: ['أَفْعَال', 'أَفْعِلَة', 'أَفْعُل', 'فِعْلَة'],
+        correct: 2,
+        explanation: 'أَنْفُسٌ = pola أَفْعُل. Jamak qillah dari نَفْس.',
+      },
+      {
+        q: 'Jamak qillah dipakai untuk jumlah...',
+        options: ['1-2', '3-10', '11-99', '100+'],
+        correct: 1,
+        explanation: 'Qillah = sedikit (3-10). Katsroh = banyak (11+).',
+      },
+      {
+        q: 'أَيَّامٌ adalah jamak qillah dari...',
+        options: ['أَامُ', 'يَوْمٌ', 'أَيَّامُ', 'يَوْمَانِ'],
+        correct: 1,
+        explanation: 'يَوْمٌ → أَيَّامٌ. Pola أَفْعَال (jamak qillah).',
+      },
+    ],
+  },
+
+  // ============ PELAJARAN 24 (PREMIUM) — CAPSTONE ============
+  {
+    id: 'shorf-24-capstone',
+    order: 24,
+    isFree: false,
+    title: 'Capstone: Sintesis Tashrif',
+    subtitle: 'Aplikasi lengkap shorf ke kitab klasik',
+    emoji: '🎓',
+    duration: '10 menit',
+    color: '#a05536',
+    xpReward: 60,
+    theory: {
+      intro: 'Penutup. Mari gabungkan semua pengetahuan shorf — tashrif lughowi, istilahi, wazan, mu\'tal, mubaalaghah, jamak — untuk menganalisis kata-kata di Qur\'an dan kitab klasik. Dari 1 akar, kamu sekarang bisa derivasi semua bentuknya.',
+      sections: [
+        {
+          title: 'Studi Kasus: Akar ك-ت-ب (Menulis)',
+          body: 'Dari akar tunggal, derivasi lengkap:',
+          examples: [
+            { ar: 'كَتَبَ', latin: 'kataba', id: 'fi\'il madhi (menulis)' },
+            { ar: 'يَكْتُبُ', latin: 'yaktubu', id: 'fi\'il mudhori\'' },
+            { ar: 'اُكْتُبْ', latin: 'uktub', id: 'fi\'il amr' },
+            { ar: 'كَاتِبٌ', latin: 'kaatib', id: 'isim fa\'il (penulis)' },
+            { ar: 'مَكْتُوبٌ', latin: 'maktuub', id: 'isim maf\'ul (yg ditulis)' },
+            { ar: 'كِتَابَةٌ', latin: 'kitaabah', id: 'mashdar (penulisan)' },
+            { ar: 'مَكْتَبٌ', latin: 'maktab', id: 'isim makan (kantor/meja)' },
+            { ar: 'مَكْتَبَةٌ', latin: 'maktabah', id: 'isim makan (perpustakaan)' },
+            { ar: 'كِتَابٌ', latin: 'kitaab', id: 'isim (buku — dari akar yg sama)' },
+            { ar: 'كُتُبٌ', latin: 'kutub', id: 'jamak katsroh (buku-buku)' },
+            { ar: 'كَتَّابٌ', latin: 'kattaab', id: 'mubaalaghah (penulis ulung)' },
+          ],
+        },
+        {
+          title: 'Studi Kasus: Akar ك-ر-م (Mulia)',
+          body: 'Akar ini muncul di banyak ayat tentang kemuliaan.',
+          examples: [
+            { ar: 'كَرُمَ', latin: 'karuma', id: 'madhi: menjadi mulia' },
+            { ar: 'كَرِيمٌ', latin: 'kariim', id: 'isim sifat (mulia)' },
+            { ar: 'أَكْرَمَ', latin: 'akrama', id: 'mazid أَفْعَلَ (memuliakan)' },
+            { ar: 'إِكْرَامٌ', latin: 'ikraam', id: 'mashdar dari akrama' },
+            { ar: 'أَكْرَمُ', latin: 'akram', id: 'ism tafdhil (paling mulia)' },
+            { ar: 'مُكْرِمٌ', latin: 'mukrim', id: 'isim fa\'il dari akrama (yang memuliakan)' },
+            { ar: 'كَرَامَةٌ', latin: 'karaamah', id: 'mashdar (kemuliaan)' },
+          ],
+        },
+        {
+          title: 'Manfaat Praktis',
+          body: 'Saat kamu baca tafsir atau kitab kuning, kamu tidak akan stuck di kata yang asing. Karena kamu bisa: (1) identifikasi akar 3 huruf, (2) kenali wazan/pola, (3) deduksi maknanya dari pola itu. Inilah "membaca dgn pemahaman" — bukan hanya "membaca terjemahan".',
+          examples: [
+            { ar: 'مُسْتَغْفِرٌ', latin: 'mustaghfir', id: 'akar غ-ف-ر, wazan اسْتَفْعَلَ → isim fa\'il = "yang meminta ampun"' },
+            { ar: 'مُسْتَقْبَلٌ', latin: 'mustaqbal', id: 'akar ق-ب-ل, wazan اسْتَفْعَلَ → isim maf\'ul = "yang akan datang"' },
+          ],
+        },
+      ],
+      quranExample: {
+        ayat: 'إِنَّ أَكْرَمَكُمْ عِنْدَ اللَّهِ أَتْقَاكُمْ',
+        latin: 'inna akramakum \'indallaahi atqaakum',
+        surah: 'Al-Hujurat',
+        ayatNum: 13,
+        analysis: [
+          { word: 'إِنَّ', type: 'Harf taukid', note: 'sungguh' },
+          { word: 'أَكْرَمَ', type: 'Ism Tafdhil', note: 'pola أَفْعَل dari كَرُمَ; isim إِنَّ; nashob' },
+          { word: 'كُمْ', type: 'Mudhof ilaih', note: 'kalian' },
+          { word: 'عِنْدَ اللَّهِ', type: 'Zhorof + Mudhof ilaih', note: 'di sisi Allah' },
+          { word: 'أَتْقَا', type: 'Ism Tafdhil', note: 'pola أَفْعَل dari تَقِيَ; isim manqush; khobar إِنَّ; rofa\'' },
+          { word: 'كُمْ', type: 'Mudhof ilaih', note: 'kalian' },
+        ],
+        explanation: 'SATU ayat ini berisi: ism tafdhil (2x), isim manqush (أَتْقَا dari akar ت-ق-ي, ya boleh dibuang), zhorof + idhofah, dhomir muttashil. Sekarang kamu bisa urai dgn percaya diri. SELAMAT — kamu sudah menyelesaikan kurikulum Shorf level dasar-menengah. أَلْفُ مَبْرُوكٍ!',
+      },
+    },
+    quiz: [
+      {
+        q: 'Dari akar غ-ف-ر, isim fa\'il dgn wazan اسْتَفْعَلَ adalah...',
+        options: ['غَافِرٌ', 'مُسْتَغْفِرٌ', 'مَغْفُورٌ', 'غُفْرَانٌ'],
+        correct: 1,
+        explanation: 'Wazan اسْتَفْعَلَ → isim fa\'il pola مُسْتَفْعِلٌ. غَفَرَ → اسْتَغْفَرَ → مُسْتَغْفِرٌ = yang meminta ampun.',
+      },
+      {
+        q: 'أَتْقَا (dari ayat) adalah isim tafdhil dari...',
+        options: ['تَقِيَ', 'تَقَوَّى', 'وَقَى', 'يَقِي'],
+        correct: 0,
+        explanation: 'أَتْقَا = ism tafdhil pola أَفْعَل dari akar ت-ق-ي (تَقِيَ — bertakwa). Ya akhir dibuang karena manqush.',
+      },
+      {
+        q: 'Dari akar ك-ر-م, مُكْرِمٌ artinya...',
+        options: ['Mulia', 'Memuliakan (isim fa\'il dari أَكْرَمَ)', 'Yang dimuliakan', 'Kemuliaan'],
+        correct: 1,
+        explanation: 'مُكْرِمٌ = isim fa\'il dari أَكْرَمَ (wazan أَفْعَلَ). Polanya مُفْعِلٌ. Artinya: yang memuliakan.',
+      },
+      {
+        q: 'Apa tujuan utama menyelesaikan kurikulum shorf?',
+        options: ['Hafal banyak istilah', 'Bisa derive sendiri turunan kata dari akar manapun di teks Arab klasik', 'Hanya kebanggaan akademis', 'Tidak ada manfaat'],
+        correct: 1,
+        explanation: 'Shorf membuka pintu: dari akar 3-4 huruf manapun, kamu bisa kenali turunan-nya. Itulah modal membaca kitab kuning, tafsir, dan teks Arab klasik dgn mandiri.',
+      },
+    ],
+  },
 ];
 
 export function getShorfLesson(id) {
