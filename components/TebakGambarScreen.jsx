@@ -303,6 +303,18 @@ function PlayView({ level, onBack, onComplete }) {
         })}
       </div>
 
+      {/* 💡 Pemahaman: kalau item punya note (penjelasan tambahan), tampilkan setelah user jawab */}
+      {selected !== null && current.note && (
+        <div className="mt-3 rounded-2xl p-3 text-xs leading-relaxed" style={{
+          background: 'rgba(201,169,97,0.12)',
+          border: '1px solid rgba(201,169,97,0.35)',
+          color: '#3d2817',
+        }}>
+          <p className="font-bold mb-1" style={{ color: '#8b6b3d', fontSize: '10px', letterSpacing: '0.15em' }}>💡 PEMAHAMAN</p>
+          {current.note}
+        </div>
+      )}
+
       <p className="text-xs text-center mt-4" style={{ color: '#8b6b3d' }}>
         Skor sementara: <span className="font-bold" style={{ color: level.color }}>{score}/{questions.length}</span>
       </p>

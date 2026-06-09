@@ -154,7 +154,7 @@ const PASAR_KAKKIYAH_LEVELS = [
         { ar: 'كَبِير جِدًّا', latin: 'Kabiir jiddan', id: 'Sangat besar (XL)' },
       ]},
       { type: 'mc', ar: 'مَا مَقَاسِي؟', latin: 'Maa maqaasi?', options: ['Apa warnaku', 'Apa ukuranku', 'Berapa harganya', 'Di mana saya'], correct: 1 },
-      { type: 'mc', ar: 'مُمْكِن أَجَرِّبُهُ؟', latin: 'Mumkin ajarribuhu?', options: ['Boleh dibeli', 'Boleh dicoba', 'Boleh dibawa', 'Boleh ditukar'], correct: 1 },
+      { type: 'mc', ar: 'مُمْكِن أُجَرِّبُهُ؟', latin: 'Mumkin ujarribuhu?', options: ['Boleh dibeli', 'Boleh dicoba', 'Boleh dibawa', 'Boleh ditukar'], correct: 1 },
     ],
   },
   {

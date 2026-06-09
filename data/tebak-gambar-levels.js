@@ -115,8 +115,10 @@ export const TEBAK_GAMBAR_LEVELS = [
     bgGradient: 'linear-gradient(135deg, #c9a961, #d4b876)',
     xpReward: 55,
     items: [
-      { image: '🐪', imageUrl: null, arabic: 'جَمَل', latin: 'jamal', id: 'Unta', distractors: ['حِصَان', 'بَقَرَة', 'غَنَم'] },
-      { image: '🐑', imageUrl: null, arabic: 'غَنَم', latin: 'ghanam', id: 'Domba', distractors: ['مَاعِز', 'بَقَرَة', 'جَمَل'] },
+      { image: '🐪', imageUrl: null, arabic: 'جَمَل', latin: 'jamal', id: 'Unta', distractors: ['حِصَان', 'بَقَرَة', 'غَنَم'],
+        note: 'جَمَل = unta (hewan padang pasir). Bedakan dgn غَنَم (domba/biri-biri) & مَاعِز (kambing).' },
+      { image: '🐑', imageUrl: null, arabic: 'غَنَم', latin: 'ghanam', id: 'Domba', distractors: ['مَاعِز', 'بَقَرَة', 'جَمَل'],
+        note: '⚠️ Beda halus: غَنَم = domba/biri-biri (berbulu tebal, ekor pendek). مَاعِز = kambing (tanduk panjang). Dalam fiqih qurban keduanya sah, tapi sebutan beda.' },
       { image: '🐎', imageUrl: null, arabic: 'حِصَان', latin: 'hisan', id: 'Kuda', distractors: ['حِمَار', 'جَمَل', 'بَقَرَة'] },
       { image: '🐈', imageUrl: null, arabic: 'قِطَّة', latin: 'qittah', id: 'Kucing', distractors: ['كَلْب', 'فَأْر', 'أَرْنَب'] },
       { image: '🐦', imageUrl: null, arabic: 'طَائِر', latin: 'taa\'ir', id: 'Burung', distractors: ['نَحْلَة', 'فَرَاشَة', 'سَمَك'] },

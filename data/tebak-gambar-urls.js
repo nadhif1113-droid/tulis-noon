@@ -66,9 +66,9 @@ export const TEBAK_GAMBAR_URLS = {
     "فَرَاشَة": "https://storage.googleapis.com/tulis-noon.firebasestorage.app/tebak-gambar/hewan-alam/kupu-kupu.png",
     "شَجَرَة": "https://storage.googleapis.com/tulis-noon.firebasestorage.app/tebak-gambar/hewan-alam/pohon.png",
     "وَرْدَة": "https://storage.googleapis.com/tulis-noon.firebasestorage.app/tebak-gambar/hewan-alam/mawar.png",
-    "جَبَل": "https://storage.googleapis.com/tulis-noon.firebasestorage.app/tebak-gambar/hewan-alam/gunung.png",
-    "بَحْر": "https://storage.googleapis.com/tulis-noon.firebasestorage.app/tebak-gambar/hewan-alam/laut.png",
-    "نَهْر": "https://storage.googleapis.com/tulis-noon.firebasestorage.app/tebak-gambar/hewan-alam/sungai.png"
+    "جَبَل": "https://storage.googleapis.com/tulis-noon.firebasestorage.app/tebak-gambar/hewan-alam/gunung.png"
+    // ⚠️ Laut & Sungai di-disable sementara — gambar AI tidak sinkron (feedback ustadz).
+    // Fallback ke emoji 🌊 (laut) / 🏞️ (sungai). Regenerasi via scripts/generate-tebak-images.js.
   },
   "benda": {
     "كِتَاب": "https://storage.googleapis.com/tulis-noon.firebasestorage.app/tebak-gambar/benda/buku.png",
