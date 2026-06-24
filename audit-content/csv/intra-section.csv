@@ -1,0 +1,62 @@
+source,arabic,count,locations
+Tulis Arab,ب,7,"mengenal-huruf/L1/ba (ba) | mengenal-huruf/L2/ba (1 titik bawah) (ba (1 titik bawah)) | mengenal-huruf/L3/ba + fatha (ba) (ba + fatha (ba)) | mengenal-huruf/L3/ba + kasra (bi) (ba + kasra (bi)) | mengenal-huruf/L3/ba + dhamma (bu) (ba + dhamma (bu)) | mengenal-huruf/L3/ba + sukun (b mati) (ba + sukun (b mati)) | cara-baca/L6/ba sukun (b mati) — di ""lab"" (ba sukun (b mati) — di ""lab"")"
+Cerita,abu bakr ash-shiddiq,3,sahabat-bilal/endQuiz#2 (Yang membebaskan Bilal dari perbudakan adalah...) | hijrah-madinah/endQuiz#1 (Teman Nabi saat hijrah...) | aisyah-ra/endQuiz#0 (Aisyah adalah putri dari sahabat...)
+Perkenalan Diri,ما اسمك,3,nama/vocab (Siapa namamu? (ke laki)) | nama/vocab (Siapa namamu? (ke perempuan)) | nama/quiz#3 (Cara tanya nama ke perempuan?)
+Lesson Pelajar,لماذا,3,tanya-diskusi/conv3/line2 (Mengapa?) | minta-izin-kelas/conv5/line1 (Mengapa?) | tugas-ujian/conv5/line1 (Kenapa?)
+Tulis Arab,ر,3,mengenal-huruf/L1/ra (ra) | mengenal-huruf/L3/ra + dhamma (ru) (ra + dhamma (ru)) | cara-baca/L6/ra sukun (r mati) (ra sukun (r mati))
+Tulis Arab,م,3,mengenal-huruf/L1/mim (mim) | mengenal-huruf/L3/mim + sukun (m mati) (mim + sukun (m mati)) | cara-baca/L6/mim sukun (m mati) (mim sukun (m mati))
+Tulis Arab,ن,3,mengenal-huruf/L1/nun (nun) | mengenal-huruf/L3/nun + fatha (na) (nun + fatha (na)) | cara-baca/L6/nun tasydid (nn) (nun tasydid (nn))
+Tebak Gambar,الكعبة,2,tempat/al-ka'ba (Ka'bah) | pakaian-umrah/al-ka'ba (Ka'bah)
+Tebak Gambar,جمل,2,hewan-alam/jamal (Unta) | transportasi/jamal (Unta (tunggangan))
+Tebak Gambar,حصان,2,hewan-alam/hisan (Kuda) | transportasi/hisan (Kuda (tunggangan))
+Cerita,من فضلك,2,"tiba-di-madinah/page6/vocab (Tolong / Silakan (sopan)) | tiba-di-madinah/endQuiz#4 (Untuk meminta diantar dengan sopan, kita pakai kata...)"
+Cerita,عبد,2,sahabat-bilal/page1/vocab (Hamba / Budak) | salman-al-farisi/page4/vocab (Budak / Hamba)
+Cerita,صباح الخير,2,"sarapan-hotel/page1/vocab (Selamat pagi) | sarapan-hotel/endQuiz#1 (Bagaimana mengucap ""Selamat pagi""?)"
+Cerita,لذيذ,2,"sarapan-hotel/page4/vocab (Enak / Lezat) | sarapan-hotel/endQuiz#3 (Untuk bilang ""enak"", pakai kata...)"
+Cerita,من أين,2,"bertemu-jamaah/page1/vocab (Dari mana) | bertemu-jamaah/endQuiz#1 (Cara tanya ""Dari mana?"" dalam Arab...)"
+Cerita,أيضا,2,"bertemu-jamaah/page3/vocab (Juga) | bertemu-jamaah/endQuiz#2 (Kata ""juga"" dalam Arab...)"
+Cerita,كيف حالك,2,"telepon-keluarga/page1/vocab (Apa kabar (untuk perempuan)) | telepon-keluarga/endQuiz#1 (Cara tanya ""Apa kabar"" ke perempuan...)"
+Cerita,بخير,2,"telepon-keluarga/page2/vocab (Baik / Sehat) | telepon-keluarga/endQuiz#2 (Jawaban ""Baik"" dalam Arab...)"
+Cerita,يوم الأربعاء,2,pesan-hotel/page4/vocab (Hari Rabu) | pesan-hotel/endQuiz#2 (Hari Rabu dalam Arab...)
+Cerita,1000,2,perang-badar/endQuiz#2 (Jumlah pasukan Quraisy...) | perang-badar/endQuiz#4 (Allah mengirim ... malaikat untuk membantu.)
+Perkenalan Diri,تشرفنا,2,nama/vocab (Senang berkenalan) | nama/quiz#2 (Apa yang diucapkan setelah kenalan?)
+Perkenalan Diri,من أين أنت,2,asal/vocab (Dari mana asalmu?) | asal/quiz#0 (Bagaimana cara tanya asal seseorang?)
+Perkenalan Diri,كم عمرك,2,umur/vocab (Berapa umurmu? (ke laki)) | umur/quiz#0 (Bagaimana cara tanya umur?)
+Perkenalan Diri,ما مهنتك,2,pekerjaan/vocab (Apa pekerjaanmu?) | pekerjaan/quiz#0 (Bagaimana cara tanya pekerjaan?)
+Perkenalan Diri,زوجتي,2,"keluarga/vocab (Istriku) | keluarga/quiz#1 (Cara bilang ""istriku""?)"
+Perkenalan Diri,كم ولد عندك,2,keluarga/vocab (Berapa anakmu?) | keluarga/quiz#3 (Cara tanya jumlah anak?)
+Perkenalan Diri,جئت للعمرة,2,"tujuan/vocab (Aku datang untuk umrah) | tujuan/quiz#0 (Cara bilang ""aku datang untuk umrah""?)"
+Perkenalan Diri,بطلاقة,2,"bahasa/vocab (Lancar) | bahasa/quiz#1 (Cara bilang ""lancar""?)"
+Perkenalan Diri,أتعلم,2,"bahasa/vocab (Aku belajar) | bahasa/quiz#2 (Cara bilang ""aku sedang belajar""?)"
+Perkenalan Diri,سأرسل لك,2,"kontak/vocab (Aku akan kirim untukmu) | kontak/quiz#1 (Cara bilang ""aku akan kirim untukmu""?)"
+Perkenalan Diri,أعزب,2,"status/vocab (Belum menikah (lk)) | status/quiz#1 (Cara bilang ""belum menikah (laki)""?)"
+Perkenalan Diri,دعوت لك,2,"jamaah-haji/vocab (Aku doakan kamu) | jamaah-haji/quiz#2 (Cara bilang ""aku doakan kamu""?)"
+Lesson Umrah,ممنوع,2,bandara-imigrasi/vocab (Dilarang) | miqat-ihram/vocab (Dilarang)
+Lesson Umrah,بعيد,2,transportasi-hotel/vocab (Jauh) | arah-lokasi/vocab (Jauh)
+Lesson Umrah,قريب,2,transportasi-hotel/vocab (Dekat) | arah-lokasi/vocab (Dekat)
+Lesson Umrah,الطريق,2,transportasi-hotel/vocab (Jalan) | arah-lokasi/vocab (Jalan)
+Lesson Umrah,الإفطار,2,check-in-hotel/vocab (Sarapan) | restoran-makanan/vocab (Sarapan)
+Lesson Umrah,ضائع,2,askar-mutawif/vocab (Tersesat) | tersesat-hilang/vocab (Hilang)
+Lesson Umrah,الحمد لله,2,restoran-makanan/conv1/line2 (Alhamdulillah.) | sosial-salam/vocab (Alhamdulillah)
+Lesson Profesional,متابعة,2,kartu-networking/vocab (Follow-up) | rapat-meeting/vocab (Follow-up)
+Lesson Profesional,مشغول,2,komunikasi-kantor/vocab (Sibuk) | telepon-bisnis/vocab (Sibuk)
+Lesson Profesional,تأجيل,2,rapat-meeting/vocab (Penundaan) | jadwal-tugas/vocab (Penundaan)
+Lesson Profesional,ممتاز شكرا,2,"rapat-meeting/conv4/line2 (Bagus, terima kasih.) | jadwal-tugas/conv5/line1 (Bagus, terima kasih.)"
+Lesson Profesional,لماذا,2,diskusi-pendapat/conv0/line1 (Kenapa?) | cuti-izin/conv3/line1 (Kenapa?)
+Lesson Profesional,سأرسل لك المستندات بالبريد,2,email-bisnis/conv1/line0 (Saya kirim dokumen via email.) | atasan-bawahan/conv1/line2 (Saya kirim dokumennya via email.)
+Lesson Profesional,ما السبب,2,jadwal-tugas/conv2/line1 (Sebabnya?) | krisis-masalah/conv4/line1 (Penyebabnya?)
+Lesson Profesional,ملاحظات,2,atasan-bawahan/vocab (Catatan / feedback) | evaluasi-promosi/vocab (Feedback)
+Lesson Profesional,غدا الصباح,2,kerja-tim/conv0/line3 (Besok pagi.) | krisis-masalah/conv1/line3 (Besok pagi.)
+Lesson Pelajar,الإعادة,2,tanya-diskusi/vocab (Pengulangan) | perpustakaan/vocab (Pengembalian)
+Lesson Pelajar,ما السبب,2,minta-izin-kelas/conv1/line1 (Apa sebabnya?) | minta-izin-kelas/conv2/line1 (Sebabnya?)
+Lesson Pelajar,جزاك الله خيرا,2,minta-izin-kelas/conv4/line2 (Semoga Allah balas.) | kantin/conv2/line3 (Semoga Allah balas kebaikanmu.)
+Tulis Arab,ت,2,mengenal-huruf/L1/ta (ta) | mengenal-huruf/L3/ta + fatha (ta) (ta + fatha (ta))
+Tulis Arab,ج,2,mengenal-huruf/L1/jim (jim) | mengenal-huruf/L2/jim (titik bawah) (jim (titik bawah))
+Tulis Arab,د,2,mengenal-huruf/L1/dal (dal) | cara-baca/L6/dal tasydid (dd) (dal tasydid (dd))
+Tulis Arab,س,2,mengenal-huruf/L1/sin (sin) | mengenal-huruf/L3/sin + fatha (sa) (sin + fatha (sa))
+Tulis Arab,ل,2,mengenal-huruf/L3/lam + tasydid (ll) (lam + tasydid (ll)) | cara-baca/L6/lam tasydid (ll) — di Allah (lam tasydid (ll) — di Allah)
+Tulis Arab,جلس,2,cara-baca/L4/ja + lasa = jalasa (ja + lasa = jalasa) | menulis-kata/L7/jalasa (duduk) (jalasa (duduk))
+Tulis Arab,قرأ,2,cara-baca/L4/qa + ra'a = qara'a (qa + ra'a = qara'a) | menulis-kata/L7/qara'a (membaca) (qara'a (membaca))
+Challenge,هل هذا حلال,2,tower-zamzam/L2/q0 (Apakah ini halal) | gunung-uhud/L3/q3 (Apakah ini halal (boleh dibawa))
+Ngomong,ماء,2,kata/kata-mandi/item3 (air) | kata/kata-makanan/item4 (air)
+Hafalan,ولا أنتم عابدون ما أعبد,2,"al-kafirun/ayat3 (""Dan kamu bukan penyembah Tuhan yang aku sembah."") | al-kafirun/ayat5 (""Dan kamu tidak pernah (pula) menjadi penyembah Tuhan yang aku sembah."")"

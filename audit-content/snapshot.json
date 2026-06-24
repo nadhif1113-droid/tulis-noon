@@ -1,0 +1,685 @@
+{
+  "runDate": "2026-06-24",
+  "runTime": "2026-06-24T01:25:38.958Z",
+  "stats": {
+    "total": 2616,
+    "bySource": {
+      "Tebak Gambar": 199,
+      "Cerita": 277,
+      "Perkenalan Diri": 125,
+      "Lesson Umrah": 565,
+      "Lesson Profesional": 542,
+      "Lesson Pelajar": 316,
+      "Nahwu": 120,
+      "Shorf": 96,
+      "Tulis Arab": 111,
+      "Challenge": 80,
+      "Match": 43,
+      "Ngomong": 64,
+      "Roleplay": 23,
+      "Hafalan": 55
+    },
+    "byType": {
+      "vocab": 862,
+      "dialog": 1029,
+      "quiz-mc": 372,
+      "tap-letter": 111,
+      "mc": 80,
+      "match": 43,
+      "ngomong-kata": 36,
+      "ngomong-kalimat": 18,
+      "ngomong-cerita": 10,
+      "ayat": 55
+    },
+    "arabPresent": 2377,
+    "latinPresent": 2234,
+    "indoPresent": 2616
+  },
+  "findings": {
+    "exactDuplicates": [
+      {
+        "key": "ماء::air",
+        "count": 5
+      },
+      {
+        "key": "شكرا جزيلا::terima kasih banyak",
+        "count": 5
+      },
+      {
+        "key": "تمر::kurma",
+        "count": 4
+      },
+      {
+        "key": "صباح الخير::selamat pagi",
+        "count": 4
+      },
+      {
+        "key": "بعيد::jauh",
+        "count": 4
+      },
+      {
+        "key": "قريب::dekat",
+        "count": 4
+      },
+      {
+        "key": "خبز::roti",
+        "count": 3
+      },
+      {
+        "key": "شاي::teh",
+        "count": 3
+      },
+      {
+        "key": "أرز::nasi",
+        "count": 3
+      },
+      {
+        "key": "لحم::daging",
+        "count": 3
+      },
+      {
+        "key": "الكعبة::kabah",
+        "count": 3
+      },
+      {
+        "key": "هدية::hadiah",
+        "count": 3
+      },
+      {
+        "key": "كرة القدم::sepak bola",
+        "count": 3
+      },
+      {
+        "key": "قهوة عربية::kopi arab",
+        "count": 3
+      },
+      {
+        "key": "من أين أنت::dari mana asalmu",
+        "count": 3
+      },
+      {
+        "key": "الحمد لله::alhamdulillah",
+        "count": 3
+      },
+      {
+        "key": "نعم تفضل::iya silakan",
+        "count": 3
+      },
+      {
+        "key": "لماذا::kenapa",
+        "count": 3
+      },
+      {
+        "key": "قهوة::kopi",
+        "count": 2
+      },
+      {
+        "key": "دجاج::ayam",
+        "count": 2
+      },
+      {
+        "key": "مسجد::masjid",
+        "count": 2
+      },
+      {
+        "key": "فندق::hotel",
+        "count": 2
+      },
+      {
+        "key": "مطار::bandara",
+        "count": 2
+      },
+      {
+        "key": "سمك::ikan",
+        "count": 2
+      },
+      {
+        "key": "صحراء::padang pasir",
+        "count": 2
+      },
+      {
+        "key": "كتاب::buku",
+        "count": 2
+      },
+      {
+        "key": "قلم::pena",
+        "count": 2
+      },
+      {
+        "key": "هاتف::telepon",
+        "count": 2
+      },
+      {
+        "key": "ساعة::jam",
+        "count": 2
+      },
+      {
+        "key": "مفتاح::kunci",
+        "count": 2
+      },
+      {
+        "key": "حقيبة::tas",
+        "count": 2
+      },
+      {
+        "key": "نظارة::kacamata",
+        "count": 2
+      },
+      {
+        "key": "مرآة::cermin",
+        "count": 2
+      },
+      {
+        "key": "سرير::tempat tidur",
+        "count": 2
+      },
+      {
+        "key": "خزانة::lemari",
+        "count": 2
+      },
+      {
+        "key": "مصباح::lampu",
+        "count": 2
+      },
+      {
+        "key": "شوكة::garpu",
+        "count": 2
+      },
+      {
+        "key": "ملعقة::sendok",
+        "count": 2
+      },
+      {
+        "key": "سكين::pisau",
+        "count": 2
+      },
+      {
+        "key": "صابون::sabun",
+        "count": 2
+      },
+      {
+        "key": "حافلة::bus",
+        "count": 2
+      },
+      {
+        "key": "بارد::dingin",
+        "count": 2
+      },
+      {
+        "key": "سنة::tahun",
+        "count": 2
+      },
+      {
+        "key": "الحمد لله::segala puji bagi allah",
+        "count": 2
+      },
+      {
+        "key": "بكم الكيلو::berapa per kilo",
+        "count": 2
+      },
+      {
+        "key": "ماء زمزم::air zam zam",
+        "count": 2
+      },
+      {
+        "key": "متى::kapan",
+        "count": 2
+      },
+      {
+        "key": "مريض::sakit",
+        "count": 2
+      },
+      {
+        "key": "دواء::obat",
+        "count": 2
+      },
+      {
+        "key": "مسجد قباء::masjid quba",
+        "count": 2
+      },
+      {
+        "key": "تشرفنا::senang berkenalan",
+        "count": 2
+      },
+      {
+        "key": "الرياضة::olahraga",
+        "count": 2
+      },
+      {
+        "key": "ممنوع::dilarang",
+        "count": 2
+      },
+      {
+        "key": "وعليكم السلام تفضل::wa alaikum salam silakan",
+        "count": 2
+      },
+      {
+        "key": "حاضر::siap",
+        "count": 2
+      },
+      {
+        "key": "الطريق::jalan",
+        "count": 2
+      },
+      {
+        "key": "الإفطار::sarapan",
+        "count": 2
+      },
+      {
+        "key": "تفضل::silakan",
+        "count": 2
+      },
+      {
+        "key": "يمين::kanan",
+        "count": 2
+      },
+      {
+        "key": "مستقيم::lurus",
+        "count": 2
+      },
+      {
+        "key": "الغداء::makan siang",
+        "count": 2
+      },
+      {
+        "key": "كم السعر::berapa harganya",
+        "count": 2
+      },
+      {
+        "key": "خصم::diskon",
+        "count": 2
+      },
+      {
+        "key": "كيف حالك::apa kabar",
+        "count": 2
+      },
+      {
+        "key": "متابعة::follow up",
+        "count": 2
+      },
+      {
+        "key": "مشغول::sibuk",
+        "count": 2
+      },
+      {
+        "key": "تأجيل::penundaan",
+        "count": 2
+      },
+      {
+        "key": "ممتاز شكرا::bagus terima kasih",
+        "count": 2
+      },
+      {
+        "key": "لا شكرا::tidak terima kasih",
+        "count": 2
+      },
+      {
+        "key": "هل من أسئلة أخرى::ada pertanyaan lain",
+        "count": 2
+      },
+      {
+        "key": "ما السبب::sebabnya",
+        "count": 2
+      },
+      {
+        "key": "غدا الصباح::besok pagi",
+        "count": 2
+      },
+      {
+        "key": "ما الشروط::apa syaratnya",
+        "count": 2
+      },
+      {
+        "key": "لماذا::mengapa",
+        "count": 2
+      },
+      {
+        "key": "ا::alif",
+        "count": 2
+      },
+      {
+        "key": "ب::ba",
+        "count": 2
+      },
+      {
+        "key": "ت::ta",
+        "count": 2
+      },
+      {
+        "key": "ج::jim",
+        "count": 2
+      },
+      {
+        "key": "د::dal",
+        "count": 2
+      },
+      {
+        "key": "ر::ra",
+        "count": 2
+      },
+      {
+        "key": "س::sin",
+        "count": 2
+      },
+      {
+        "key": "م::mim",
+        "count": 2
+      },
+      {
+        "key": "ن::nun",
+        "count": 2
+      },
+      {
+        "key": "ي::ya",
+        "count": 2
+      }
+    ],
+    "intraSection": [
+      {
+        "source": "Tulis Arab",
+        "arab": "ب",
+        "count": 7
+      },
+      {
+        "source": "Cerita",
+        "arab": "abu bakr ash-shiddiq",
+        "count": 3
+      },
+      {
+        "source": "Perkenalan Diri",
+        "arab": "ما اسمك",
+        "count": 3
+      },
+      {
+        "source": "Lesson Pelajar",
+        "arab": "لماذا",
+        "count": 3
+      },
+      {
+        "source": "Tulis Arab",
+        "arab": "ر",
+        "count": 3
+      },
+      {
+        "source": "Tulis Arab",
+        "arab": "م",
+        "count": 3
+      },
+      {
+        "source": "Tulis Arab",
+        "arab": "ن",
+        "count": 3
+      },
+      {
+        "source": "Tebak Gambar",
+        "arab": "الكعبة",
+        "count": 2
+      },
+      {
+        "source": "Tebak Gambar",
+        "arab": "جمل",
+        "count": 2
+      },
+      {
+        "source": "Tebak Gambar",
+        "arab": "حصان",
+        "count": 2
+      },
+      {
+        "source": "Cerita",
+        "arab": "من فضلك",
+        "count": 2
+      },
+      {
+        "source": "Cerita",
+        "arab": "عبد",
+        "count": 2
+      },
+      {
+        "source": "Cerita",
+        "arab": "صباح الخير",
+        "count": 2
+      },
+      {
+        "source": "Cerita",
+        "arab": "لذيذ",
+        "count": 2
+      },
+      {
+        "source": "Cerita",
+        "arab": "من أين",
+        "count": 2
+      },
+      {
+        "source": "Cerita",
+        "arab": "أيضا",
+        "count": 2
+      },
+      {
+        "source": "Cerita",
+        "arab": "كيف حالك",
+        "count": 2
+      },
+      {
+        "source": "Cerita",
+        "arab": "بخير",
+        "count": 2
+      },
+      {
+        "source": "Cerita",
+        "arab": "يوم الأربعاء",
+        "count": 2
+      },
+      {
+        "source": "Cerita",
+        "arab": "1000",
+        "count": 2
+      },
+      {
+        "source": "Perkenalan Diri",
+        "arab": "تشرفنا",
+        "count": 2
+      },
+      {
+        "source": "Perkenalan Diri",
+        "arab": "من أين أنت",
+        "count": 2
+      },
+      {
+        "source": "Perkenalan Diri",
+        "arab": "كم عمرك",
+        "count": 2
+      },
+      {
+        "source": "Perkenalan Diri",
+        "arab": "ما مهنتك",
+        "count": 2
+      },
+      {
+        "source": "Perkenalan Diri",
+        "arab": "زوجتي",
+        "count": 2
+      },
+      {
+        "source": "Perkenalan Diri",
+        "arab": "كم ولد عندك",
+        "count": 2
+      },
+      {
+        "source": "Perkenalan Diri",
+        "arab": "جئت للعمرة",
+        "count": 2
+      },
+      {
+        "source": "Perkenalan Diri",
+        "arab": "بطلاقة",
+        "count": 2
+      },
+      {
+        "source": "Perkenalan Diri",
+        "arab": "أتعلم",
+        "count": 2
+      },
+      {
+        "source": "Perkenalan Diri",
+        "arab": "سأرسل لك",
+        "count": 2
+      },
+      {
+        "source": "Perkenalan Diri",
+        "arab": "أعزب",
+        "count": 2
+      },
+      {
+        "source": "Perkenalan Diri",
+        "arab": "دعوت لك",
+        "count": 2
+      },
+      {
+        "source": "Lesson Umrah",
+        "arab": "ممنوع",
+        "count": 2
+      },
+      {
+        "source": "Lesson Umrah",
+        "arab": "بعيد",
+        "count": 2
+      },
+      {
+        "source": "Lesson Umrah",
+        "arab": "قريب",
+        "count": 2
+      },
+      {
+        "source": "Lesson Umrah",
+        "arab": "الطريق",
+        "count": 2
+      },
+      {
+        "source": "Lesson Umrah",
+        "arab": "الإفطار",
+        "count": 2
+      },
+      {
+        "source": "Lesson Umrah",
+        "arab": "ضائع",
+        "count": 2
+      },
+      {
+        "source": "Lesson Umrah",
+        "arab": "الحمد لله",
+        "count": 2
+      },
+      {
+        "source": "Lesson Profesional",
+        "arab": "متابعة",
+        "count": 2
+      },
+      {
+        "source": "Lesson Profesional",
+        "arab": "مشغول",
+        "count": 2
+      },
+      {
+        "source": "Lesson Profesional",
+        "arab": "تأجيل",
+        "count": 2
+      },
+      {
+        "source": "Lesson Profesional",
+        "arab": "ممتاز شكرا",
+        "count": 2
+      },
+      {
+        "source": "Lesson Profesional",
+        "arab": "لماذا",
+        "count": 2
+      },
+      {
+        "source": "Lesson Profesional",
+        "arab": "سأرسل لك المستندات بالبريد",
+        "count": 2
+      },
+      {
+        "source": "Lesson Profesional",
+        "arab": "ما السبب",
+        "count": 2
+      },
+      {
+        "source": "Lesson Profesional",
+        "arab": "ملاحظات",
+        "count": 2
+      },
+      {
+        "source": "Lesson Profesional",
+        "arab": "غدا الصباح",
+        "count": 2
+      },
+      {
+        "source": "Lesson Pelajar",
+        "arab": "الإعادة",
+        "count": 2
+      },
+      {
+        "source": "Lesson Pelajar",
+        "arab": "ما السبب",
+        "count": 2
+      },
+      {
+        "source": "Lesson Pelajar",
+        "arab": "جزاك الله خيرا",
+        "count": 2
+      },
+      {
+        "source": "Tulis Arab",
+        "arab": "ت",
+        "count": 2
+      },
+      {
+        "source": "Tulis Arab",
+        "arab": "ج",
+        "count": 2
+      },
+      {
+        "source": "Tulis Arab",
+        "arab": "د",
+        "count": 2
+      },
+      {
+        "source": "Tulis Arab",
+        "arab": "س",
+        "count": 2
+      },
+      {
+        "source": "Tulis Arab",
+        "arab": "ل",
+        "count": 2
+      },
+      {
+        "source": "Tulis Arab",
+        "arab": "جلس",
+        "count": 2
+      },
+      {
+        "source": "Tulis Arab",
+        "arab": "قرأ",
+        "count": 2
+      },
+      {
+        "source": "Challenge",
+        "arab": "هل هذا حلال",
+        "count": 2
+      },
+      {
+        "source": "Ngomong",
+        "arab": "ماء",
+        "count": 2
+      },
+      {
+        "source": "Hafalan",
+        "arab": "ولا أنتم عابدون ما أعبد",
+        "count": 2
+      }
+    ]
+  }
+}
