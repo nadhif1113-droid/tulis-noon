@@ -152,22 +152,25 @@ export default function NahwuShorfScreen({ pathId = 'nahwu', userProfile, isPrem
                     opacity: isLocked ? 0.7 : 1,
                   }}
                 >
-                  <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 text-2xl" style={{ background: isLocked ? 'rgba(201,169,97,0.12)' : isCompleted ? 'rgba(22,163,74,0.1)' : `${l.color}15` }}>
-                    {l.emoji}
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 text-2xl" style={{ background: isLocked ? 'rgba(201,169,97,0.12)' : isCompleted ? '#0a4d3c' : `${l.color}15` }}>
+                    {isCompleted ? <Check size={20} color="white" /> : l.emoji}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 mb-0.5">
+                    <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
                       <span className="text-[10px] font-bold" style={{ color: '#8b6b3d' }}>#{l.order}</span>
-                      {l.isFree ? (
+                      {isCompleted && (
+                        <span className="text-[8px] font-bold px-1 py-0.5 rounded" style={{ background: '#0a4d3c', color: 'white' }}>✓ SELESAI</span>
+                      )}
+                      {!isCompleted && l.isFree && (
                         <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'rgba(10,77,60,0.1)', color: meta.color }}>FREE</span>
-                      ) : (
+                      )}
+                      {!isCompleted && !l.isFree && (
                         <span className="text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5" style={{ background: isPremium ? 'rgba(10,77,60,0.1)' : 'rgba(201,169,97,0.18)', color: isPremium ? meta.color : '#8b6b3d' }}>
                           {isPremium ? '✦ MAHIR' : <><Lock size={9} /> MAHIR</>}
                         </span>
                       )}
-                      {isCompleted && <Check size={12} style={{ color: '#16a34a' }} />}
                     </div>
-                    <p className="font-semibold text-sm leading-tight" style={{ color: meta.color }}>{l.title}</p>
+                    <p className="font-semibold text-sm leading-tight" style={{ color: isCompleted ? '#0a4d3c' : meta.color }}>{l.title}</p>
                     <p className="text-xs" style={{ color: '#8b6b3d' }}>{l.subtitle} · {l.duration}</p>
                   </div>
                   {isLocked ? <Lock size={15} style={{ color: '#c9a961', flexShrink: 0 }} /> : <ChevronRight size={16} style={{ color: meta.color, flexShrink: 0 }} />}

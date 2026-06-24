@@ -43,6 +43,11 @@ import { Analytics, setAnalyticsUser, setUserProperties } from '@/lib/analytics'
 import { isChallengeActive, challengeDaysRemaining, challengeTotalDays, CHALLENGE_TITLE, CHALLENGE_TAGLINE, CHALLENGE_PRIZES, challengeTotalPrize, EVENT_ID, CHALLENGE_START_MS } from '@/lib/challenge-launch';
 import { applyEventXp, EVENT_FEATURES } from '@/lib/event-scoring';
 import { processActivityXp } from '@/lib/anti-cheat';
+import {
+  buildLessonCompletionUpdate, buildCeritaCompletionUpdate,
+  buildNahwuShorfCompletionUpdate, buildPerkenalanCompletionUpdate,
+  isLessonCompleted, isCeritaCompleted, isNahwuShorfCompleted, isPerkenalanCompleted,
+} from '@/lib/learning-progress';
 import { LEARNING_UMRAH } from '@/data/learning-umrah';
 import { LEARNING_PELAJAR } from '@/data/learning-pelajar';
 import { LEARNING_PROFESIONAL } from '@/data/learning-profesional';
@@ -959,6 +964,9 @@ export default function TulisNoonApp() {
               // Anti-replay: track modul yang sudah selesai
               awardXp(earned, 'lesson', { contentId: `lesson-${selectedLesson?.pathId}-${selectedLesson?.id}` });
               setProgress(p => ({ ...p, [selectedLesson.pathId]: Math.max((p[selectedLesson.pathId] || 0), selectedLesson.order) }));
+              // ✅ Mark modul completed di completedLessonModules (untuk ceklis UI)
+              const completionUpdate = buildLessonCompletionUpdate(authProfile, selectedLesson.pathId, selectedLesson.id);
+              if (completionUpdate) updateUserProfile(completionUpdate).catch((e) => console.error('Mark lesson complete failed:', e));
               logCommunity({ type:'lesson', text:`Selesai modul: ${selectedLesson.title} (+${earned} XP)`, emoji: selectedLesson.emoji });
               Analytics.lessonComplete(selectedLesson.pathId, selectedLesson.id, earned);
               Analytics.xpEarned(earned, 'lesson');
@@ -1161,11 +1169,17 @@ export default function TulisNoonApp() {
         {/* Cerita Interaktif — narrative learning */}
         {screen === 'cerita' && <CeritaScreen
           lives={authProfile?.lives ?? 10}
+          userProfile={authProfile}
           onNoLives={() => setShowLivesModal(true)}
           onBack={() => setScreen('main')}
           onHome={() => { setTab('home'); setScreen('main'); }}
-          onComplete={({ earned, score, totalQuestions, correctRatio, contentId }) => {
+          onComplete={({ earned, score, totalQuestions, correctRatio, contentId, storyId }) => {
             awardXp(earned, 'game', { contentId, correctRatio });
+            // ✅ Mark cerita selesai (ceklis di list)
+            if (storyId) {
+              const update = buildCeritaCompletionUpdate(authProfile, storyId);
+              if (update) updateUserProfile(update).catch((e) => console.error('Mark cerita complete failed:', e));
+            }
             logCommunity({ type: 'cerita', text: `Cerita Interaktif — quiz selesai (${score}/${totalQuestions}, +${earned} XP)`, emoji: '📖' });
             deductLifeIfLost(score === totalQuestions);
           }}
@@ -1378,12 +1392,9 @@ export default function TulisNoonApp() {
             if (earned > 0) {
               awardXp(earned, 'nahwu_shorf', { contentId: contentId || `nahwu-shorf-${pathId}-${lessonId}`, correctRatio });
               logCommunity({ type: pathId, text: `${pathId === 'nahwu' ? 'Nahwu' : 'Shorf'} — selesai pelajaran (+${earned} XP)`, emoji: pathId === 'nahwu' ? '🧮' : '🌿' });
-              // Track completed lessons
-              const completedMap = authProfile?.completedNahwuShorf || {};
-              const arr = completedMap[pathId] || [];
-              if (!arr.includes(lessonId)) {
-                try { await updateUserProfile({ completedNahwuShorf: { ...completedMap, [pathId]: [...arr, lessonId] } }); } catch (e) {}
-              }
+              // ✅ Track completed pakai helper (consistent dgn source lain)
+              const update = buildNahwuShorfCompletionUpdate(authProfile, pathId, lessonId);
+              if (update) { try { await updateUserProfile(update); } catch (e) {} }
             }
           }}
         />}
@@ -3105,7 +3116,9 @@ function LessonsScreen({ path, onBack, onSelectLesson, progress, userProfile, on
 
       <div className="space-y-2">
         {lessons.map((l, idx) => {
-          const isCompleted = idx < progress;
+          // Pakai completedLessonModules (granular per ID) + fallback ke order-based progress
+          const isCompletedById = l.pathId && isLessonCompleted(userProfile, l.pathId, l.id);
+          const isCompleted = isCompletedById || idx < progress;
           // Pakai pricing system kalau lesson punya pathId (modul learning path baru)
           const isFree = l.pathId ? isModuleFreeFn(l) : true;
           const isUnlocked = l.pathId ? isModuleUnlockedFn(l, userProfile) : true;
@@ -3130,11 +3143,14 @@ function LessonsScreen({ path, onBack, onSelectLesson, progress, userProfile, on
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <h3 className="font-semibold text-sm" style={{ color: '#1a1a1a' }}>{l.title}</h3>
-                  {l.pathId && isFree && (
+                  <h3 className="font-semibold text-sm" style={{ color: isCompleted ? '#0a4d3c' : '#1a1a1a' }}>{l.title}</h3>
+                  {isCompleted && (
+                    <span className="text-[8px] font-bold px-1 py-0.5 rounded" style={{ background: '#0a4d3c', color: 'white' }}>✓ SELESAI</span>
+                  )}
+                  {!isCompleted && l.pathId && isFree && (
                     <span className="text-[8px] font-bold px-1 py-0.5 rounded" style={{ background: 'rgba(10,77,60,0.1)', color: '#0a4d3c' }}>FREE</span>
                   )}
-                  {l.pathId && !isFree && isUnlocked && (
+                  {!isCompleted && l.pathId && !isFree && isUnlocked && (
                     <span className="text-[8px] font-bold px-1 py-0.5 rounded" style={{ background: 'rgba(10,77,60,0.1)', color: '#0a4d3c' }}>✓ DIBUKA</span>
                   )}
                   {l.isStub && (

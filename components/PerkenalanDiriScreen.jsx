@@ -209,6 +209,7 @@ function ListView({ userProfile, onBack, onHome, onSelect, onOpenBundle }) {
       <div className="space-y-3">
         {PERKENALAN_MATERI.map((m) => {
           const unlocked = isMateriUnlocked(m, userProfile);
+          const isCompleted = (userProfile?.completedPerkenalanMateri || []).includes(m.id);
           return (
             <button
               key={m.id}
@@ -216,7 +217,7 @@ function ListView({ userProfile, onBack, onHome, onSelect, onOpenBundle }) {
               className="w-full p-4 rounded-2xl text-left flex items-start gap-3 transition-transform active:scale-[0.98] relative overflow-hidden"
               style={{
                 background: 'white',
-                border: unlocked ? '1.5px solid rgba(10,77,60,0.1)' : '1.5px dashed rgba(201,169,97,0.4)',
+                border: isCompleted ? '1.5px solid rgba(10,77,60,0.4)' : (unlocked ? '1.5px solid rgba(10,77,60,0.1)' : '1.5px dashed rgba(201,169,97,0.4)'),
                 opacity: unlocked ? 1 : 0.95,
               }}
             >
@@ -224,9 +225,9 @@ function ListView({ userProfile, onBack, onHome, onSelect, onOpenBundle }) {
               <div className="flex flex-col items-center gap-1 flex-shrink-0">
                 <div
                   className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl"
-                  style={{ background: m.bgGradient }}
+                  style={{ background: isCompleted ? '#0a4d3c' : m.bgGradient }}
                 >
-                  {m.emoji}
+                  {isCompleted ? <Check size={26} color="white" /> : m.emoji}
                 </div>
                 <span className="text-[10px] font-bold" style={{ color: '#8b6b3d' }}>#{m.order}</span>
               </div>
@@ -234,11 +235,15 @@ function ListView({ userProfile, onBack, onHome, onSelect, onOpenBundle }) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                   <p className="font-semibold text-base leading-tight" style={{ color: m.color }}>{m.title}</p>
-                  {m.isFree ? (
+                  {isCompleted && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: '#0a4d3c', color: 'white' }}>✓ SELESAI</span>
+                  )}
+                  {!isCompleted && m.isFree && (
                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'rgba(10,77,60,0.12)', color: '#0a4d3c' }}>
                       FREE
                     </span>
-                  ) : (
+                  )}
+                  {!isCompleted && !m.isFree && (
                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5" style={{ background: unlocked ? 'rgba(10,77,60,0.12)' : 'rgba(201,169,97,0.18)', color: unlocked ? '#0a4d3c' : '#8b6b3d' }}>
                       {unlocked ? <><Check size={9} /> DIBUKA</> : <><Lock size={9} /> MAHIR</>}
                     </span>

@@ -9,7 +9,8 @@ import { ArrowLeft, ArrowRight, Home, Volume2, Sparkles, Star, ChevronRight, Boo
 import { CERITA_STORIES } from '@/data/cerita-stories';
 import { speakArabic as ttsSpeakArabic } from '@/lib/tts';
 
-export default function CeritaScreen({ lives = 10, onNoLives, onBack, onHome, onComplete }) {
+export default function CeritaScreen({ lives = 10, userProfile, onNoLives, onBack, onHome, onComplete }) {
+  const completedStories = userProfile?.completedCeritaStories || [];
   const [view, setView] = useState('list'); // list | reader | quiz | result
   const [selectedStory, setSelectedStory] = useState(null);
   const [quizResult, setQuizResult] = useState(null);
@@ -36,6 +37,7 @@ export default function CeritaScreen({ lives = 10, onNoLives, onBack, onHome, on
     if (onComplete) {
       onComplete({
         earned: xpEarned, score, totalQuestions, correctRatio,
+        storyId: selectedStory.id,
         contentId: `cerita-${selectedStory.id}`,
       });
     }
@@ -67,13 +69,13 @@ export default function CeritaScreen({ lives = 10, onNoLives, onBack, onHome, on
     );
   }
 
-  return <ListView lives={lives} onBack={onBack} onHome={onHome} onSelect={handleSelectStory} />;
+  return <ListView lives={lives} onBack={onBack} onHome={onHome} onSelect={handleSelectStory} completedStories={completedStories} />;
 }
 
 // ============================================================================
 // LIST VIEW — daftar cerita
 // ============================================================================
-function ListView({ lives, onBack, onHome, onSelect }) {
+function ListView({ lives, onBack, onHome, onSelect, completedStories = [] }) {
   return (
     <div className="flex-1 flex flex-col px-5 py-6">
       <div className="flex items-center gap-2 mb-4">
@@ -128,25 +130,35 @@ function ListView({ lives, onBack, onHome, onSelect }) {
               </div>
               <p className="text-[11px] mb-3" style={{ color: '#8b6b3d', fontStyle: 'italic' }}>{lvl.desc}</p>
               <div className="space-y-3">
-                {stories.map((story) => (
+                {stories.map((story) => {
+                  const isCompleted = completedStories.includes(story.id);
+                  return (
                   <button
                     key={story.id}
                     onClick={() => onSelect(story)}
                     className="w-full p-4 rounded-2xl text-left flex items-start gap-3 transition-transform active:scale-[0.98]"
-                    style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.1)' }}
+                    style={{
+                      background: 'white',
+                      border: isCompleted ? '1.5px solid rgba(10,77,60,0.4)' : '1.5px solid rgba(10,77,60,0.1)',
+                    }}
                   >
                     <div
                       className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0"
-                      style={{ background: story.bgGradient }}
+                      style={{ background: isCompleted ? '#0a4d3c' : story.bgGradient }}
                     >
-                      {story.emoji}
+                      {isCompleted ? <Check size={26} color="white" /> : story.emoji}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
+                      <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                         <p className="font-semibold text-base leading-tight" style={{ color: story.color }}>{story.title}</p>
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: `${story.color}15`, color: story.color }}>
-                          {story.difficulty}
-                        </span>
+                        {isCompleted && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: '#0a4d3c', color: 'white' }}>✓ SELESAI</span>
+                        )}
+                        {!isCompleted && (
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: `${story.color}15`, color: story.color }}>
+                            {story.difficulty}
+                          </span>
+                        )}
                       </div>
                       <p className="text-xs leading-snug mb-1" style={{ color: '#8b6b3d', fontStyle: 'italic' }}>{story.subtitle}</p>
                       <p className="text-[11px] leading-snug mb-1.5" style={{ color: '#666' }}>{story.description}</p>
@@ -158,7 +170,8 @@ function ListView({ lives, onBack, onHome, onSelect }) {
                     </div>
                     <ChevronRight size={18} style={{ color: '#c9a961' }} className="flex-shrink-0 self-center" />
                   </button>
-                ))}
+                  );
+                })}
               </div>
             </div>
           );
