@@ -560,10 +560,15 @@ function QuizView({ module, onSpeak, onBack, onFinish }) {
         <button onClick={onBack} className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'rgba(10,77,60,0.08)' }}>
           <ArrowLeft size={17} style={{ color: '#0a4d3c' }} />
         </button>
-        <div className="flex-1">
-          <p className="text-[10px] tracking-widest uppercase" style={{ color: '#8b6b3d' }}>Latihan Soal</p>
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] tracking-widest uppercase truncate" style={{ color: '#8b6b3d' }}>
+            Latihan: {module?.title || 'Modul'}
+          </p>
           <p className="text-xs font-semibold" style={{ color: '#0a4d3c' }}>Soal {idx + 1} dari {questions.length}</p>
         </div>
+        {module?.emoji && (
+          <div className="text-2xl flex-shrink-0" aria-hidden="true">{module.emoji}</div>
+        )}
       </div>
       <div className="px-5 pt-3">
         <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(10,77,60,0.08)' }}>
