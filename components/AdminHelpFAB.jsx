@@ -17,7 +17,7 @@ export default function AdminHelpFAB({ user, userProfile }) {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed flex items-center gap-2 rounded-full active:scale-95 transition-all"
+        className="fixed flex items-center gap-2 rounded-full active:scale-95 transition-transform"
         style={{
           right: 16,
           bottom: 88, // di atas BottomNav-like area

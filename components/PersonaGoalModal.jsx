@@ -57,7 +57,7 @@ export default function PersonaGoalModal({ onSelect, onClose, allowDismiss = fal
               <button
                 key={goal.id}
                 onClick={() => setSelected(goal.id)}
-                className="w-full flex items-center gap-3 p-3.5 rounded-2xl text-left transition-all active:scale-[0.98]"
+                className="w-full flex items-center gap-3 p-3.5 rounded-2xl text-left transition-transform active:scale-[0.98]"
                 style={{
                   background: isSelected ? `${goal.color}15` : 'white',
                   border: isSelected ? `2px solid ${goal.color}` : '1.5px solid rgba(10,77,60,0.1)',
@@ -95,7 +95,7 @@ export default function PersonaGoalModal({ onSelect, onClose, allowDismiss = fal
           <button
             onClick={handleConfirm}
             disabled={!selected || saving}
-            className="w-full py-3.5 rounded-2xl font-bold text-white transition-all active:scale-[0.98] disabled:opacity-50"
+            className="w-full py-3.5 rounded-2xl font-bold text-white transition-transform active:scale-[0.98] disabled:opacity-50"
             style={{
               background: selected ? 'linear-gradient(135deg, #0a4d3c, #1a6b56)' : '#8b6b3d',
               boxShadow: selected ? '0 10px 24px -8px rgba(10,77,60,0.5)' : 'none',

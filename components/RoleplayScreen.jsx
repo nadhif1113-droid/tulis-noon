@@ -736,7 +736,7 @@ function MessageBubble({ message, scenarioColor, personaAvatar, onSuggestionTap,
               key={idx}
               onClick={() => onSuggestionTap && onSuggestionTap(s.arabic)}
               disabled={disableSuggestions}
-              className="w-full rounded-2xl p-2.5 text-left transition-transform active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
+              className="w-full rounded-2xl p-2.5 text-left disabled:opacity-50"
               style={{
                 background: 'rgba(201,169,97,0.1)',
                 border: '1.5px solid rgba(201,169,97,0.35)',

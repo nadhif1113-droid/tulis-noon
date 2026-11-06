@@ -175,7 +175,7 @@ export default function CommunityScreen({ userId, userProfile, onBack, onHome, o
             <div className="flex items-center gap-1.5 mt-2 mb-1">
               <button
                 onClick={() => setVisibility('public')}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold"
                 style={{
                   background: visibility === 'public' ? 'rgba(10,77,60,0.12)' : 'transparent',
                   color: visibility === 'public' ? '#0a4d3c' : '#8b6b3d',
@@ -186,7 +186,7 @@ export default function CommunityScreen({ userId, userProfile, onBack, onHome, o
               </button>
               <button
                 onClick={() => setVisibility('friends')}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold"
                 style={{
                   background: visibility === 'friends' ? 'rgba(201,169,97,0.18)' : 'transparent',
                   color: visibility === 'friends' ? '#8b6b3d' : '#8b6b3d',

@@ -65,9 +65,9 @@ export default function ShareEventModal({ userId, userName, score, rank, streak,
         style={{
           background: '#fdfaf4',
           maxHeight: '95vh',
-          transform: animate ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(20px)',
+          transform: animate ? 'scale(1)' : 'scale(0.95)',
           opacity: animate ? 1 : 0,
-          transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+          transition: 'transform 300ms var(--ease-out), opacity 300ms var(--ease-out)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -280,7 +280,7 @@ function PlatformTab({ id, current, onClick, label }) {
   return (
     <button
       onClick={() => onClick(id)}
-      className="flex-1 py-2 rounded-xl text-[11px] font-semibold transition-all"
+      className="flex-1 py-2 rounded-xl text-[11px] font-semibold"
       style={{
         background: active ? '#0a4d3c' : 'rgba(10,77,60,0.06)',
         color: active ? 'white' : '#8b6b3d',

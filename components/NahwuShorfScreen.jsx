@@ -298,7 +298,7 @@ export default function NahwuShorfScreen({ pathId = 'nahwu', userProfile, isPrem
         </div>
         <div className="px-5 pt-3">
           <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(10,77,60,0.08)' }}>
-            <div className="h-full rounded-full transition-all" style={{ width: `${((quizIdx + (revealed ? 1 : 0)) / total) * 100}%`, background: meta.color }} />
+            <div className="h-full progress-fill rounded-full" style={{ transform: `translateX(${(((quizIdx + (revealed ? 1 : 0)) / total) * 100) - 100}%)`, background: meta.color }} />
           </div>
         </div>
 
@@ -331,7 +331,7 @@ export default function NahwuShorfScreen({ pathId = 'nahwu', userProfile, isPrem
                   key={i}
                   onClick={() => handleSelectAnswer(i)}
                   disabled={revealed}
-                  className="w-full text-left p-3.5 rounded-2xl transition-all flex items-center gap-3"
+                  className="w-full text-left p-3.5 rounded-2xl flex items-center gap-3"
                   style={{ background: bg, border }}
                 >
                   <span className="text-base flex-1" dir={/[؀-ۿ]/.test(opt) ? 'rtl' : 'ltr'} style={{ fontFamily: /[؀-ۿ]/.test(opt) ? 'Amiri, serif' : 'inherit', color, fontWeight: 600 }}>{opt}</span>

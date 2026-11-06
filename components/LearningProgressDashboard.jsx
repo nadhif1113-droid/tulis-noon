@@ -63,9 +63,9 @@ export default function LearningProgressDashboard({ userProfile, onOpenCertifica
               {dashboard.overall.completed.toLocaleString('id-ID')} / {dashboard.overall.total.toLocaleString('id-ID')} materi
             </p>
           </div>
-          <div className="h-2 rounded-full mb-3" style={{ background: 'rgba(255,255,255,0.2)' }}>
-            <div className="h-full rounded-full transition-all" style={{
-              width: `${dashboard.overall.percent}%`,
+          <div className="h-2 rounded-full overflow-hidden mb-3" style={{ background: 'rgba(255,255,255,0.2)' }}>
+            <div className="h-full progress-fill rounded-full" style={{
+              transform: `translateX(${dashboard.overall.percent - 100}%)`,
               background: '#c9a961',
             }} />
           </div>
@@ -130,9 +130,9 @@ export default function LearningProgressDashboard({ userProfile, onOpenCertifica
                     {s.stat.completed}/{s.stat.total}
                   </p>
                 </div>
-                <div className="h-1.5 rounded-full" style={{ background: 'rgba(10,77,60,0.08)' }}>
-                  <div className="h-full rounded-full transition-all" style={{
-                    width: `${s.stat.percent}%`,
+                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(10,77,60,0.08)' }}>
+                  <div className="h-full progress-fill rounded-full" style={{
+                    transform: `translateX(${s.stat.percent - 100}%)`,
                     background: s.stat.isCompleted ? '#0a4d3c' : s.color,
                   }} />
                 </div>

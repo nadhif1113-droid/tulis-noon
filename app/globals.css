@@ -70,3 +70,79 @@ body {
   0%, 80%, 100% { opacity: 0.2; }
   40%           { opacity: 1; }
 }
+
+/* =====================================================================
+   MOTION SYSTEM — aturan animasi Tulis Noon
+   - easing masuk/keluar  : --ease-out    cubic-bezier(0.23, 1, 0.32, 1)
+   - easing pindah posisi : --ease-in-out cubic-bezier(0.77, 0, 0.175, 1)
+   - durasi UI 150–250ms, modal maks 300ms
+   - cuma animasiin transform + opacity (jangan width/height/background)
+   - masuk mulai dari scale(0.95) + opacity 0, bukan scale(0)
+   - jangan `transition: all` — sebut propertinya
+   - stagger list 30–80ms (pakai --i di .motion-stagger > *)
+   - prefers-reduced-motion dihormati (lihat paling bawah)
+   - jangan animasi di hover/klik yang sering (tombol jawaban kuis, tab, keypad)
+   ===================================================================== */
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --dur-fast: 150ms;
+  --dur-ui: 200ms;
+  --dur-slow: 250ms;
+  --dur-modal: 300ms;
+  --stagger: 50ms;
+}
+
+/* Masuk: scale(0.95) + opacity 0 → normal */
+@keyframes motion-enter {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.motion-enter {
+  animation: motion-enter var(--dur-ui) var(--ease-out) both;
+}
+.motion-enter-modal {
+  animation: motion-enter var(--dur-modal) var(--ease-out) both;
+}
+
+/* Stagger list: item ke-n delay n × --stagger (default 50ms, rentang 30–80ms).
+   Set --i via style={{ '--i': idx }} kalau item lebih dari 10. */
+.motion-stagger > * {
+  animation: motion-enter var(--dur-ui) var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * var(--stagger));
+}
+.motion-stagger > *:nth-child(1)  { --i: 0; }
+.motion-stagger > *:nth-child(2)  { --i: 1; }
+.motion-stagger > *:nth-child(3)  { --i: 2; }
+.motion-stagger > *:nth-child(4)  { --i: 3; }
+.motion-stagger > *:nth-child(5)  { --i: 4; }
+.motion-stagger > *:nth-child(6)  { --i: 5; }
+.motion-stagger > *:nth-child(7)  { --i: 6; }
+.motion-stagger > *:nth-child(8)  { --i: 7; }
+.motion-stagger > *:nth-child(9)  { --i: 8; }
+.motion-stagger > *:nth-child(n+10) { --i: 9; }
+
+/* Progress bar: isi selebar penuh lalu digeser pakai translateX,
+   bukan animasi width. Parent wajib overflow-hidden. */
+.progress-fill {
+  width: 100%;
+  transition: transform var(--dur-slow) var(--ease-in-out);
+  will-change: transform;
+}
+
+/* === Reduced motion === */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+  /* Spinner tetap muter — dia indikator status, bukan dekorasi */
+  .animate-spin {
+    animation-duration: 1s !important;
+    animation-iteration-count: infinite !important;
+  }
+}

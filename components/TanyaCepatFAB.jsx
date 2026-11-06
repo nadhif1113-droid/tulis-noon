@@ -22,7 +22,7 @@ export default function TanyaCepatFAB({ onClick, hasQuotaLow = false }) {
     <>
       <button
         onClick={onClick}
-        className="fixed flex items-center gap-2 rounded-full active:scale-95 transition-all"
+        className="fixed flex items-center gap-2 rounded-full active:scale-95 transition-transform"
         style={{
           right: 16,
           bottom: 88, // di atas BottomNav (yang ±70px)

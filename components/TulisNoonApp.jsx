@@ -1800,7 +1800,7 @@ function WelcomeScreen({ onComplete, initialName = '' }) {
         <ArrowLeft size={18} style={{ color: '#0a4d3c' }} />
       </button>
       <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(10,77,60,0.1)' }}>
-        <div className="h-full transition-all duration-500" style={{ width: `${(stepNum/totalSteps)*100}%`, background: '#0a4d3c' }} />
+        <div className="h-full progress-fill" style={{ transform: `translateX(${((stepNum/totalSteps)*100) - 100}%)`, background: '#0a4d3c' }} />
       </div>
       <span className="text-xs font-semibold" style={{ color: '#0a4d3c' }}>{stepNum}/{totalSteps}</span>
     </div>
@@ -1865,7 +1865,7 @@ function WelcomeScreen({ onComplete, initialName = '' }) {
               <button
                 key={it.id}
                 onClick={() => toggleInterest(it.id)}
-                className="px-4 py-2.5 rounded-full text-sm font-medium flex items-center gap-2 transition-all"
+                className="px-4 py-2.5 rounded-full text-sm font-medium flex items-center gap-2"
                 style={{
                   background: isSelected ? '#0a4d3c' : 'white',
                   color: isSelected ? 'white' : '#1a1a1a',
@@ -2821,7 +2821,7 @@ function SosialTab({ achievements, userName, currentUserId, userProfile, dmThrea
             <button
               key={t.k}
               onClick={() => setLbScope(t.k)}
-              className="flex-1 py-1.5 rounded-lg text-[11px] font-semibold transition-all"
+              className="flex-1 py-1.5 rounded-lg text-[11px] font-semibold"
               style={{
                 background: lbScope === t.k ? 'white' : 'transparent',
                 color: lbScope === t.k ? '#0a4d3c' : '#8b6b3d',
@@ -3204,7 +3204,7 @@ function LessonScreen({ lesson, onBack, onComplete }) {
           <X size={18} style={{ color: '#0a4d3c' }} />
         </button>
         <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'rgba(10,77,60,0.1)' }}>
-          <div className="h-full transition-all duration-500" style={{ width: `${((step+1)/steps.length)*100}%`, background: '#0a4d3c' }} />
+          <div className="h-full progress-fill" style={{ transform: `translateX(${(((step+1)/steps.length)*100) - 100}%)`, background: '#0a4d3c' }} />
         </div>
         <span className="text-xs font-semibold" style={{ color: '#0a4d3c' }}>{step+1}/{steps.length}</span>
       </div>
@@ -3415,7 +3415,7 @@ function ImageQuizGame({ onBack, onComplete }) {
       <div className="flex items-center gap-3 mb-6">
         <button onClick={onBack} className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(10,77,60,0.08)' }}><X size={18} style={{ color: '#0a4d3c' }} /></button>
         <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'rgba(10,77,60,0.1)' }}>
-          <div className="h-full transition-all duration-500" style={{ width: `${((q+1)/questions.length)*100}%`, background: '#0a4d3c' }} />
+          <div className="h-full progress-fill" style={{ transform: `translateX(${(((q+1)/questions.length)*100) - 100}%)`, background: '#0a4d3c' }} />
         </div>
         <span className="text-xs font-semibold" style={{ color: '#0a4d3c' }}>{q+1}/{questions.length}</span>
       </div>
@@ -3520,7 +3520,7 @@ function VideoQuizGame({ onBack, onComplete }) {
       <div className="flex items-center gap-3 mb-6">
         <button onClick={onBack} className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(10,77,60,0.08)' }}><X size={18} style={{ color: '#0a4d3c' }} /></button>
         <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'rgba(10,77,60,0.1)' }}>
-          <div className="h-full transition-all duration-500" style={{ width: `${((scene+1)/scenes.length)*100}%`, background: '#0a4d3c' }} />
+          <div className="h-full progress-fill" style={{ transform: `translateX(${(((scene+1)/scenes.length)*100) - 100}%)`, background: '#0a4d3c' }} />
         </div>
         <span className="text-xs font-semibold" style={{ color: '#0a4d3c' }}>{scene+1}/{scenes.length}</span>
       </div>
@@ -3703,7 +3703,7 @@ function StoryGame({ onBack, onComplete }) {
       <div className="flex items-center gap-3 mb-6">
         <button onClick={onBack} className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(10,77,60,0.08)' }}><X size={18} style={{ color: '#0a4d3c' }} /></button>
         <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'rgba(10,77,60,0.1)' }}>
-          <div className="h-full transition-all duration-500" style={{ width: `${((scene+1)/story.length)*100}%`, background: '#0a4d3c' }} />
+          <div className="h-full progress-fill" style={{ transform: `translateX(${(((scene+1)/story.length)*100) - 100}%)`, background: '#0a4d3c' }} />
         </div>
       </div>
 
@@ -3718,7 +3718,7 @@ function StoryGame({ onBack, onComplete }) {
       <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#8b6b3d' }}>Pilihanmu:</p>
       <div className="space-y-2">
         {current.choices.map((c, i) => (
-          <button key={i} onClick={() => setScene(c.next)} className="w-full p-4 rounded-2xl text-left active:scale-[0.98] transition-transform" style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.15)', color: '#1a1a1a' }}>
+          <button key={i} onClick={() => setScene(c.next)} className="w-full p-4 rounded-2xl text-left" style={{ background: 'white', border: '1.5px solid rgba(10,77,60,0.15)', color: '#1a1a1a' }}>
             {c.text}
           </button>
         ))}
@@ -3793,7 +3793,7 @@ function ChallengeLevelsScreen({ scenario, challengeProgress = {}, onBack, onHom
             <button
               key={i}
               onClick={() => setPage(i)}
-              className="px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all"
+              className="px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap"
               style={{
                 background: isActive ? scenario.color : 'rgba(10,77,60,0.06)',
                 color: isActive ? 'white' : '#8b6b3d',
@@ -4210,7 +4210,7 @@ function ChallengeScreen({ onBack, onShare, onComplete, onNextLevel, scenario, l
   const progressBar = (
     <div className="flex items-center gap-3 mb-6">
       <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'rgba(10,77,60,0.1)' }}>
-        <div className="h-full transition-all" style={{ width: `${((q+1)/questions.length)*100}%`, background: activeScenario.color }} />
+        <div className="h-full progress-fill" style={{ transform: `translateX(${(((q+1)/questions.length)*100) - 100}%)`, background: activeScenario.color }} />
       </div>
       <span className="text-xs font-semibold" style={{ color: activeScenario.color }}>{q+1}/{questions.length}</span>
     </div>
@@ -4395,7 +4395,7 @@ function MatchQuestion({ question, scenarioColor, onComplete }) {
                 ref={(el) => { leftRefs.current[arIdx] = el; }}
                 onClick={() => handleArClick(arIdx)}
                 disabled={isMatched}
-                className="w-full p-3 rounded-xl text-center transition-all disabled:opacity-100"
+                className="w-full p-3 rounded-xl text-center disabled:opacity-100"
                 style={{
                   background: isMatched ? `${scenarioColor}15` : isSelected ? 'rgba(201,169,97,0.25)' : 'white',
                   border: `2px solid ${isMatched ? scenarioColor : isSelected ? '#c9a961' : 'rgba(10,77,60,0.15)'}`,
@@ -4419,7 +4419,7 @@ function MatchQuestion({ question, scenarioColor, onComplete }) {
                 ref={(el) => { rightRefs.current[idIdx] = el; }}
                 onClick={() => handleIdClick(idIdx)}
                 disabled={isMatched}
-                className="w-full p-3 rounded-xl text-center transition-all disabled:opacity-100"
+                className="w-full p-3 rounded-xl text-center disabled:opacity-100"
                 style={{
                   background: isMatched ? `${scenarioColor}15` : 'white',
                   border: `2px solid ${isMatched ? scenarioColor : 'rgba(10,77,60,0.15)'}`,
@@ -4522,12 +4522,12 @@ function GuruScreen({ onBack, onSelectGuru }) {
 
       {/* Mode tabs */}
       <div className="flex gap-2 mb-5 p-1 rounded-2xl" style={{ background: 'rgba(10,77,60,0.06)' }}>
-        <button onClick={() => setMode('grup')} className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all" style={{ background: mode === 'grup' ? 'white' : 'transparent', color: mode === 'grup' ? '#0a4d3c' : '#8b6b3d', boxShadow: mode === 'grup' ? '0 2px 8px rgba(10,77,60,0.1)' : 'none' }}>
+        <button onClick={() => setMode('grup')} className="flex-1 py-2.5 rounded-xl text-sm font-semibold" style={{ background: mode === 'grup' ? 'white' : 'transparent', color: mode === 'grup' ? '#0a4d3c' : '#8b6b3d', boxShadow: mode === 'grup' ? '0 2px 8px rgba(10,77,60,0.1)' : 'none' }}>
           <div className="flex items-center justify-center gap-2">
             <Users size={14} /> Kelas Grup
           </div>
         </button>
-        <button onClick={() => setMode('privat')} className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all" style={{ background: mode === 'privat' ? 'white' : 'transparent', color: mode === 'privat' ? '#0a4d3c' : '#8b6b3d', boxShadow: mode === 'privat' ? '0 2px 8px rgba(10,77,60,0.1)' : 'none' }}>
+        <button onClick={() => setMode('privat')} className="flex-1 py-2.5 rounded-xl text-sm font-semibold" style={{ background: mode === 'privat' ? 'white' : 'transparent', color: mode === 'privat' ? '#0a4d3c' : '#8b6b3d', boxShadow: mode === 'privat' ? '0 2px 8px rgba(10,77,60,0.1)' : 'none' }}>
           <div className="flex items-center justify-center gap-2">
             <User size={14} /> Privat 1-on-1
           </div>
@@ -5021,7 +5021,7 @@ function TourOverlay({ onComplete, onSkip }) {
             {slides.map((_, i) => (
               <div
                 key={i}
-                className="h-1.5 rounded-full transition-all"
+                className="h-1.5 rounded-full"
                 style={{
                   width: i === slide ? '24px' : '8px',
                   background: i === slide ? '#0a4d3c' : 'rgba(10,77,60,0.2)',

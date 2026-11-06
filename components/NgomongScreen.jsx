@@ -397,7 +397,7 @@ function MateriSession({ materi, isUnlocked, coins, onUnlock, onUpgrade, onExit,
             {shuffled.map((s, sIdx) => {
               const used = built.includes(sIdx);
               return (
-                <button key={sIdx} disabled={used} onClick={() => addToken(sIdx)} className="px-3.5 py-2 rounded-xl text-xl transition-opacity" style={{ fontFamily: 'Amiri, serif', background: used ? 'rgba(10,77,60,0.04)' : 'white', color: used ? '#cdc4b4' : '#0a4d3c', border: '1px solid rgba(10,77,60,0.12)', opacity: used ? 0.4 : 1 }}>{s.display}</button>
+                <button key={sIdx} disabled={used} onClick={() => addToken(sIdx)} className="px-3.5 py-2 rounded-xl text-xl" style={{ fontFamily: 'Amiri, serif', background: used ? 'rgba(10,77,60,0.04)' : 'white', color: used ? '#cdc4b4' : '#0a4d3c', border: '1px solid rgba(10,77,60,0.12)', opacity: used ? 0.4 : 1 }}>{s.display}</button>
               );
             })}
           </div>
@@ -485,7 +485,7 @@ function ProgressBar({ idx, total, correct, unit }) {
         <p className="text-[11px]" style={{ color: '#16a34a' }}>{correct} benar</p>
       </div>
       <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(10,77,60,0.08)' }}>
-        <div className="h-full rounded-full transition-all" style={{ width: `${(idx / total) * 100}%`, background: '#0a4d3c' }} />
+        <div className="h-full progress-fill rounded-full" style={{ transform: `translateX(${((idx / total) * 100) - 100}%)`, background: '#0a4d3c' }} />
       </div>
     </div>
   );

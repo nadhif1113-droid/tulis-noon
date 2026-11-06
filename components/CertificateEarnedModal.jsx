@@ -39,9 +39,9 @@ export default function CertificateEarnedModal({ pathId, recipientName, onClose,
       <div className="w-full max-w-sm rounded-3xl p-6 relative" style={{
         background: '#faf6ee',
         boxShadow: '0 20px 60px -20px rgba(0,0,0,0.6)',
-        transform: animate ? 'scale(1) translateY(0)' : 'scale(0.85) translateY(20px)',
+        transform: animate ? 'scale(1)' : 'scale(0.95)',
         opacity: animate ? 1 : 0,
-        transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+        transition: 'transform 300ms var(--ease-out), opacity 300ms var(--ease-out)',
       }}>
         {/* Close */}
         <button onClick={onClose} className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'rgba(10,77,60,0.08)' }} aria-label="Tutup">

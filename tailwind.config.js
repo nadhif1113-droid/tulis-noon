@@ -5,6 +5,26 @@ module.exports = {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
+    // Motion system — lihat app/globals.css (MOTION SYSTEM).
+    // Sengaja TIDAK ada `transition-all` / `transition-colors`: cuma transform + opacity.
+    transitionProperty: {
+      none: 'none',
+      DEFAULT: 'opacity, transform',
+      opacity: 'opacity',
+      transform: 'transform',
+    },
+    transitionTimingFunction: {
+      DEFAULT: 'cubic-bezier(0.23, 1, 0.32, 1)', // masuk/keluar
+      out: 'cubic-bezier(0.23, 1, 0.32, 1)',
+      'in-out': 'cubic-bezier(0.77, 0, 0.175, 1)', // pindah posisi
+    },
+    transitionDuration: {
+      DEFAULT: '150ms',
+      150: '150ms',
+      200: '200ms',
+      250: '250ms',
+      300: '300ms', // modal (maks)
+    },
     extend: {
       colors: {
         'noon-green': '#0a4d3c',

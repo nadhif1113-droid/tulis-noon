@@ -327,7 +327,7 @@ function ListView({ hafalanProgress, userProfile, coins, onBack, onHome, onShowU
                   <button
                     key={i}
                     onClick={() => setPage(i)}
-                    className="px-3 py-1.5 rounded-full text-xs font-bold flex-shrink-0 transition-all"
+                    className="px-3 py-1.5 rounded-full text-xs font-bold flex-shrink-0"
                     style={{
                       background: isActive ? '#0a4d3c' : 'rgba(10,77,60,0.08)',
                       color: isActive ? 'white' : '#0a4d3c',
@@ -462,7 +462,7 @@ function SuratCard({ meta, seeded, progress, isUnlocked, onSelect, accentColor, 
         {hasContent && isUnlocked && totalChunks > 0 && (
           <div className="flex items-center gap-2 mt-1.5">
             <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(10,77,60,0.1)' }}>
-              <div className="h-full transition-all rounded-full" style={{ width: `${percent}%`, background: isComplete ? '#c9a961' : '#0a4d3c' }} />
+              <div className="h-full progress-fill rounded-full" style={{ transform: `translateX(${(percent) - 100}%)`, background: isComplete ? '#c9a961' : '#0a4d3c' }} />
             </div>
             <span className="text-[10px] font-bold" style={{ color: '#8b6b3d' }}>
               {completedChunks}/{totalChunks}
@@ -651,7 +651,7 @@ function MemorizeFlow({ surat, chunk, chunkIdx, totalChunks, onComplete, onBack 
           {STAGES.map((s) => (
             <div
               key={s.id}
-              className="flex-1 h-1.5 rounded-full transition-all"
+              className="flex-1 h-1.5 rounded-full"
               style={{
                 background: s.id < stageId ? '#c9a961' : s.id === stageId ? '#0a4d3c' : 'rgba(10,77,60,0.15)',
               }}
@@ -884,7 +884,7 @@ function Stage2ListenFull({ surat, chunk, onComplete }) {
           return (
             <div
               key={a.num}
-              className="pb-3 transition-all"
+              className="pb-3 transition-opacity"
               style={{
                 borderBottom: i < chunk.ayat.length - 1 ? '1px solid rgba(10,77,60,0.08)' : 'none',
                 opacity: isCurrent ? 1 : isPast ? 0.5 : 0.8,
@@ -1573,10 +1573,13 @@ function MicLevelBars({ isActive, barCount = 5 }) {
             key={i}
             style={{
               width: '5px',
-              height: `${height}px`,
+              height: '26px',
               background: 'rgba(255,255,255,0.95)',
               borderRadius: '3px',
-              transition: 'height 80ms ease-out',
+              // scaleY, bukan height — cuma animasiin transform
+              transformOrigin: 'bottom',
+              transform: `scaleY(${height / 26})`,
+              transition: 'transform 80ms var(--ease-out)',
             }}
           />
         );

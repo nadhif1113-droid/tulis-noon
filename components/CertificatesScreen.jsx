@@ -103,7 +103,7 @@ export default function CertificatesScreen({ userProfile, userId, onBack, onHome
                     </p>
                   </div>
                   <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.2)' }}>
-                    <div className="h-full" style={{ width: `${recommendation.pathPercent}%`, background: '#c9a961', transition: 'width 0.5s' }} />
+                    <div className="h-full progress-fill" style={{ transform: `translateX(${(recommendation.pathPercent) - 100}%)`, background: '#c9a961' }} />
                   </div>
                 </div>
                 <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: '#c9a961' }}>
@@ -146,7 +146,7 @@ export default function CertificatesScreen({ userProfile, userId, onBack, onHome
             </p>
             {/* Progress bar */}
             <div className="h-1.5 rounded-full overflow-hidden mt-3" style={{ background: 'rgba(255,255,255,0.15)' }}>
-              <div className="h-full" style={{ width: `${(earnedCount / totalCount) * 100}%`, background: '#c9a961', transition: 'width 0.5s ease' }} />
+              <div className="h-full progress-fill" style={{ transform: `translateX(${((earnedCount / totalCount) * 100) - 100}%)`, background: '#c9a961' }} />
             </div>
           </div>
         </div>
@@ -205,7 +205,7 @@ export default function CertificatesScreen({ userProfile, userId, onBack, onHome
                         <p className="text-[11px] font-bold" style={{ color: '#0a4d3c' }}>{p.progress.percent}%</p>
                       </div>
                       <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(10,77,60,0.08)' }}>
-                        <div className="h-full" style={{ width: `${p.progress.percent}%`, background: p.color, transition: 'width 0.5s ease' }} />
+                        <div className="h-full progress-fill" style={{ transform: `translateX(${(p.progress.percent) - 100}%)`, background: p.color }} />
                       </div>
                     </>
                   )}
@@ -259,7 +259,7 @@ export default function CertificatesScreen({ userProfile, userId, onBack, onHome
                   <p className="text-[11px] font-bold" style={{ color: '#c9a961' }}>{masterProgress.percent}%</p>
                 </div>
                 <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(201,169,97,0.15)' }}>
-                  <div className="h-full" style={{ width: `${masterProgress.percent}%`, background: 'linear-gradient(90deg, #c9a961, #d4b876)', transition: 'width 0.5s' }} />
+                  <div className="h-full progress-fill" style={{ transform: `translateX(${(masterProgress.percent) - 100}%)`, background: 'linear-gradient(90deg, #c9a961, #d4b876)' }} />
                 </div>
               </>
             )}

@@ -116,7 +116,7 @@ export default function EventDashboard({ userId, userProfile, userEmail, onBack,
                   <p className="text-[11px] font-bold" style={{ color: '#c9a961' }}>{Math.round(percentElapsed)}% berjalan</p>
                 </div>
                 <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.2)' }}>
-                  <div className="h-full" style={{ width: `${percentElapsed}%`, background: '#c9a961', transition: 'width 0.5s' }} />
+                  <div className="h-full progress-fill" style={{ transform: `translateX(${(percentElapsed) - 100}%)`, background: '#c9a961' }} />
                 </div>
               </>
             )}
@@ -229,9 +229,9 @@ export default function EventDashboard({ userId, userProfile, userEmail, onBack,
                 </p>
                 <p className="text-sm opacity-80">/ {GRAND_PRIZE_MIN_SCORE.toLocaleString('id-ID')} XP</p>
               </div>
-              <div className="h-2.5 rounded-full mb-2" style={{ background: 'rgba(255,255,255,0.25)' }}>
-                <div className="h-full rounded-full transition-all" style={{
-                  width: `${grandPrize.percent}%`,
+              <div className="h-2.5 rounded-full overflow-hidden mb-2" style={{ background: 'rgba(255,255,255,0.25)' }}>
+                <div className="h-full progress-fill rounded-full" style={{
+                  transform: `translateX(${grandPrize.percent - 100}%)`,
                   background: grandPrize.eligible ? '#0a4d3c' : '#faf6ee',
                 }} />
               </div>
@@ -451,7 +451,7 @@ function FeatureRow({ progress }) {
         </p>
         <div className="flex items-center gap-2 mt-1">
           <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ background: 'rgba(10,77,60,0.06)' }}>
-            <div className="h-full" style={{ width: `${progress.percent}%`, background: progress.used ? '#0a4d3c' : 'rgba(139,107,61,0.3)', transition: 'width 0.4s' }} />
+            <div className="h-full progress-fill" style={{ transform: `translateX(${(progress.percent) - 100}%)`, background: progress.used ? '#0a4d3c' : 'rgba(139,107,61,0.3)' }} />
           </div>
           <p className="text-[10px] font-bold w-12 text-right" style={{ color: progress.used ? '#0a4d3c' : '#8b6b3d' }}>
             {progress.currentXp}/{progress.capPerDay}

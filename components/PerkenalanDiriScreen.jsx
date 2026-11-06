@@ -318,7 +318,7 @@ function ReaderView({ materi, onBack, onDone }) {
 
       {/* Progress bar */}
       <div className="h-1 rounded-full overflow-hidden mb-5" style={{ background: 'rgba(10,77,60,0.1)' }}>
-        <div className="h-full transition-all" style={{ width: `${((pageIdx + 1) / pages.length) * 100}%`, background: '#0a4d3c' }} />
+        <div className="h-full progress-fill" style={{ transform: `translateX(${(((pageIdx + 1) / pages.length) * 100) - 100}%)`, background: '#0a4d3c' }} />
       </div>
 
       <div className="flex-1">
@@ -452,7 +452,7 @@ function QuizView({ materi, onBack, onComplete }) {
         </div>
       </div>
       <div className="h-1 rounded-full overflow-hidden mb-5" style={{ background: 'rgba(10,77,60,0.1)' }}>
-        <div className="h-full transition-all" style={{ width: `${((qIdx + 1) / materi.quiz.length) * 100}%`, background: '#c9a961' }} />
+        <div className="h-full progress-fill" style={{ transform: `translateX(${(((qIdx + 1) / materi.quiz.length) * 100) - 100}%)`, background: '#c9a961' }} />
       </div>
 
       <div className="rounded-3xl p-5 mb-5" style={{ background: 'linear-gradient(135deg, rgba(10,77,60,0.06), rgba(201,169,97,0.06))', border: '1.5px solid rgba(10,77,60,0.1)' }}>
@@ -474,7 +474,7 @@ function QuizView({ materi, onBack, onComplete }) {
               key={i}
               onClick={() => handlePick(i)}
               disabled={selected !== null}
-              className="w-full p-4 rounded-2xl text-left flex items-center gap-3 active:scale-[0.98] transition-transform"
+              className="w-full p-4 rounded-2xl text-left flex items-center gap-3"
               style={{ background: bg, border, color }}
             >
               <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-xs" style={{ background: 'rgba(10,77,60,0.08)', color: '#0a4d3c' }}>

@@ -348,7 +348,7 @@ function ConversationView({ module, convIdx, userId, onSpeak, onBack, onNext, on
 
       {/* Progress bar */}
       <div className="h-1 rounded-full overflow-hidden mb-4" style={{ background: 'rgba(10,77,60,0.1)' }}>
-        <div className="h-full transition-all" style={{ width: `${((convIdx + 1) / module.conversations.length) * 100}%`, background: module.color }} />
+        <div className="h-full progress-fill" style={{ transform: `translateX(${(((convIdx + 1) / module.conversations.length) * 100) - 100}%)`, background: module.color }} />
       </div>
 
       {/* Situation card */}
@@ -572,7 +572,7 @@ function QuizView({ module, onSpeak, onBack, onFinish }) {
       </div>
       <div className="px-5 pt-3">
         <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(10,77,60,0.08)' }}>
-          <div className="h-full transition-all" style={{ width: `${((idx + (revealed ? 1 : 0)) / questions.length) * 100}%`, background: '#0a4d3c' }} />
+          <div className="h-full progress-fill" style={{ transform: `translateX(${(((idx + (revealed ? 1 : 0)) / questions.length) * 100) - 100}%)`, background: '#0a4d3c' }} />
         </div>
       </div>
 
@@ -617,7 +617,7 @@ function QuizView({ module, onSpeak, onBack, onFinish }) {
                 key={i}
                 onClick={() => !revealed && setSelectedOption(i)}
                 disabled={revealed}
-                className="w-full text-left p-3.5 rounded-2xl transition-all flex items-center gap-3"
+                className="w-full text-left p-3.5 rounded-2xl flex items-center gap-3"
                 style={{ background: bg, border }}
               >
                 <span className={isArabicOpt(opt) ? 'text-lg flex-1' : 'text-base flex-1'} dir={isArabicOpt(opt) ? 'rtl' : 'ltr'} style={{ fontFamily: isArabicOpt(opt) ? 'Amiri, serif' : 'inherit', color, fontWeight: 600 }}>{opt}</span>

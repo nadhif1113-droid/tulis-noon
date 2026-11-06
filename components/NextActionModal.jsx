@@ -39,9 +39,9 @@ export default function NextActionModal({
         style={{
           background: '#fdfaf4',
           boxShadow: '0 24px 60px -16px rgba(0,0,0,0.4)',
-          transform: animate ? 'scale(1) translateY(0)' : 'scale(0.92) translateY(20px)',
+          transform: animate ? 'scale(1)' : 'scale(0.95)',
           opacity: animate ? 1 : 0,
-          transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+          transition: 'transform 300ms var(--ease-out), opacity 300ms var(--ease-out)',
         }}
         onClick={(e) => e.stopPropagation()}
       >

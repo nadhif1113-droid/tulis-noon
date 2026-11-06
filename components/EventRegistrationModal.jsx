@@ -404,7 +404,7 @@ function Step3({ formData, update, toggleAgreement, errors }) {
             <button
               key={point.id}
               onClick={() => toggleAgreement(point.id)}
-              className="w-full text-left rounded-2xl p-3 flex items-start gap-3 transition-all active:scale-[0.98]"
+              className="w-full text-left rounded-2xl p-3 flex items-start gap-3 transition-transform active:scale-[0.98]"
               style={{
                 background: checked ? 'rgba(10,77,60,0.06)' : 'white',
                 border: `1.5px solid ${checked ? 'rgba(10,77,60,0.4)' : 'rgba(10,77,60,0.15)'}`,

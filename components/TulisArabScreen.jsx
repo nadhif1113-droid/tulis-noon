@@ -434,7 +434,7 @@ function PlayView({ phase, level, lives = 10, onNoLives, onBack, onComplete }) {
             <ArrowLeft size={16} style={{ color: '#0a4d3c' }} />
           </button>
           <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'rgba(10,77,60,0.1)' }}>
-            <div className="h-full transition-all" style={{ width: `${((itemIdx + 1) / items.length) * 100}%`, background: phase.color }} />
+            <div className="h-full progress-fill" style={{ transform: `translateX(${(((itemIdx + 1) / items.length) * 100) - 100}%)`, background: phase.color }} />
           </div>
           <span className="text-xs font-semibold" style={{ color: phase.color }}>{itemIdx + 1}/{items.length}</span>
         </div>
@@ -485,7 +485,7 @@ function PlayView({ phase, level, lives = 10, onNoLives, onBack, onComplete }) {
                 key={i}
                 onClick={() => handleTap(letter)}
                 disabled={selected !== null}
-                className="aspect-square rounded-2xl flex items-center justify-center transition-all active:scale-95 disabled:active:scale-100"
+                className="aspect-square rounded-2xl flex items-center justify-center"
                 style={{
                   background: bg,
                   border: `2px solid ${border}`,

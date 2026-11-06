@@ -512,7 +512,7 @@ function PlayingView({ opponent, userName, onComplete, onQuit }) {
       </div>
 
       <div className="h-2 rounded-full overflow-hidden mb-4" style={{ background: 'rgba(10,77,60,0.1)' }}>
-        <div className="h-full transition-all" style={{ width: `${timePercent}%`, background: timePercent > 50 ? tier.color : timePercent > 25 ? '#c9a961' : '#a05536' }} />
+        <div className="h-full progress-fill" style={{ transform: `translateX(${(timePercent) - 100}%)`, background: timePercent > 50 ? tier.color : timePercent > 25 ? '#c9a961' : '#a05536' }} />
       </div>
 
       <p className="text-xs tracking-widest uppercase mb-2 text-center" style={{ color: '#8b6b3d' }}>Tap huruf untuk</p>
@@ -542,7 +542,7 @@ function PlayingView({ opponent, userName, onComplete, onQuit }) {
               key={i}
               onClick={() => handleUserTap(letter)}
               disabled={!!userAnswered}
-              className="aspect-square rounded-2xl flex items-center justify-center transition-all active:scale-95 disabled:active:scale-100"
+              className="aspect-square rounded-2xl flex items-center justify-center"
               style={{ background: bg, border: `2px solid ${border}`, fontFamily: 'Amiri, serif', fontSize: '34px', color: tier.color }}
             >
               {letter}

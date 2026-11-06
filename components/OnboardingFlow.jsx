@@ -140,7 +140,7 @@ export default function OnboardingFlow({ userName, onComplete }) {
             {[1, 2, 3, 4, 5, 6, 7].map((n) => (
               <div
                 key={n}
-                className="h-1.5 flex-1 rounded-full transition-all"
+                className="h-1.5 flex-1 rounded-full"
                 style={{ background: n <= step ? '#0a4d3c' : 'rgba(10,77,60,0.12)' }}
               />
             ))}
@@ -238,7 +238,7 @@ function StepPersona({ onNext, onBack }) {
             <button
               key={g.id}
               onClick={() => setSelected(g.id)}
-              className="w-full flex items-center gap-3 p-3.5 rounded-2xl text-left transition-all active:scale-[0.98]"
+              className="w-full flex items-center gap-3 p-3.5 rounded-2xl text-left transition-transform active:scale-[0.98]"
               style={{
                 background: isSel ? `${g.color}12` : 'white',
                 border: isSel ? `2px solid ${g.color}` : '1.5px solid rgba(10,77,60,0.1)',
@@ -299,7 +299,7 @@ function StepDailyCommit({ onNext, onBack }) {
             <button
               key={opt.minutes}
               onClick={() => setSelected(opt.minutes)}
-              className="w-full flex items-center gap-3 p-4 rounded-2xl text-left transition-all active:scale-[0.98]"
+              className="w-full flex items-center gap-3 p-4 rounded-2xl text-left transition-transform active:scale-[0.98]"
               style={{
                 background: isSel ? 'rgba(10,77,60,0.08)' : 'white',
                 border: isSel ? '2px solid #0a4d3c' : '1.5px solid rgba(10,77,60,0.1)',
@@ -377,7 +377,7 @@ function StepMiniLesson({ persona, onNext, onBack }) {
                 key={i}
                 onClick={() => !answered && setQuizAnswer(c)}
                 disabled={answered}
-                className="w-full p-3.5 rounded-2xl text-left font-semibold text-sm transition-all active:scale-[0.98]"
+                className="w-full p-3.5 rounded-2xl text-left font-semibold text-sm"
                 style={{ background: bg, border: `2px solid ${border}`, color: '#0a4d3c' }}
               >
                 {String.fromCharCode(65 + i)}. {c}
@@ -443,7 +443,7 @@ function StepMiniLesson({ persona, onNext, onBack }) {
         )}
         <button
           onClick={() => isLast ? setShowQuiz(true) : setCardIdx(cardIdx + 1)}
-          className="flex-1 py-3.5 rounded-2xl font-bold text-white active:scale-[0.98] transition-transform"
+          className="flex-1 py-3.5 rounded-2xl font-bold text-white"
           style={{ background: 'linear-gradient(135deg, #0a4d3c, #1a6b56)' }}
         >
           {isLast ? 'Test Pemahaman →' : 'Lanjut kartu →'}
@@ -474,7 +474,7 @@ function StepFirstWin({ onNext }) {
                 top: `${(i * 37) % 80}%`,
                 left: `${(i * 53) % 90}%`,
                 opacity: animate ? 0.8 : 0,
-                transition: `opacity 0.6s ${i * 0.05}s, transform 0.8s ${i * 0.05}s`,
+                transition: `opacity 250ms var(--ease-out) ${i * 40}ms, transform 250ms var(--ease-out) ${i * 40}ms`,
                 transform: animate ? `translateY(0) rotate(${i * 25}deg)` : 'translateY(20px) rotate(0)',
               }}
             >
@@ -487,9 +487,9 @@ function StepFirstWin({ onNext }) {
           style={{
             background: 'linear-gradient(135deg, #c9a961, #d4b876)',
             boxShadow: '0 20px 50px -15px rgba(201,169,97,0.8)',
-            transform: animate ? 'scale(1)' : 'scale(0.5)',
+            transform: animate ? 'scale(1)' : 'scale(0.95)',
             opacity: animate ? 1 : 0,
-            transition: 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            transition: 'transform 300ms var(--ease-out), opacity 300ms var(--ease-out)',
           }}
         >
           🎉
@@ -551,7 +551,7 @@ function StepPushPermission({ onNext, onBack }) {
             <button
               key={t.id}
               onClick={() => setSelected(t.id)}
-              className="w-full flex items-center gap-3 p-4 rounded-2xl text-left transition-all active:scale-[0.98]"
+              className="w-full flex items-center gap-3 p-4 rounded-2xl text-left transition-transform active:scale-[0.98]"
               style={{
                 background: isSel ? 'rgba(201,169,97,0.12)' : 'white',
                 border: isSel ? '2px solid #c9a961' : '1.5px solid rgba(10,77,60,0.1)',

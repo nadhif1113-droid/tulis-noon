@@ -237,7 +237,7 @@ function ReaderView({ story, onBack, onDone }) {
         </div>
         {/* Progress bar */}
         <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(10,77,60,0.1)' }}>
-          <div className="h-full transition-all" style={{ width: `${((pageIdx + 1) / story.pages.length) * 100}%`, background: story.color }} />
+          <div className="h-full progress-fill" style={{ transform: `translateX(${(((pageIdx + 1) / story.pages.length) * 100) - 100}%)`, background: story.color }} />
         </div>
       </div>
 
@@ -352,7 +352,7 @@ function QuizView({ story, onBack, onComplete }) {
           <ArrowLeft size={16} style={{ color: '#0a4d3c' }} />
         </button>
         <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'rgba(10,77,60,0.1)' }}>
-          <div className="h-full transition-all" style={{ width: `${((qIdx + 1) / questions.length) * 100}%`, background: story.color }} />
+          <div className="h-full progress-fill" style={{ transform: `translateX(${(((qIdx + 1) / questions.length) * 100) - 100}%)`, background: story.color }} />
         </div>
         <span className="text-xs font-semibold" style={{ color: story.color }}>{qIdx + 1}/{questions.length}</span>
       </div>
@@ -377,7 +377,7 @@ function QuizView({ story, onBack, onComplete }) {
               key={i}
               onClick={() => handleTap(i)}
               disabled={selected !== null}
-              className="w-full p-4 rounded-2xl text-left transition-all active:scale-95 disabled:active:scale-100"
+              className="w-full p-4 rounded-2xl text-left"
               style={{ background: bg, border: `2px solid ${border}`, color: '#1a1a1a' }}
             >
               <p className="text-sm font-medium">

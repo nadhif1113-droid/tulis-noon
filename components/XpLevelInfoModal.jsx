@@ -78,7 +78,7 @@ export default function XpLevelInfoModal({ xp = 0, onClose }) {
               </span>
             </div>
             <div className="h-2 rounded-full overflow-hidden mt-2" style={{ background: 'rgba(10,77,60,0.1)' }}>
-              <div className="h-full transition-all duration-700 rounded-full" style={{ width: `${percent}%`, background: tier.bgGradient }} />
+              <div className="h-full progress-fill rounded-full" style={{ transform: `translateX(${(percent) - 100}%)`, background: tier.bgGradient }} />
             </div>
             <p className="text-[11px] mt-1.5" style={{ color: '#8b6b3d' }}>
               {xpRemaining.toLocaleString('id-ID')} XP lagi → naik ke <strong style={{ color: nextTier.color }}>Level {currentLevel + 1}</strong>

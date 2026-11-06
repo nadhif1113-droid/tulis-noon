@@ -216,8 +216,8 @@ export default function ProfilePage() {
               </div>
               <div className="h-2.5 rounded-full overflow-hidden" style={{ background: 'rgba(10,77,60,0.1)' }}>
                 <div
-                  className="h-full transition-all duration-700 rounded-full"
-                  style={{ width: `${percent}%`, background: tier.bgGradient }}
+                  className="h-full progress-fill rounded-full"
+                  style={{ transform: `translateX(${percent - 100}%)`, background: tier.bgGradient }}
                 />
               </div>
               <p className="text-[11px] mt-2" style={{ color: '#8b6b3d' }}>
@@ -346,7 +346,7 @@ export default function ProfilePage() {
                         await updateUserProfile({ locationOverride: opt.id === 'auto' ? null : opt.id });
                       } catch (e) { console.error(e); }
                     }}
-                    className="p-2 rounded-xl text-center transition-all"
+                    className="p-2 rounded-xl text-center"
                     style={{
                       background: isActive ? 'linear-gradient(135deg, #0a4d3c, #1a6b56)' : 'rgba(10,77,60,0.05)',
                       border: isActive ? 'none' : '1.5px solid rgba(10,77,60,0.1)',

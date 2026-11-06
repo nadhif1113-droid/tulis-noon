@@ -83,9 +83,9 @@ export default function DailyBriefingModal({ userName, userProfile, onClose, onS
         style={{
           background: '#fdfaf4',
           maxHeight: '92vh',
-          transform: animate ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(20px)',
+          transform: animate ? 'scale(1)' : 'scale(0.95)',
           opacity: animate ? 1 : 0,
-          transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+          transition: 'transform 300ms var(--ease-out), opacity 300ms var(--ease-out)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
